@@ -1,0 +1,28 @@
+# LLM & Agent
+langchain>=0.2.0
+langchain-google-genai>=1.0.0
+google-generativeai>=0.5.0
+
+# Embeddings & Retrieval
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.4
+
+# Cross-encoder
+transformers>=4.30.0
+
+# NLP Analysis
+bertopic>=0.15.0
+torch>=2.0.0
+
+# Data
+google-api-python-client>=2.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Frontend
+streamlit>=1.30.0
+
+# Utilities
+python-dotenv>=1.0.0
+tqdm>=4.65.0
+requests>=2.31.0
