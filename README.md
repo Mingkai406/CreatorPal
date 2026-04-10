@@ -2,12 +2,6 @@
 
 CreatorPal is a RAG-centric system for matching YouTube creators with the most relevant Reddit communities and generating actionable audience strategy reports.
 
-## Team
-- Mingkai Gao
-- Runxin Shao
-- Ziqi Yang
-- Gaoyuan Shi
-
 ## Architecture
 
 CreatorPal orchestrates an end-to-end retrieval-augmented workflow:
