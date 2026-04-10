@@ -1,0 +1,29 @@
+services:
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: creatorpal-vllm
+    command: >
+      --model meta-llama/Llama-3.1-8B-Instruct
+      --host 0.0.0.0
+      --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/models
+    restart: unless-stopped
+
+  app:
+    build: .
+    container_name: creatorpal-app
+    env_file:
+      - .env
+    environment:
+      - VLLM_ENDPOINT=${VLLM_ENDPOINT:-http://vllm:8000/v1}
+    command: streamlit run app/streamlit_app.py --server.address=0.0.0.0 --server.port=8501
+    volumes:
+      - .:/workspace
+    ports:
+      - "8501:8501"
+    depends_on:
+      - vllm
+    restart: unless-stopped

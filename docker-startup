@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COMMAND="${1:-}"
+
+case "$COMMAND" in
+  deploy)
+    docker compose up --build -d
+    ;;
+  *)
+    echo "Usage: ./docker-startup deploy"
+    exit 1
+    ;;
+esac

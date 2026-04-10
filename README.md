@@ -1,53 +1,73 @@
-# 🤝 CreatorPal
+# CreatorPal
 
-**A PAL Agent for YouTube Creator-Audience Semantic Matching**
-
-CS 6120 Natural Language Processing — Final Project
-Northeastern University, Khoury College of Computer Science
-
-## Overview
-
-CreatorPal is an autonomous AI agent that analyzes YouTube creator channels and identifies optimal audience communities for content distribution. Powered by a ReAct-style agent loop with Gemini 2.5 Flash, the system orchestrates multiple NLP skills — semantic search, topic modeling, sentiment analysis, and program-aided reasoning — to generate actionable audience growth strategies.
-
-## Architecture
-```
-User Query → LLM Agent (ReAct Loop) → Skills → Final Report
-                                        ├── youtube_api
-                                        ├── semantic_search (bi-encoder + cross-encoder)
-                                        ├── topic_modeling (BERTopic)
-                                        ├── sentiment_analysis (RoBERTa)
-                                        ├── trend_analysis
-                                        └── code_executor (PAL)
-```
-
-## Quick Start
-
-### Prerequisites
-- Python 3.10+
-- Google AI Studio API Key ([free](https://aistudio.google.com/apikey))
-- YouTube Data API Key ([free](https://console.cloud.google.com))
-
-### Setup
-```bash
-git clone https://github.com/[YOUR_USERNAME]/creatorpal.git
-cd creatorpal
-pip install -r requirements.txt
-cp .env.example .env
-# Edit .env with your API keys
-```
-
-### Run
-```bash
-streamlit run app/app.py
-```
-
-### Docker
-```bash
-docker-compose up
-```
+CreatorPal is a RAG-centric system for matching YouTube creators with the most relevant Reddit communities and generating actionable audience strategy reports.
 
 ## Team
 - Mingkai Gao
 - Runxin Shao
 - Ziqi Yang
 - Gaoyuan Shi
+
+## Architecture
+
+CreatorPal orchestrates an end-to-end retrieval-augmented workflow:
+
+1. Channel Ingest: YouTube Data API v3 collects channel metadata, video descriptions, and top comments.
+2. Theme Extractor: Llama 3.1 (8B) extracts channel themes and keywords.
+3. Query Rewriting (HyDE): Llama 3.1 writes a hypothetical ideal subreddit description for retrieval.
+4. RAG Retriever: `all-mpnet-base-v2` retrieves top-50 profiles from a FAISS Flat index.
+5. Reranker: `ms-marco-MiniLM-L-6-v2` reranks to top-10 candidates.
+6. PAL Executor: Llama-generated Python is executed in a RestrictedPython sandbox for dynamic analytics.
+7. Sentiment Analyzer: `cardiffnlp/twitter-roberta-base-sentiment-latest` computes subreddit sentiment from comments.
+8. Augmented Generator: Llama 3.1 produces the final strategy report from retrieved context + PAL + sentiment outputs.
+9. Streamlit UI: users enter a YouTube channel URL or free-text query and receive ranked subreddit links and report text.
+
+## Project Layout
+
+```
+creatorpal/
+├── docker-compose.yml
+├── Dockerfile
+├── docker-startup
+├── README.md
+├── requirements.txt
+├── .env.example
+├── data/
+├── src/
+├── app/
+└── eval/
+```
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Configure environment:
+   ```bash
+   cp .env.example .env
+   ```
+3. Add your `YOUTUBE_API_KEY` and `VLLM_ENDPOINT` to `.env`.
+
+## Local Run
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+## Docker Deploy
+
+```bash
+./docker-startup deploy
+```
+
+This starts:
+- `vllm` service for Llama 3.1 (OpenAI-compatible endpoint)
+- `app` service for the Streamlit frontend
+
+## Data and Evaluation
+
+- `data/`: corpus download, preprocessing, FAISS index build, and ground-truth construction.
+- `eval/`: retrieval metrics (Recall@K, MRR) and generation evaluation scaffolding.
+
