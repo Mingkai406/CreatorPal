@@ -5,10 +5,17 @@ from __future__ import annotations
 from html import escape
 
 
-def metric_card_html(label: str, value: str, sub: str, sub_up: bool = True) -> str:
+def metric_card_html(
+    label: str,
+    value: str,
+    sub: str,
+    sub_up: bool = True,
+    container_style: str | None = None,
+) -> str:
     sub_class = "cp-metric-sub-up" if sub_up else "cp-metric-sub-neutral"
+    style_attr = f' style="{escape(container_style, quote=True)}"' if container_style else ""
     return (
-        f'<div class="cp-metric">'
+        f'<div class="cp-metric"{style_attr}>'
         f'<div class="cp-metric-label">{escape(label)}</div>'
         f'<div class="cp-metric-value">{escape(value)}</div>'
         f'<div class="{sub_class}">{escape(sub)}</div>'
@@ -44,7 +51,12 @@ def subreddit_row_html(
         f'<div class="cp-score-fill" style="width:{score_pct}"></div>'
         f"</div>"
         f"</div>"
-        f'<a class="cp-open-link" href="{safe_url}" target="_blank">↗</a>'
+        f'<a href="{safe_url}" target="_blank" style="'
+        f"width:26px;height:26px;border-radius:6px;"
+        f"background:rgba(59,130,246,0.10);"
+        f"display:flex;align-items:center;justify-content:center;"
+        f"flex-shrink:0;text-decoration:none;font-size:12px;color:#3B82F6;"
+        f'transition:background 100ms ease;">↗</a>'
         f"</div>"
     )
 

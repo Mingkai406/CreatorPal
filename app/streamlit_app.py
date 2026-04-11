@@ -20,16 +20,16 @@ from app.helpers.mock_pipeline import MockPipeline
 from src.pipeline import build_pipeline
 
 COLORS: dict[str, str] = {
-    "bg_page": "#EEF2F7",
+    "bg_page": "#E2E8F0",
     "bg_card": "#FFFFFF",
     "bg_input": "#F8FAFC",
     "bg_badge_blue": "#EFF6FF",
     "bg_badge_green": "#ECFDF5",
     "border_default": "#E2E8F0",
     "border_subtle": "#F1F5F9",
-    "text_primary": "#0F172A",
-    "text_secondary": "#475569",
-    "text_muted": "#94A3B8",
+    "text_primary": "#1C1C1E",
+    "text_secondary": "#3C3C43",
+    "text_muted": "#8E8E93",
     "text_link": "#3B82F6",
     "blue_500": "#3B82F6",
     "blue_hover": "#2563EB",
@@ -45,7 +45,7 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .stApp {{
-    background: {COLORS["bg_page"]} !important;
+    background-color: {COLORS["bg_page"]} !important;
 }}
 
 [data-testid="stSidebar"] {{
@@ -75,9 +75,10 @@ section[data-testid="stSidebar"] {{
 }}
 
 [data-testid="stForm"] {{
-    background: {COLORS["bg_card"]} !important;
-    border: 1px solid {COLORS["border_default"]} !important;
-    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.78) !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
     padding: 16px 18px 10px !important;
     margin-bottom: 0 !important;
 }}
@@ -87,18 +88,19 @@ section[data-testid="stSidebar"] {{
 }}
 
 [data-testid="stTextInput"] input {{
-    background: {COLORS["bg_input"]} !important;
-    border: 1px solid {COLORS["border_default"]} !important;
+    background: rgba(255, 255, 255, 0.60) !important;
+    border: 1px solid rgba(255, 255, 255, 0.90) !important;
     border-radius: 8px !important;
-    color: {COLORS["text_primary"]} !important;
+    color: #1C1C1E !important;
     font-size: 13px !important;
 }}
 
 [data-testid="stTextInput"] input::placeholder {{
-    color: #CBD5E1 !important;
+    color: #C7C7CC !important;
 }}
 
 [data-testid="stTextInput"] input:focus {{
+    background: rgba(255, 255, 255, 0.85) !important;
     border-color: {COLORS["blue_500"]} !important;
     box-shadow: none !important;
 }}
@@ -108,9 +110,11 @@ section[data-testid="stSidebar"] {{
     color: #FFFFFF !important;
     border: none !important;
     border-radius: 8px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 500 !important;
+    padding: 11px 0 !important;
     width: 100% !important;
+    margin-top: 4px !important;
 }}
 
 [data-testid="stFormSubmitButton"] button:hover {{
@@ -129,7 +133,7 @@ section[data-testid="stSidebar"] {{
 
 [data-testid="stCaptionContainer"] p {{
     font-size: 11px !important;
-    color: #94A3B8 !important;
+    color: #8E8E93 !important;
     margin: 4px 0 0 !important;
     line-height: 1.2 !important;
 }}
@@ -179,7 +183,7 @@ section[data-testid="stSidebar"] {{
 
 .cp-page-subtitle {{
     font-size: 14px;
-    color: {COLORS["text_muted"]};
+    color: #6E6E73;
     margin: 0;
 }}
 
@@ -215,14 +219,29 @@ section[data-testid="stSidebar"] {{
 }}
 
 .cp-card {{
-    background: {COLORS["bg_card"]};
-    border: 1px solid {COLORS["border_default"]};
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.78) !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     padding: 16px 18px;
 }}
 
 .cp-card-fill-col {{
     height: 100%;
+}}
+
+.cp-card,
+.cp-metric {{
+    transition:
+        transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 220ms ease;
+    will-change: transform;
+}}
+
+.cp-card:hover,
+.cp-metric:hover {{
+    transform: scale(1.018);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
 }}
 
 .cp-results-grid {{
@@ -249,6 +268,12 @@ section[data-testid="stSidebar"] {{
     margin-bottom: 14px;
 }}
 
+.cp-card-header-row {{
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 4px;
+}}
+
 .cp-card-title {{
     font-size: 16px;
     font-weight: 600;
@@ -261,16 +286,17 @@ section[data-testid="stSidebar"] {{
 }}
 
 .cp-metric {{
-    background: {COLORS["bg_card"]};
-    border: 1px solid {COLORS["border_default"]};
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.78) !important;
+    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     padding: 14px 16px;
 }}
 
 .cp-metric-label {{
     font-size: 12px;
     font-weight: 500;
-    color: {COLORS["text_muted"]};
+    color: #6E6E73;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-bottom: 8px;
@@ -300,12 +326,18 @@ section[data-testid="stSidebar"] {{
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 0;
-    border-bottom: 0.5px solid {COLORS["border_subtle"]};
+    border-radius: 8px;
+    margin: 0 -8px;
+    padding: 10px 8px;
+    transition: background 100ms ease;
 }}
 
-.cp-sub-row:last-child {{
-    border-bottom: none;
+.cp-sub-row + .cp-sub-row {{
+    border-top: 0.5px solid rgba(0, 0, 0, 0.05);
+}}
+
+.cp-sub-row:hover {{
+    background: rgba(255, 255, 255, 0.60);
 }}
 
 .cp-rank {{
@@ -349,13 +381,13 @@ section[data-testid="stSidebar"] {{
 
 .cp-score-num {{
     font-size: 13px;
-    color: #64748B;
+    color: #636366;
     margin-bottom: 3px;
 }}
 
 .cp-score-track {{
     height: 4px;
-    background: #EEF2F7;
+    background: rgba(59, 130, 246, 0.10);
     border-radius: 2px;
     overflow: hidden;
 }}
@@ -365,16 +397,8 @@ section[data-testid="stSidebar"] {{
     background: #3B82F6;
 }}
 
-.cp-open-link {{
-    font-size: 14px;
-    color: {COLORS["text_link"]};
-    text-decoration: none !important;
-    flex-shrink: 0;
-}}
-
-.cp-open-link:hover {{
-    opacity: 0.75;
-    text-decoration: none !important;
+a[href*="reddit.com"]:hover {{
+    background: rgba(59, 130, 246, 0.18) !important;
 }}
 
 .cp-sent-head {{
@@ -404,7 +428,7 @@ section[data-testid="stSidebar"] {{
 .cp-sent-track {{
     flex: 1;
     height: 5px !important;
-    background: #EEF2F7;
+    background: rgba(0, 0, 0, 0.07);
     border-radius: 3px;
     overflow: hidden;
 }}
@@ -481,8 +505,22 @@ section[data-testid="stSidebar"] {{
     padding: 24px 0;
 }}
 
-.cp-card, .cp-metric, [data-testid="stForm"], [data-testid="stTextInput"] input, [data-testid="stFormSubmitButton"] button {{
+[data-testid="stTextInput"] input, [data-testid="stFormSubmitButton"] button {{
     box-shadow: none !important;
+}}
+
+[data-testid="stButton"] button {{
+    background: transparent !important;
+    border: 1px solid rgba(0, 0, 0, 0.12) !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    color: #6E6E73 !important;
+    padding: 4px 12px !important;
+    margin-bottom: 12px !important;
+}}
+
+[data-testid="stButton"] button:hover {{
+    background: rgba(255, 255, 255, 0.5) !important;
 }}
 </style>"""
 
@@ -563,60 +601,98 @@ def render_sidebar() -> None:
         )
 
 
-def render_header() -> None:
-    st.markdown(
-        """
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-  <div style="
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: #3B82F6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  ">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-         stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="23 7 16 12 23 17 23 7"/>
-      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-    </svg>
-  </div>
-  <span style="font-size:24px;font-weight:700;color:#0F172A;letter-spacing:-0.025em;line-height:1">
-    CreatorPal
-  </span>
+def render_page_header() -> None:
+    """Render compact dashboard header after results are available."""
+    col_hdr, col_badge = st.columns([10, 1])
+    with col_hdr:
+        st.markdown(
+            """
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <div style="width:32px;height:32px;border-radius:8px;background:#3B82F6;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2"/>
+        </svg>
+    </div>
+    <div>
+        <div style="font-size:18px;font-weight:700;color:#1C1C1E;letter-spacing:-.02em;line-height:1">
+            CreatorPal
+        </div>
+        <div style="font-size:12px;color:#6E6E73;margin-top:1px">
+            YouTube → Reddit audience intelligence
+        </div>
+    </div>
 </div>
-<p style="font-size:14px;color:#94A3B8;margin:0 0 16px 42px">
-  YouTube → Reddit audience intelligence
-</p>
 """,
-        unsafe_allow_html=True,
-    )
+            unsafe_allow_html=True,
+        )
+    with col_badge:
+        st.markdown(
+            '<div style="padding-top:8px;text-align:right">'
+            '<span class="cp-badge cp-badge-blue">Beta</span></div>',
+            unsafe_allow_html=True,
+        )
 
 
-def render_input_form() -> tuple[str, str, bool]:
-    """Render top query form and return input values."""
-    with st.form("query_form", clear_on_submit=False):
-        col_a, col_b, col_btn = st.columns([5, 4, 2], gap="small")
-        with col_a:
-            st.markdown('<div class="cp-field-label">CHANNEL OR TOPIC</div>', unsafe_allow_html=True)
-            channel_or_query = st.text_input(
-                "Channel or topic",
-                placeholder="https://youtube.com/@mkbhd",
-                label_visibility="collapsed",
-            )
-        with col_b:
-            st.markdown('<div class="cp-field-label">YOUR GOAL (optional)</div>', unsafe_allow_html=True)
-            user_query = st.text_input(
-                "Your goal (optional)",
-                placeholder="e.g. grow subscribers in EU",
-                label_visibility="collapsed",
-            )
-        with col_btn:
-            st.markdown('<div class="cp-btn-spacer"></div>', unsafe_allow_html=True)
-            submitted = st.form_submit_button("Analyze \u2192", use_container_width=True)
-    return channel_or_query, user_query, submitted
+def render_idle_hero() -> tuple[str, str | None, bool]:
+    """Render centered idle hero and return submitted query payload."""
+    st.markdown("<div style='height:10vh'></div>", unsafe_allow_html=True)
+    _, col, _ = st.columns([1, 2.2, 1])
+
+    with col:
+        st.markdown(
+            """
+<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:28px">
+    <div style="
+        width:52px;height:52px;border-radius:14px;
+        background:#3B82F6;
+        display:flex;align-items:center;justify-content:center;
+        margin-bottom:14px;
+    ">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+             stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"/>
+            <rect x="1" y="5" width="15" height="14" rx="2"/>
+        </svg>
+    </div>
+    <div style="font-size:28px;font-weight:700;color:#1C1C1E;letter-spacing:-.03em;margin-bottom:8px">
+        CreatorPal
+    </div>
+    <div style="font-size:14px;color:#6E6E73;text-align:center;line-height:1.6">
+        Find the right Reddit communities for your YouTube channel
+    </div>
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+        with st.form("query_form", clear_on_submit=False):
+            col_a, col_b = st.columns([1, 1], gap="small")
+            with col_a:
+                channel_or_query = st.text_input(
+                    "Channel or topic",
+                    placeholder="https://youtube.com/@channel",
+                )
+            with col_b:
+                user_query = st.text_input(
+                    "Your goal (optional)",
+                    placeholder="e.g. grow subscribers in EU",
+                )
+            submitted = st.form_submit_button("Analyze →", use_container_width=True)
+
+        st.markdown(
+            """
+<div style="text-align:center;margin-top:14px;font-size:12px;color:#8E8E93">
+    Powered by RAG · <span style="color:#3B82F6">FAISS</span> retrieval · cross-encoder reranking
+</div>
+""",
+            unsafe_allow_html=True,
+        )
+
+    normalized_goal = user_query.strip() or None
+    return channel_or_query, normalized_goal, submitted
 
 
 def render_metrics(data: Mapping[str, Any]) -> None:
@@ -639,22 +715,41 @@ def render_metrics(data: Mapping[str, Any]) -> None:
                 str(len(subreddits)),
                 f"↑ from {meta['retrieval_top_k']} retrieved",
                 sub_up=True,
+                container_style="border-top:3px solid #3B82F6 !important;",
             ),
             unsafe_allow_html=True,
         )
     with c2:
         st.markdown(
-            metric_card_html("TOP RERANK SCORE", f"{top_score:.2f}", top_name, sub_up=True),
+            metric_card_html(
+                "TOP RERANK SCORE",
+                f"{top_score:.2f}",
+                top_name,
+                sub_up=True,
+                container_style="border-top:3px solid #10B981 !important;",
+            ),
             unsafe_allow_html=True,
         )
     with c3:
         st.markdown(
-            metric_card_html("AVG SENTIMENT", f"{avg_sentiment:+.2f}", sentiment_sub, sub_up=True),
+            metric_card_html(
+                "AVG SENTIMENT",
+                f"{avg_sentiment:+.2f}",
+                sentiment_sub,
+                sub_up=True,
+                container_style="border-top:3px solid #10B981 !important;",
+            ),
             unsafe_allow_html=True,
         )
     with c4:
         st.markdown(
-            metric_card_html("LATENCY", latency_s, "end-to-end", sub_up=False),
+            metric_card_html(
+                "LATENCY",
+                latency_s,
+                "end-to-end",
+                sub_up=False,
+                container_style="border-top:3px solid #C7C7CC !important;",
+            ),
             unsafe_allow_html=True,
         )
 
@@ -677,7 +772,8 @@ def _ranked_subreddits_card_html(subreddits: Sequence[Mapping[str, Any]]) -> str
 
     return (
         '<div class="cp-card cp-card-fill-col">'
-        '<div class="cp-card-head">'
+        '<div style="display:flex;align-items:baseline;justify-content:space-between;'
+        'padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,0.06);margin-bottom:4px">'
         '<span class="cp-card-title">Recommended communities</span>'
         '<span class="cp-card-subtitle">top 10 by rerank</span>'
         "</div>"
@@ -705,7 +801,8 @@ def _sentiment_card_html(sentiment_scores: Mapping[str, float]) -> str:
 
     return (
         '<div class="cp-card">'
-        '<div class="cp-sent-head">'
+        '<div style="display:flex;align-items:center;justify-content:space-between;'
+        'padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,0.06);margin-bottom:8px">'
         '<span class="cp-card-title">Community sentiment</span>'
         f"{badge}"
         "</div>"
@@ -752,7 +849,9 @@ def _strategy_report_card_html(report: str) -> str:
     """Build strategy report card HTML."""
     return (
         '<div class="cp-card">'
+        '<div style="padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,0.06);margin-bottom:12px">'
         '<span class="cp-card-title">Strategy report</span>'
+        "</div>"
         f'<div class="cp-report">{_render_report_html(report)}</div>'
         "</div>"
     )
@@ -781,7 +880,7 @@ def render_results_grid(data: Mapping[str, Any]) -> None:
 
 
 def main() -> None:
-    st.set_page_config(page_title="CreatorPal", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(page_title="CreatorPal", page_icon="🎯", layout="wide", initial_sidebar_state="expanded")
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
     if "last_result" not in st.session_state:
@@ -793,35 +892,43 @@ def main() -> None:
     pipeline = get_pipeline(force_mock=force_mock)
     using_mock = isinstance(pipeline, MockPipeline)
 
-    render_sidebar()
-    render_header()
+    data: Mapping[str, Any] | None = st.session_state.get("last_result")
+    error_message = st.session_state.get("last_error")
 
-    channel_or_query, user_query, submitted = render_input_form()
+    if data is None:
+        st.markdown('<style>[data-testid="stSidebar"]{display:none !important;}</style>', unsafe_allow_html=True)
+        if error_message:
+            st.markdown(error_card_html(error_message), unsafe_allow_html=True)
 
-    if submitted:
-        query = channel_or_query.strip()
-        goal = user_query.strip() or None
-        if not query:
-            st.warning("Please enter a YouTube channel URL or topic keyword.")
-        else:
+        channel_or_query, user_query, submitted = render_idle_hero()
+        if submitted:
+            query = channel_or_query.strip()
+            if not query:
+                st.warning("Please enter a YouTube channel URL or topic keyword.")
+                return
             try:
                 with st.spinner("Analyzing..."):
-                    raw = pipeline.run(channel_or_query=query, user_query=goal)
+                    raw = pipeline.run(channel_or_query=query, user_query=user_query)
                 st.session_state["last_result"] = adapt(raw)
                 st.session_state["last_error"] = None
+                st.rerun()
             except Exception as exc:
                 st.session_state["last_error"] = str(exc)
+                st.rerun()
+        if using_mock:
+            st.caption("Mock pipeline active — CREATORPAL_USE_MOCK_PIPELINE=1")
+        return
 
+    render_sidebar()
+    render_page_header()
+    if st.button("← New query", key="reset"):
+        st.session_state["last_result"] = None
+        st.session_state["last_error"] = None
+        st.rerun()
     if using_mock:
         st.caption("Mock pipeline active — CREATORPAL_USE_MOCK_PIPELINE=1")
-
-    error_message = st.session_state.get("last_error")
     if error_message:
         st.markdown(error_card_html(error_message), unsafe_allow_html=True)
-
-    data: Mapping[str, Any] | None = st.session_state.get("last_result")
-    if not data:
-        return
 
     st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
     render_metrics(data)
