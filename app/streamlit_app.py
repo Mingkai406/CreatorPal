@@ -321,8 +321,12 @@ GLOBAL_CSS = f"""<style>
 .cp-open-link {{
     font-size: 14px;
     color: {COLORS["text_link"]};
-    text-decoration: none;
+    text-decoration: none !important;
     flex-shrink: 0;
+}}
+
+.cp-open-link:hover {{
+    opacity: 0.75;
 }}
 
 .cp-sent-head {{
