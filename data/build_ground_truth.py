@@ -13,7 +13,7 @@ def extract_youtube_links(text: str) -> list[str]:
     raise NotImplementedError("Implement YouTube URL extraction from Reddit text.")
 
 
-def build_ground_truth_pairs(posts_path: Path, output_path: Path, min_score: int = 10) -> pd.DataFrame:
+def build_ground_truth_pairs(posts_path: Path, output_path: Path, min_score: int = 2) -> pd.DataFrame:
     """Build labeled YouTube-subreddit pairs from Reddit posts with score filtering."""
     raise NotImplementedError("Implement ground-truth pair extraction.")
 
