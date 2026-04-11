@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import time
+import os
 from collections.abc import Mapping, Sequence
-from datetime import datetime, timezone
 from html import escape
 from typing import Any
 
 import streamlit as st
 
-from src.pipeline import build_pipeline
 from app.helpers.adapter import adapt
 from app.helpers.components import (
     error_card_html,
@@ -18,6 +16,8 @@ from app.helpers.components import (
     sentiment_bar_html,
     subreddit_row_html,
 )
+from app.helpers.mock_pipeline import MockPipeline
+from src.pipeline import build_pipeline
 
 COLORS: dict[str, str] = {
     "bg_page": "#EEF2F7",
@@ -254,82 +254,24 @@ body, .stMarkdown, .stText {{
 </style>"""
 
 
-class _MockPipeline:
-    """Local fallback pipeline for frontend development before backend integration."""
-
-    def run(self, channel_or_query: str, user_query: str | None = None) -> dict[str, Any]:
-        time.sleep(0.7)
-        resolved_mode = "channel" if "youtube.com" in channel_or_query or "@" in channel_or_query else "query"
-        return {
-            "input": {
-                "channel_or_query": channel_or_query,
-                "user_query": user_query,
-                "resolved_mode": resolved_mode,
-                "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-            },
-            "ranked_subreddits": [
-                {
-                    "rank": 1,
-                    "subreddit": "hardware",
-                    "url": "https://www.reddit.com/r/hardware/",
-                    "retrieval_score": 0.91,
-                    "rerank_score": 0.94,
-                    "reason": "Strong overlap with benchmark-focused creator content.",
-                    "evidence": [],
-                    "sentiment_score": 0.72,
-                },
-                {
-                    "rank": 2,
-                    "subreddit": "r/buildapc",
-                    "url": "",
-                    "retrieval_score": 0.86,
-                    "rerank_score": 0.89,
-                    "reason": "Community often cites deep-dive review videos in discussions.",
-                    "evidence": [],
-                    "sentiment_score": 0.63,
-                },
-                {
-                    "rank": 3,
-                    "subreddit": "gadgets",
-                    "url": "https://www.reddit.com/r/gadgets/",
-                    "retrieval_score": 0.77,
-                    "rerank_score": 0.80,
-                    "reason": "Broad consumer tech audience with high post engagement.",
-                    "evidence": [],
-                    "sentiment_score": 0.44,
-                },
-            ],
-            "strategy_report": (
-                "Audience fit is strongest in technical hardware communities.\n"
-                "Start with r/hardware and r/buildapc, then expand to broader tech forums."
-            ),
-            "pal_results": {
-                "summary": "Top recommendations indicate stable engagement potential.",
-                "metrics": {"avg_rerank_score": 0.88},
-            },
-            "sentiment_scores": {
-                "r/hardware": 0.72,
-                "r/buildapc": 0.63,
-                "r/gadgets": 0.44,
-            },
-            "meta": {
-                "retrieval_top_k": 50,
-                "rerank_top_k": 10,
-                "latency_ms": 700,
-            },
-        }
+def _env_flag_enabled(name: str) -> bool:
+    value = os.getenv(name, "").strip().lower()
+    return value in {"1", "true", "yes", "on", "y"}
 
 
 @st.cache_resource
-def get_pipeline() -> Any:
-    """Build backend pipeline; fallback to mock while backend is not implemented."""
+def get_pipeline(force_mock: bool = False) -> Any:
+    """Build backend pipeline with mock fallback for offline verification."""
+    if force_mock:
+        return MockPipeline()
+
     try:
         pipeline = build_pipeline()
         if not hasattr(pipeline, "run"):
             raise TypeError("build_pipeline() returned an object without run().")
         return pipeline
     except Exception:
-        return _MockPipeline()
+        return MockPipeline()
 
 
 def _as_float(value: Any) -> float:
@@ -432,6 +374,10 @@ def main() -> None:
     if "last_error" not in st.session_state:
         st.session_state["last_error"] = None
 
+    force_mock = _env_flag_enabled("CREATORPAL_USE_MOCK_PIPELINE")
+    pipeline = get_pipeline(force_mock=force_mock)
+    using_mock = isinstance(pipeline, MockPipeline)
+
     with st.sidebar:
         st.markdown("**CreatorPal**")
         st.caption("YouTube -> Reddit audience intelligence")
@@ -462,7 +408,6 @@ def main() -> None:
         if not query:
             st.warning("Please enter a YouTube channel URL or topic keyword.")
         else:
-            pipeline = get_pipeline()
             try:
                 with st.spinner("Analyzing..."):
                     raw = pipeline.run(channel_or_query=query, user_query=goal)
@@ -471,9 +416,11 @@ def main() -> None:
             except Exception as exc:
                 st.session_state["last_error"] = str(exc)
 
-    pipeline = get_pipeline()
-    if isinstance(pipeline, _MockPipeline):
-        st.info("Backend pipeline is not ready. Showing frontend behavior with mock pipeline data.")
+    if using_mock:
+        if force_mock:
+            st.info("Using mock pipeline for offline verification (CREATORPAL_USE_MOCK_PIPELINE=1).")
+        else:
+            st.info("Backend pipeline is not ready. Falling back to mock pipeline for offline verification.")
 
     error_message = st.session_state.get("last_error")
     if error_message:
