@@ -624,8 +624,8 @@ def render_ranked_subreddits(subreddits: Sequence[Mapping[str, Any]]) -> None:
     st.markdown(
         '<div class="cp-card">'
         '<div class="cp-card-head">'
-        '<span class="cp-card-title">Recommended communities</span>'
-        '<span class="cp-card-subtitle">top 10 by rerank</span>'
+        '<span style="font-size:15px;font-weight:600;color:#0F172A">Recommended communities</span>'
+        '<span style="font-size:12px;color:#94A3B8">top 10 by rerank</span>'
         "</div>"
         f"{rows}"
         "</div>",
@@ -648,7 +648,7 @@ def render_sentiment(sentiment_scores: Mapping[str, float]) -> None:
     st.markdown(
         '<div class="cp-card">'
         '<div class="cp-sent-head">'
-        '<span class="cp-card-title">Community sentiment</span>'
+        '<span style="font-size:15px;font-weight:600;color:#0F172A">Community sentiment</span>'
         f"{badge}"
         "</div>"
         f"{rows}"
@@ -690,7 +690,7 @@ def render_strategy_report(report: str) -> None:
     """Render strategy report card."""
     st.markdown(
         '<div class="cp-card">'
-        '<span class="cp-card-title">Strategy report</span>'
+        '<span style="font-size:15px;font-weight:600;color:#0F172A">Strategy report</span>'
         f'<div class="cp-report">{_render_report_html(report)}</div>'
         "</div>",
         unsafe_allow_html=True,
