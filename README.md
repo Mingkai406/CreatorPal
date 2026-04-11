@@ -1,11 +1,10 @@
 # CreatorPal: YouTube-to-Reddit Audience Intelligence
 
-> A retrieval-augmented system for matching YouTube creators to relevant Reddit communities and generating actionable audience strategy reports.
+> A RAG-centric system that matches YouTube creators with high-fit Reddit communities and generates actionable audience strategy reports.
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit)](https://streamlit.io/)
 [![FAISS](https://img.shields.io/badge/FAISS-Vector%20Search-0467DF)](https://github.com/facebookresearch/faiss)
-[![SentenceTransformers](https://img.shields.io/badge/SentenceTransformers-Embeddings-FF9900)](https://www.sbert.net/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
@@ -15,10 +14,9 @@
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Repository Structure](#repository-structure)
-- [Pipeline Design](#pipeline-design)
+- [Latest Execution Plan (2026-04-10)](#latest-execution-plan-2026-04-10)
+- [Team Ownership](#team-ownership)
 - [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [Data and Evaluation](#data-and-evaluation)
 - [Deployment](#deployment)
 - [Current Implementation Status](#current-implementation-status)
 - [Development Workflow](#development-workflow)
@@ -28,67 +26,30 @@
 
 ## Overview
 
-CreatorPal helps creators answer one practical question: **which Reddit communities best match my channel and how should I engage them?**
+CreatorPal solves one practical question for creators: **Which Reddit communities should I target, and what engagement strategy should I use?**
 
-The system combines retrieval, reranking, analysis, and generation:
+Core workflow:
 
-- Ingest creator/channel context from YouTube.
-- Retrieve and rerank subreddit candidates from a FAISS index.
-- Run PAL-style analytics and sentiment scoring for evidence grounding.
-- Generate a final strategy report with ranked subreddit links.
-
-### What it handles
-
-| Concern | Mechanism |
-|---|---|
-| Channel understanding | YouTube metadata + comments ingestion |
-| Theme extraction | LLM-based topic keyword extraction |
-| Retrieval quality | HyDE query rewriting + FAISS dense retrieval |
-| Candidate precision | Cross-encoder reranking |
-| Quantitative analysis | PAL execution in RestrictedPython sandbox |
-| Community sentiment | RoBERTa sentiment model on comment text |
-| User-facing output | Streamlit app with ranked links + strategy report |
+1. YouTube channel ingest (metadata, videos, comments)
+2. LLM theme extraction + HyDE query rewriting
+3. FAISS retrieval (top-50) + cross-encoder reranking (top-10)
+4. PAL analytics + subreddit sentiment scoring
+5. Final strategy report generation and Streamlit rendering
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────┐
-│ Input: YouTube URL / Query  │
-└──────────────┬──────────────┘
-               │
-       ┌───────▼────────┐
-       │ YouTube Ingest │
-       └───────┬────────┘
-               │
-       ┌───────▼────────┐
-       │ Theme Extract  │
-       └───────┬────────┘
-               │
-       ┌───────▼────────┐
-       │ HyDE Rewriter  │
-       └───────┬────────┘
-               │
-       ┌───────▼────────┐
-       │ FAISS Retrieve │  top-50
-       └───────┬────────┘
-               │
-       ┌───────▼────────┐
-       │ Cross Reranker │  top-10
-       └───────┬────────┘
-               │
-   ┌───────────▼───────────┐
-   │ PAL + Sentiment Layer │
-   └───────────┬───────────┘
-               │
-       ┌───────▼────────┐
-       │ Report Gen LLM │
-       └───────┬────────┘
-               │
-     ┌─────────▼─────────┐
-     │ Streamlit Frontend │
-     └────────────────────┘
+Input (YouTube URL / Query)
+  -> YouTube Ingest
+  -> Theme Extractor
+  -> HyDE Rewriter
+  -> FAISS Retriever (top-50)
+  -> CrossEncoder Reranker (top-10)
+  -> PAL + Sentiment
+  -> Augmented Generator
+  -> Streamlit UI (ranked subreddit links + report)
 ```
 
 ---
@@ -103,7 +64,9 @@ creatorpal/
 │   ├── download_reddit.py
 │   ├── preprocess_corpus.py
 │   ├── build_faiss_index.py
-│   └── build_ground_truth.py
+│   ├── build_ground_truth.py
+│   ├── read_zst.py
+│   └── read_zst_commands.md
 ├── eval/
 │   ├── retrieval_eval.py
 │   └── generation_eval.py
@@ -118,22 +81,59 @@ creatorpal/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── docker-startup
-├── requirements.txt
-└── .env.example
+├── project-plan.md
+└── requirements.txt
 ```
 
 ---
 
-## Pipeline Design
+## Latest Execution Plan (2026-04-10)
 
-1. **Ingest**: collect channel metadata, video descriptions, and comments.
-2. **Extract**: infer creator themes from channel context.
-3. **Rewrite**: generate HyDE pseudo-document for retrieval.
-4. **Retrieve**: dense search against subreddit profile index (top-50).
-5. **Rerank**: cross-encoder scoring to top-10 candidates.
-6. **Analyze**: PAL analytics + subreddit sentiment scoring.
-7. **Generate**: synthesize final audience strategy report.
-8. **Render**: display ranked subreddit links and report in Streamlit.
+### Step 1: Rebuild repository skeleton
+
+- Replace previous ReAct/Gemini structure with the new RAG architecture.
+- Team syncs to latest `main` and verifies skeleton signatures.
+
+### Step 2: Data pipeline execution (parallel)
+
+- Dataset source:
+  - File: `RS_2019-04.zst`
+  - URL: https://zenodo.org/records/3608135
+- Person 1 (`download_reddit.py`): download Pushshift dataset (15.53GB) to GCP.
+- Current local strategy: first run with a small sample (first 1000 lines) for fast validation.
+- Person 2 (`preprocess_corpus.py`): build subreddit profiles (sidebar + rules + top-50 posts), filter subscriber count < 1000.
+- Person 3 (`build_faiss_index.py`): 64-token window / 16-token overlap chunking, encode with `all-mpnet-base-v2`, build FAISS Flat index.
+- Person 4 (`build_ground_truth.py`): extract `(YouTube channel, subreddit)` from posts containing `youtube.com` or `youtu.be`, filter `score >= 2`.
+
+### Latest local data strategy
+
+1. Build `reddit_slim.ndjson` locally by streaming `RS_2019-04.zst` and keeping only selected fields.
+2. Run preprocessing and ground-truth generation from `reddit_slim.ndjson` in parallel.
+3. Store outputs in `data/processed/`:
+   - `data/processed/reddit_slim.ndjson`
+   - `data/processed/subreddit_profiles.json`
+   - `data/processed/ground_truth_pairs.csv`
+
+If `reddit_slim.ndjson` is too large for GitHub (>100MB), use Git LFS or store it on GCP/Google Drive and commit only derived outputs.
+
+### Step 3: Validation targets
+
+- FAISS index generated (target scale: about 1M vectors)
+- `subreddit_profiles.json` generated
+- `ground_truth_pairs.csv` generated
+
+---
+
+## Team Ownership
+
+| Owner | Scope | Responsibilities | Deliverable |
+|---|---|---|---|
+| Person A (Gaoyuan) | `data/`, `src/config.py`, `src/pipeline.py` | Data pipeline maintenance, config centralization, end-to-end integration | Full call chain from input to final report |
+| Person B (Runxin) | `src/ingest/`, `src/retrieval/` | YouTube ingest, theme extraction, HyDE, FAISS retrieval, reranking | Top-10 subreddit ranking with metadata |
+| Person C (Mingkai) | `src/pal/`, `src/sentiment/`, `eval/` | PAL executor, sentiment scoring, retrieval and generation evaluation | Independent PAL/Sentiment runs + metric scripts |
+| Person D (Ziqi) | `app/`, Docker files, docs | Streamlit UI, deploy scripts, env template, README maintenance | Demo-ready UI with clickable Reddit links |
+
+Karl's demo requirement is mandatory: every recommended subreddit in UI/report must include a clickable full Reddit URL.
 
 ---
 
@@ -142,98 +142,60 @@ creatorpal/
 ### Prerequisites
 
 - Python 3.11+
-- pip
-- Docker and Docker Compose (for containerized deployment)
-- YouTube Data API v3 key
-- vLLM-compatible OpenAI endpoint
+- Docker + Docker Compose
+- YouTube Data API key
+- vLLM OpenAI-compatible endpoint
 
-### Local Setup
+### Local setup
 
 ```bash
-git clone <your-repo-url>
-cd CreatorPal
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Update `.env` with your credentials:
+`.env`:
 
 ```env
-YOUTUBE_API_KEY=your_key
+YOUTUBE_API_KEY=your_youtube_api_key
 VLLM_ENDPOINT=http://localhost:8000/v1
 ```
-
-### Run Locally
-
-```bash
-streamlit run app/streamlit_app.py
-```
-
----
-
-## Configuration
-
-Environment variables currently used:
-
-| Variable | Description |
-|---|---|
-| `YOUTUBE_API_KEY` | API key for YouTube Data API v3 |
-| `VLLM_ENDPOINT` | OpenAI-compatible vLLM endpoint |
-
-The configuration model and defaults are centralized in `src/config.py`.
-
----
-
-## Data and Evaluation
-
-### Data Pipeline Scripts
-
-- `data/download_reddit.py`: download Reddit corpus (Pushshift mirror).
-- `data/preprocess_corpus.py`: build subreddit profiles and text chunks.
-- `data/build_faiss_index.py`: encode chunks and build FAISS index.
-- `data/build_ground_truth.py`: create YouTube-channel-to-subreddit pairs.
-
-### Evaluation Scripts
-
-- `eval/retrieval_eval.py`: retrieval metrics such as Recall@K and MRR.
-- `eval/generation_eval.py`: human-rating based generation evaluation scaffold.
 
 ---
 
 ## Deployment
 
-### Docker Deployment
-
 ```bash
 ./docker-startup deploy
 ```
 
-This starts:
+Services:
 
-- `vllm`: Llama 3.1 8B OpenAI-compatible inference server.
-- `app`: Streamlit frontend service.
+- `vllm`: Llama 3.1 8B OpenAI-compatible inference endpoint
+- `app`: Streamlit frontend
 
 ---
 
 ## Current Implementation Status
 
-This repository is currently in **scaffold phase**:
+The project is still in scaffold-to-implementation transition:
 
-- Project structure, interfaces, and dependency wiring are defined.
-- Most core functions intentionally raise `NotImplementedError`.
-- The current branch is suitable for parallel development by module owners.
-
-For execution readiness, complete implementation is required in `src/`, `data/`, and `eval/`.
+- Interfaces and module boundaries are defined.
+- A large portion of core functions still use `NotImplementedError`.
+- Team is implementing by module ownership and integrating through `src/pipeline.py`.
 
 ---
 
 ## Development Workflow
 
-- Use feature branches per module domain (`data`, `retrieval`, `pal-sentiment`, `frontend-deploy`).
-- Open PRs to `main` after module-level tests pass.
-- Integrate through `src/pipeline.py` and run end-to-end verification.
+- Branches:
+  - `feature/data-pipeline`
+  - `feature/retrieval`
+  - `feature/pal-sentiment`
+  - `feature/frontend-deploy`
+- Integration via PR to `main`.
+- Final end-to-end assembly in `src/pipeline.py`.
 
 ---
 
