@@ -56,8 +56,13 @@ GLOBAL_CSS = f"""<style>
     width: 60px !important;
 }}
 
-[data-testid="stSidebar"] > div {{
-    padding: 8px 0 !important;
+section[data-testid="stSidebar"] {{
+    width: 60px !important;
+}}
+
+[data-testid="stSidebar"] > div:first-child {{
+    width: 60px !important;
+    padding: 10px 6px !important;
 }}
 
 [data-testid="stSidebarNav"] {{
@@ -75,6 +80,10 @@ GLOBAL_CSS = f"""<style>
     border-radius: 12px !important;
     padding: 16px 18px 10px !important;
     margin-bottom: 0 !important;
+}}
+
+[data-testid="stForm"] + div {{
+    margin-top: 0 !important;
 }}
 
 [data-testid="stTextInput"] input {{
@@ -125,6 +134,10 @@ GLOBAL_CSS = f"""<style>
     line-height: 1.2 !important;
 }}
 
+[data-testid="stCaptionContainer"] + div {{
+    margin-top: 0 !important;
+}}
+
 .cp-sidebar-shell {{
     height: calc(100vh - 24px);
     display: flex;
@@ -157,15 +170,15 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-page-title {{
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
     color: {COLORS["text_primary"]};
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     margin: 0 0 2px;
 }}
 
 .cp-page-subtitle {{
-    font-size: 13px;
+    font-size: 14px;
     color: {COLORS["text_muted"]};
     margin: 0;
 }}
@@ -216,13 +229,13 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-card-title {{
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     color: {COLORS["text_primary"]};
 }}
 
 .cp-card-subtitle {{
-    font-size: 12px;
+    font-size: 13px;
     color: {COLORS["text_muted"]};
 }}
 
@@ -234,7 +247,7 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-metric-label {{
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: {COLORS["text_muted"]};
     text-transform: uppercase;
@@ -243,7 +256,7 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-metric-value {{
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
     color: {COLORS["text_primary"]};
     letter-spacing: -0.03em;
@@ -251,13 +264,13 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-metric-sub-up {{
-    font-size: 12px;
+    font-size: 13px;
     color: {COLORS["green_500"]};
     margin-top: 5px;
 }}
 
 .cp-metric-sub-neutral {{
-    font-size: 12px;
+    font-size: 13px;
     color: {COLORS["text_muted"]};
     margin-top: 5px;
 }}
@@ -278,7 +291,7 @@ GLOBAL_CSS = f"""<style>
     width: 20px;
     flex-shrink: 0;
     text-align: right;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     color: {COLORS["rank_light"]};
 }}
@@ -289,7 +302,7 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-sub-name {{
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     color: {COLORS["text_link"]};
     text-decoration: none !important;
@@ -300,7 +313,7 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-sub-reason {{
-    font-size: 12px;
+    font-size: 13px;
     color: {COLORS["text_muted"]};
     white-space: nowrap;
     overflow: hidden;
@@ -314,7 +327,7 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-score-num {{
-    font-size: 12px;
+    font-size: 13px;
     color: #64748B;
     margin-bottom: 3px;
 }}
@@ -340,6 +353,7 @@ GLOBAL_CSS = f"""<style>
 
 .cp-open-link:hover {{
     opacity: 0.75;
+    text-decoration: none !important;
 }}
 
 .cp-sent-head {{
@@ -359,7 +373,7 @@ GLOBAL_CSS = f"""<style>
 .cp-sent-label {{
     width: 130px;
     flex-shrink: 0;
-    font-size: 12px;
+    font-size: 13px;
     color: {COLORS["text_secondary"]};
     overflow: hidden;
     text-overflow: ellipsis;
@@ -368,24 +382,24 @@ GLOBAL_CSS = f"""<style>
 
 .cp-sent-track {{
     flex: 1;
-    height: 5px;
+    height: 5px !important;
     background: #EEF2F7;
     border-radius: 3px;
     overflow: hidden;
 }}
 
 .cp-sent-fill-green {{
-    height: 100%;
+    height: 100% !important;
     background: #10B981;
 }}
 
 .cp-sent-fill-amber {{
-    height: 100%;
+    height: 100% !important;
     background: #F59E0B;
 }}
 
 .cp-sent-fill-red {{
-    height: 100%;
+    height: 100% !important;
     background: #F87171;
 }}
 
@@ -393,19 +407,19 @@ GLOBAL_CSS = f"""<style>
     width: 38px;
     flex-shrink: 0;
     text-align: right;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
     color: {COLORS["text_secondary"]};
 }}
 
 .cp-report {{
-    font-size: 13px;
+    font-size: 14px;
     color: {COLORS["text_secondary"]};
     line-height: 1.75;
 }}
 
 .cp-report h2 {{
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: {COLORS["text_primary"]};
     margin: 14px 0 6px;
@@ -530,13 +544,32 @@ def render_sidebar() -> None:
 
 def render_header() -> None:
     st.markdown(
-        '<div class="cp-page-header">'
-        '<div>'
-        '<p class="cp-page-title">CreatorPal</p>'
-        '<p class="cp-page-subtitle">YouTube \u2192 Reddit audience intelligence</p>'
-        "</div>"
-        '<span class="cp-badge cp-badge-blue">Beta</span>'
-        "</div>",
+        """
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+  <div style="
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #3B82F6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  ">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+         stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="23 7 16 12 23 17 23 7"/>
+      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+    </svg>
+  </div>
+  <span style="font-size:24px;font-weight:700;color:#0F172A;letter-spacing:-0.025em;line-height:1">
+    CreatorPal
+  </span>
+</div>
+<p style="font-size:14px;color:#94A3B8;margin:0 0 16px 42px">
+  YouTube → Reddit audience intelligence
+</p>
+""",
         unsafe_allow_html=True,
     )
 
@@ -624,8 +657,8 @@ def render_ranked_subreddits(subreddits: Sequence[Mapping[str, Any]]) -> None:
     st.markdown(
         '<div class="cp-card">'
         '<div class="cp-card-head">'
-        '<span style="font-size:15px;font-weight:600;color:#0F172A">Recommended communities</span>'
-        '<span style="font-size:12px;color:#94A3B8">top 10 by rerank</span>'
+        '<span class="cp-card-title">Recommended communities</span>'
+        '<span class="cp-card-subtitle">top 10 by rerank</span>'
         "</div>"
         f"{rows}"
         "</div>",
@@ -648,7 +681,7 @@ def render_sentiment(sentiment_scores: Mapping[str, float]) -> None:
     st.markdown(
         '<div class="cp-card">'
         '<div class="cp-sent-head">'
-        '<span style="font-size:15px;font-weight:600;color:#0F172A">Community sentiment</span>'
+        '<span class="cp-card-title">Community sentiment</span>'
         f"{badge}"
         "</div>"
         f"{rows}"
@@ -690,7 +723,7 @@ def render_strategy_report(report: str) -> None:
     """Render strategy report card."""
     st.markdown(
         '<div class="cp-card">'
-        '<span style="font-size:15px;font-weight:600;color:#0F172A">Strategy report</span>'
+        '<span class="cp-card-title">Strategy report</span>'
         f'<div class="cp-report">{_render_report_html(report)}</div>'
         "</div>",
         unsafe_allow_html=True,
