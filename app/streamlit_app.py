@@ -93,6 +93,15 @@ section[data-testid="stSidebar"] {{
     border-radius: 8px !important;
     color: #1C1C1E !important;
     font-size: 13px !important;
+    padding: 9px 14px !important;
+}}
+
+[data-testid="stTextInput"] label p {{
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: #6E6E73 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: uppercase !important;
 }}
 
 [data-testid="stTextInput"] input::placeholder {{
@@ -106,15 +115,14 @@ section[data-testid="stSidebar"] {{
 }}
 
 [data-testid="stFormSubmitButton"] button {{
-    background: {COLORS["blue_500"]} !important;
+    background-color: #3B82F6 !important;
     color: #FFFFFF !important;
     border: none !important;
     border-radius: 8px !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     font-weight: 500 !important;
-    padding: 11px 0 !important;
+    padding: 9px 0 !important;
     width: 100% !important;
-    margin-top: 4px !important;
 }}
 
 [data-testid="stFormSubmitButton"] button:hover {{
@@ -638,29 +646,40 @@ def render_page_header() -> None:
 
 def render_idle_hero() -> tuple[str, str | None, bool]:
     """Render centered idle hero and return submitted query payload."""
-    st.markdown("<div style='height:10vh'></div>", unsafe_allow_html=True)
-    _, col, _ = st.columns([1, 2.2, 1])
+    st.markdown("<div style='height:16vh'></div>", unsafe_allow_html=True)
+    _, col, _ = st.columns([0.6, 2.8, 0.6])
+    st.markdown(
+        """
+<style>
+[data-testid="stForm"] {
+    max-width: 680px !important;
+    margin: 0 auto !important;
+}
+</style>
+""",
+        unsafe_allow_html=True,
+    )
 
     with col:
         st.markdown(
             """
-<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:28px">
+<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:32px">
     <div style="
-        width:52px;height:52px;border-radius:14px;
+        width:72px;height:72px;border-radius:20px;
         background:#3B82F6;
         display:flex;align-items:center;justify-content:center;
-        margin-bottom:14px;
+        margin-bottom:18px;
     ">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-             stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+             stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="23 7 16 12 23 17 23 7"/>
             <rect x="1" y="5" width="15" height="14" rx="2"/>
         </svg>
     </div>
-    <div style="font-size:28px;font-weight:700;color:#1C1C1E;letter-spacing:-.03em;margin-bottom:8px">
+    <div style="font-size:36px;font-weight:700;color:#1C1C1E;letter-spacing:-.03em;margin-bottom:10px">
         CreatorPal
     </div>
-    <div style="font-size:14px;color:#6E6E73;text-align:center;line-height:1.6">
+    <div style="font-size:16px;color:#6E6E73;text-align:center;line-height:1.6;max-width:420px">
         Find the right Reddit communities for your YouTube channel
     </div>
 </div>
@@ -669,7 +688,7 @@ def render_idle_hero() -> tuple[str, str | None, bool]:
         )
 
         with st.form("query_form", clear_on_submit=False):
-            col_a, col_b = st.columns([1, 1], gap="small")
+            col_a, col_b, col_btn = st.columns([5, 4, 2], gap="small")
             with col_a:
                 channel_or_query = st.text_input(
                     "Channel or topic",
@@ -680,7 +699,9 @@ def render_idle_hero() -> tuple[str, str | None, bool]:
                     "Your goal (optional)",
                     placeholder="e.g. grow subscribers in EU",
                 )
-            submitted = st.form_submit_button("Analyze →", use_container_width=True)
+            with col_btn:
+                st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+                submitted = st.form_submit_button("Analyze →", use_container_width=True)
 
         st.markdown(
             """
