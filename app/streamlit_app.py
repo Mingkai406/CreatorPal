@@ -408,7 +408,7 @@ GLOBAL_CSS = f"""<style>
     font-size: 13px;
     font-weight: 600;
     color: {COLORS["text_primary"]};
-    margin: 12px 0 4px;
+    margin: 14px 0 6px;
 }}
 
 .cp-report h2:first-child {{
@@ -416,7 +416,7 @@ GLOBAL_CSS = f"""<style>
 }}
 
 .cp-report p {{
-    margin: 0 0 8px;
+    margin: 0 0 10px;
 }}
 
 .cp-error {{
