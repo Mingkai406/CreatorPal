@@ -1,4 +1,4 @@
-"""Streamlit UI for CreatorPal subreddit matching and strategy report display."""
+"""CreatorPal Streamlit frontend aligned to strict dashboard design."""
 
 from __future__ import annotations
 
@@ -32,155 +32,323 @@ COLORS: dict[str, str] = {
     "text_muted": "#94A3B8",
     "text_link": "#3B82F6",
     "blue_500": "#3B82F6",
+    "blue_hover": "#2563EB",
     "green_500": "#10B981",
     "amber_400": "#F59E0B",
     "red_400": "#F87171",
+    "rank_light": "#CBD5E1",
 }
 
 GLOBAL_CSS = f"""<style>
-[data-testid="stAppViewContainer"] {{
-    background: {COLORS["bg_page"]};
+#MainMenu, footer, header, [data-testid="stToolbar"], [data-testid="collapsedControl"] {{
+    display: none !important;
 }}
+
+.stApp {{
+    background: {COLORS["bg_page"]} !important;
+}}
+
 [data-testid="stSidebar"] {{
-    background: {COLORS["bg_card"]};
-    border-right: 1px solid {COLORS["border_default"]};
+    background: {COLORS["bg_card"]} !important;
+    border-right: 1px solid {COLORS["border_default"]} !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
+    width: 56px !important;
 }}
-[data-testid="block-container"] {{
-    padding: 1.5rem 2rem;
-    max-width: 1100px;
+
+[data-testid="stSidebar"] > div {{
+    padding: 8px 0 !important;
 }}
-footer, #MainMenu {{
-    display: none;
+
+[data-testid="stSidebarNav"] {{
+    display: none !important;
 }}
-body, .stMarkdown, .stText {{
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+.block-container {{
+    padding: 2rem 2.5rem 2.25rem !important;
+    max-width: 1200px !important;
+}}
+
+[data-testid="stForm"] {{
+    background: {COLORS["bg_card"]} !important;
+    border: 1px solid {COLORS["border_default"]} !important;
+    border-radius: 12px !important;
+    padding: 16px 18px 10px !important;
+}}
+
+[data-testid="stTextInput"] input {{
+    background: {COLORS["bg_input"]} !important;
+    border: 1px solid {COLORS["border_default"]} !important;
+    border-radius: 8px !important;
+    color: {COLORS["text_primary"]} !important;
+    font-size: 13px !important;
+}}
+
+[data-testid="stTextInput"] input::placeholder {{
+    color: #CBD5E1 !important;
+}}
+
+[data-testid="stTextInput"] input:focus {{
+    border-color: {COLORS["blue_500"]} !important;
+    box-shadow: none !important;
+}}
+
+[data-testid="stFormSubmitButton"] button {{
+    background: {COLORS["blue_500"]} !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    width: 100% !important;
+}}
+
+[data-testid="stFormSubmitButton"] button:hover {{
+    background: {COLORS["blue_hover"]} !important;
+    border: none !important;
+}}
+
+[data-testid="stFormSubmitButton"] button p {{
+    color: #FFFFFF !important;
+}}
+
+.cp-sidebar-shell {{
+    height: calc(100vh - 24px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}}
+
+.cp-sidebar-icons {{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}}
+
+.cp-sidebar-btn {{
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}}
+
+.cp-page-header {{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}}
+
+.cp-page-title {{
+    font-size: 20px;
+    font-weight: 700;
     color: {COLORS["text_primary"]};
+    letter-spacing: -0.02em;
+    margin: 0 0 2px;
 }}
+
+.cp-page-subtitle {{
+    font-size: 13px;
+    color: {COLORS["text_muted"]};
+    margin: 0;
+}}
+
+.cp-badge {{
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: 20px;
+}}
+
+.cp-badge-blue {{
+    background: {COLORS["bg_badge_blue"]};
+    color: {COLORS["blue_500"]};
+}}
+
+.cp-badge-green {{
+    background: {COLORS["bg_badge_green"]};
+    color: {COLORS["green_500"]};
+}}
+
+.cp-field-label {{
+    font-size: 11px;
+    font-weight: 500;
+    color: {COLORS["text_muted"]};
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+}}
+
+.cp-btn-spacer {{
+    height: 26px;
+}}
+
 .cp-card {{
     background: {COLORS["bg_card"]};
-    border-radius: 12px;
     border: 1px solid {COLORS["border_default"]};
-    padding: 14px 16px;
-    margin-bottom: 10px;
+    border-radius: 12px;
+    padding: 16px 18px;
 }}
+
+.cp-card-head {{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}}
+
 .cp-card-title {{
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     color: {COLORS["text_primary"]};
-    margin: 0 0 12px;
 }}
+
+.cp-card-subtitle {{
+    font-size: 12px;
+    color: {COLORS["text_muted"]};
+}}
+
 .cp-metric {{
     background: {COLORS["bg_card"]};
-    border-radius: 12px;
     border: 1px solid {COLORS["border_default"]};
-    padding: 12px 14px;
+    border-radius: 12px;
+    padding: 14px 16px;
 }}
+
 .cp-metric-label {{
     font-size: 11px;
     font-weight: 500;
     color: {COLORS["text_muted"]};
-    letter-spacing: 0.03em;
     text-transform: uppercase;
-    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
 }}
+
 .cp-metric-value {{
-    font-size: 22px;
+    font-size: 28px;
     font-weight: 700;
     color: {COLORS["text_primary"]};
     letter-spacing: -0.03em;
     line-height: 1;
 }}
+
 .cp-metric-sub-up {{
-    font-size: 11px;
+    font-size: 12px;
     color: {COLORS["green_500"]};
-    margin-top: 4px;
+    margin-top: 5px;
 }}
+
 .cp-metric-sub-neutral {{
-    font-size: 11px;
+    font-size: 12px;
     color: {COLORS["text_muted"]};
-    margin-top: 4px;
+    margin-top: 5px;
 }}
+
 .cp-sub-row {{
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 0;
+    gap: 12px;
+    padding: 10px 0;
     border-bottom: 0.5px solid {COLORS["border_subtle"]};
 }}
+
 .cp-sub-row:last-child {{
     border-bottom: none;
 }}
+
 .cp-rank {{
-    font-size: 13px;
-    font-weight: 700;
-    color: {COLORS["text_muted"]};
-    width: 18px;
-    text-align: right;
+    width: 20px;
     flex-shrink: 0;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 700;
+    color: {COLORS["rank_light"]};
 }}
+
 .cp-sub-info {{
     flex: 1;
     min-width: 0;
 }}
+
 .cp-sub-name {{
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: {COLORS["text_link"]};
     text-decoration: none;
 }}
+
 .cp-sub-name:hover {{
     text-decoration: underline;
 }}
+
 .cp-sub-reason {{
-    font-size: 11px;
+    font-size: 12px;
     color: {COLORS["text_muted"]};
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }}
+
 .cp-score-wrap {{
-    width: 56px;
+    width: 72px;
     flex-shrink: 0;
-}}
-.cp-score-label {{
-    font-size: 10px;
-    color: {COLORS["text_muted"]};
     text-align: right;
-    margin-bottom: 2px;
 }}
+
+.cp-score-num {{
+    font-size: 12px;
+    color: #64748B;
+    margin-bottom: 3px;
+}}
+
 .cp-score-track {{
     height: 4px;
     background: {COLORS["bg_page"]};
     border-radius: 2px;
     overflow: hidden;
 }}
+
 .cp-score-fill {{
     height: 100%;
     background: {COLORS["blue_500"]};
-    border-radius: 2px;
 }}
+
 .cp-open-link {{
-    font-size: 11px;
+    font-size: 14px;
     color: {COLORS["text_link"]};
     text-decoration: none;
     flex-shrink: 0;
-    padding-left: 8px;
 }}
+
+.cp-sent-head {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}}
+
 .cp-sent-row {{
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 10px;
+    padding: 5px 0;
 }}
+
 .cp-sent-label {{
-    font-size: 11px;
-    color: {COLORS["text_secondary"]};
-    width: 120px;
+    width: 130px;
     flex-shrink: 0;
+    font-size: 12px;
+    color: {COLORS["text_secondary"]};
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }}
+
 .cp-sent-track {{
     flex: 1;
     height: 5px;
@@ -188,68 +356,81 @@ body, .stMarkdown, .stText {{
     border-radius: 3px;
     overflow: hidden;
 }}
+
 .cp-sent-fill-green {{
     height: 100%;
     background: {COLORS["green_500"]};
-    border-radius: 3px;
 }}
+
 .cp-sent-fill-amber {{
     height: 100%;
     background: {COLORS["amber_400"]};
-    border-radius: 3px;
 }}
+
 .cp-sent-fill-red {{
     height: 100%;
     background: {COLORS["red_400"]};
-    border-radius: 3px;
 }}
+
 .cp-sent-val {{
-    font-size: 11px;
-    color: {COLORS["text_secondary"]};
-    width: 34px;
-    text-align: right;
+    width: 38px;
     flex-shrink: 0;
+    text-align: right;
+    font-size: 12px;
+    font-weight: 500;
+    color: {COLORS["text_secondary"]};
 }}
+
+.cp-report {{
+    font-size: 13px;
+    color: {COLORS["text_secondary"]};
+    line-height: 1.75;
+}}
+
+.cp-report h2 {{
+    font-size: 13px;
+    font-weight: 600;
+    color: {COLORS["text_primary"]};
+    margin: 12px 0 4px;
+}}
+
+.cp-report h2:first-child {{
+    margin-top: 0;
+}}
+
+.cp-report p {{
+    margin: 0 0 8px;
+}}
+
 .cp-error {{
     background: {COLORS["bg_card"]};
-    border-radius: 12px;
     border: 1px solid {COLORS["border_default"]};
     border-left: 3px solid {COLORS["red_400"]};
+    border-radius: 12px;
     padding: 14px 16px;
 }}
+
 .cp-error-title {{
     font-size: 14px;
     font-weight: 600;
     color: {COLORS["red_400"]};
     margin-bottom: 6px;
 }}
+
 .cp-error-msg {{
     font-size: 13px;
     color: {COLORS["text_secondary"]};
 }}
-.cp-page-title {{
-    font-size: 18px;
-    font-weight: 600;
-    color: {COLORS["text_primary"]};
-    letter-spacing: -0.02em;
-    margin: 0 0 2px;
-}}
-.cp-page-subtitle {{
-    font-size: 12px;
-    color: {COLORS["text_muted"]};
-    margin: 0 0 16px;
-}}
+
 .cp-empty {{
-    font-size: 13px;
-    color: {COLORS["text_muted"]};
     text-align: center;
+    color: {COLORS["text_muted"]};
+    font-size: 13px;
     padding: 24px 0;
 }}
-.cp-report {{
-    font-size: 13px;
-    color: {COLORS["text_secondary"]};
-    line-height: 1.7;
-    white-space: pre-wrap;
+
+.cp-card, .cp-metric, [data-testid="stForm"], [data-testid="stTextInput"] input, [data-testid="stFormSubmitButton"] button {{
+    box-shadow: none !important;
 }}
 </style>"""
 
@@ -261,112 +442,246 @@ def _env_flag_enabled(name: str) -> bool:
 
 @st.cache_resource
 def get_pipeline(force_mock: bool = False) -> Any:
-    """Build backend pipeline with mock fallback for offline verification."""
+    """Return real pipeline if available, otherwise a mock pipeline."""
     if force_mock:
-        return MockPipeline()
-
+        return MockPipeline(runtime_delay_s=1.2)
     try:
         pipeline = build_pipeline()
         if not hasattr(pipeline, "run"):
             raise TypeError("build_pipeline() returned an object without run().")
         return pipeline
     except Exception:
-        return MockPipeline()
+        return MockPipeline(runtime_delay_s=1.2)
 
 
-def _as_float(value: Any) -> float:
-    if value is None:
-        return 0.0
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return 0.0
+def _svg_icon(path: str, stroke: str, bg: str) -> str:
+    return (
+        f'<div class="cp-sidebar-btn" style="background:{bg}">'
+        f'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" '
+        f'stroke="{stroke}" stroke-width="1.8">{path}</svg>'
+        f"</div>"
+    )
 
 
-def render_ranked_subreddits(subreddits: Sequence[Mapping[str, Any]]) -> None:
-    """Render ranked subreddit results with clickable Reddit links."""
-    rows = []
-    for item in subreddits:
-        rows.append(
-            subreddit_row_html(
-                rank=int(item.get("rank", 0)),
-                name=str(item.get("subreddit", "")),
-                url=str(item.get("url", "")),
-                rerank_score=item.get("rerank_score"),
-                reason=str(item.get("reason", "")),
-            )
+def render_sidebar() -> None:
+    """Render fixed-width visual icon sidebar."""
+    top_icons = "".join(
+        [
+            _svg_icon(
+                '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>'
+                '<polyline points="9 22 9 12 15 12 15 22"/>',
+                stroke=COLORS["blue_500"],
+                bg=COLORS["bg_page"],
+            ),
+            _svg_icon(
+                '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+                stroke=COLORS["text_muted"],
+                bg="transparent",
+            ),
+            _svg_icon(
+                '<line x1="18" y1="20" x2="18" y2="10"/>'
+                '<line x1="12" y1="20" x2="12" y2="4"/>'
+                '<line x1="6" y1="20" x2="6" y2="14"/>',
+                stroke=COLORS["text_muted"],
+                bg="transparent",
+            ),
+            _svg_icon(
+                '<circle cx="12" cy="12" r="3"/>'
+                '<path d="M19.07 4.93a10 10 0 010 14.14"/>'
+                '<path d="M4.93 4.93a10 10 0 000 14.14"/>',
+                stroke=COLORS["text_muted"],
+                bg="transparent",
+            ),
+        ]
+    )
+    user_icon = _svg_icon(
+        '<circle cx="12" cy="8" r="4"/>'
+        '<path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/>',
+        stroke=COLORS["text_muted"],
+        bg="transparent",
+    )
+
+    with st.sidebar:
+        st.markdown(
+            '<div class="cp-sidebar-shell">'
+            f'<div class="cp-sidebar-icons">{top_icons}</div>'
+            f"<div>{user_icon}</div>"
+            "</div>",
+            unsafe_allow_html=True,
         )
 
-    body = "".join(rows) if rows else '<p class="cp-empty">No communities found for this query.</p>'
-    card_html = (
-        '<div class="cp-card">'
-        '<div class="cp-card-title">Recommended communities</div>'
-        f"{body}"
+
+def render_header() -> None:
+    st.markdown(
+        '<div class="cp-page-header">'
+        '<div>'
+        '<p class="cp-page-title">CreatorPal</p>'
+        '<p class="cp-page-subtitle">YouTube \u2192 Reddit audience intelligence</p>'
         "</div>"
+        '<span class="cp-badge cp-badge-blue">Beta</span>'
+        "</div>",
+        unsafe_allow_html=True,
     )
-    st.markdown(card_html, unsafe_allow_html=True)
 
 
-def render_strategy_report(report: str) -> None:
-    """Render the generated audience strategy report in the UI."""
-    text = report.strip() if report.strip() else "No report available."
-    report_html = (
-        '<div class="cp-card">'
-        '<div class="cp-card-title">Strategy report</div>'
-        f'<div class="cp-report">{escape(text)}</div>'
-        "</div>"
-    )
-    st.markdown(report_html, unsafe_allow_html=True)
+def render_input_form() -> tuple[str, str, bool]:
+    """Render top query form and return input values."""
+    with st.form("query_form", clear_on_submit=False):
+        col_a, col_b, col_btn = st.columns([5, 4, 2], gap="small")
+        with col_a:
+            st.markdown('<div class="cp-field-label">CHANNEL OR TOPIC</div>', unsafe_allow_html=True)
+            channel_or_query = st.text_input(
+                "Channel or topic",
+                placeholder="https://youtube.com/@mkbhd",
+                label_visibility="collapsed",
+            )
+        with col_b:
+            st.markdown('<div class="cp-field-label">YOUR GOAL (optional)</div>', unsafe_allow_html=True)
+            user_query = st.text_input(
+                "Your goal (optional)",
+                placeholder="e.g. grow subscribers in EU",
+                label_visibility="collapsed",
+            )
+        with col_btn:
+            st.markdown('<div class="cp-btn-spacer"></div>', unsafe_allow_html=True)
+            submitted = st.form_submit_button("Analyze \u2192", use_container_width=True)
+    return channel_or_query, user_query, submitted
 
 
 def render_metrics(data: Mapping[str, Any]) -> None:
-    """Render four summary metrics from adapted payload."""
+    """Render the four metric cards."""
     subreddits = data["ranked_subreddits"]
     sentiment_scores = data["sentiment_scores"]
     meta = data["meta"]
 
-    top_score = _as_float(subreddits[0].get("rerank_score")) if subreddits else 0.0
+    top_score = float(subreddits[0]["rerank_score"]) if subreddits else 0.0
     top_name = f'r/{subreddits[0]["subreddit"]}' if subreddits else "-"
     avg_sentiment = sum(sentiment_scores.values()) / len(sentiment_scores) if sentiment_scores else 0.0
     latency_s = f'{meta["latency_ms"] / 1000:.1f}s'
+    sentiment_sub = "Positive community" if avg_sentiment >= 0.2 else "Mixed community"
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4, gap="small")
     with c1:
         st.markdown(
-            metric_card_html("Subreddits found", str(len(subreddits)), f'from {meta["retrieval_top_k"]} retrieved'),
+            metric_card_html(
+                "SUBREDDITS FOUND",
+                str(len(subreddits)),
+                f"↑ from {meta['retrieval_top_k']} retrieved",
+                sub_up=True,
+            ),
             unsafe_allow_html=True,
         )
     with c2:
-        st.markdown(metric_card_html("Top rerank score", f"{top_score:.2f}", top_name), unsafe_allow_html=True)
+        st.markdown(
+            metric_card_html("TOP RERANK SCORE", f"{top_score:.2f}", top_name, sub_up=True),
+            unsafe_allow_html=True,
+        )
     with c3:
         st.markdown(
-            metric_card_html("Avg sentiment", f"{avg_sentiment:+.2f}", "across communities"),
+            metric_card_html("AVG SENTIMENT", f"{avg_sentiment:+.2f}", sentiment_sub, sub_up=True),
             unsafe_allow_html=True,
         )
     with c4:
-        st.markdown(metric_card_html("Latency", latency_s, "end-to-end", sub_up=False), unsafe_allow_html=True)
+        st.markdown(
+            metric_card_html("LATENCY", latency_s, "end-to-end", sub_up=False),
+            unsafe_allow_html=True,
+        )
+
+
+def render_ranked_subreddits(subreddits: Sequence[Mapping[str, Any]]) -> None:
+    """Render recommended communities card."""
+    top_items = list(subreddits)[:10]
+    rows = "".join(
+        subreddit_row_html(
+            rank=int(item["rank"]),
+            name=str(item["subreddit"]),
+            url=str(item["url"]),
+            rerank_score=item.get("rerank_score"),
+            reason=str(item.get("reason", "")),
+        )
+        for item in top_items
+    )
+    if not rows:
+        rows = '<p class="cp-empty">No communities found for this query.</p>'
+
+    st.markdown(
+        '<div class="cp-card">'
+        '<div class="cp-card-head">'
+        '<span class="cp-card-title">Recommended communities</span>'
+        '<span class="cp-card-subtitle">top 10 by rerank</span>'
+        "</div>"
+        f"{rows}"
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def render_sentiment(sentiment_scores: Mapping[str, float]) -> None:
-    """Render sentiment bars for subreddit-level scores."""
-    bars = [sentiment_bar_html(name, score) for name, score in sentiment_scores.items()]
-    body = "".join(bars) if bars else '<p class="cp-empty">No sentiment scores available.</p>'
-    card_html = (
-        '<div class="cp-card">'
-        '<div class="cp-card-title">Community sentiment</div>'
-        f"{body}"
-        "</div>"
+    """Render community sentiment card."""
+    avg = sum(sentiment_scores.values()) / len(sentiment_scores) if sentiment_scores else 0.0
+    badge = (
+        '<span class="cp-badge cp-badge-green">Positive</span>'
+        if avg >= 0.5
+        else '<span class="cp-badge cp-badge-blue">Mixed</span>'
     )
-    st.markdown(card_html, unsafe_allow_html=True)
+    rows = "".join(sentiment_bar_html(name, score) for name, score in sentiment_scores.items())
+    if not rows:
+        rows = '<p class="cp-empty">No sentiment data available.</p>'
+
+    st.markdown(
+        '<div class="cp-card">'
+        '<div class="cp-sent-head">'
+        '<span class="cp-card-title">Community sentiment</span>'
+        f"{badge}"
+        "</div>"
+        f"{rows}"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def _render_report_html(report: str) -> str:
+    """Convert simple markdown-like report text into styled HTML."""
+    if not report.strip():
+        return '<p class="cp-empty">No report available.</p>'
+
+    lines = report.splitlines()
+    blocks: list[str] = []
+    paragraph: list[str] = []
+
+    def flush_paragraph() -> None:
+        nonlocal paragraph
+        if paragraph:
+            blocks.append(f"<p>{escape(' '.join(paragraph))}</p>")
+            paragraph = []
+
+    for raw in lines:
+        line = raw.strip()
+        if not line:
+            flush_paragraph()
+            continue
+        if line.startswith("## "):
+            flush_paragraph()
+            blocks.append(f"<h2>{escape(line[3:])}</h2>")
+            continue
+        paragraph.append(line)
+    flush_paragraph()
+    return "".join(blocks)
+
+
+def render_strategy_report(report: str) -> None:
+    """Render strategy report card."""
+    st.markdown(
+        '<div class="cp-card">'
+        '<span class="cp-card-title">Strategy report</span>'
+        f'<div class="cp-report">{_render_report_html(report)}</div>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def main() -> None:
-    """Run the Streamlit application entrypoint."""
-    st.set_page_config(
-        page_title="CreatorPal",
-        layout="wide",
-        initial_sidebar_state="collapsed",
-    )
+    st.set_page_config(page_title="CreatorPal", layout="wide", initial_sidebar_state="expanded")
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
     if "last_result" not in st.session_state:
@@ -378,29 +693,10 @@ def main() -> None:
     pipeline = get_pipeline(force_mock=force_mock)
     using_mock = isinstance(pipeline, MockPipeline)
 
-    with st.sidebar:
-        st.markdown("**CreatorPal**")
-        st.caption("YouTube -> Reddit audience intelligence")
+    render_sidebar()
+    render_header()
 
-    st.markdown('<p class="cp-page-title">CreatorPal</p>', unsafe_allow_html=True)
-    st.markdown(
-        '<p class="cp-page-subtitle">YouTube -> Reddit audience intelligence</p>',
-        unsafe_allow_html=True,
-    )
-
-    with st.form("query_form"):
-        col_a, col_b = st.columns([2, 1])
-        with col_a:
-            channel_or_query = st.text_input(
-                "Channel or topic",
-                placeholder="https://youtube.com/@channel or a topic keyword",
-            )
-        with col_b:
-            user_query = st.text_input(
-                "Your goal (optional)",
-                placeholder="e.g. grow subscribers in EU",
-            )
-        submitted = st.form_submit_button("Analyze", use_container_width=False)
+    channel_or_query, user_query, submitted = render_input_form()
 
     if submitted:
         query = channel_or_query.strip()
@@ -426,18 +722,22 @@ def main() -> None:
     if error_message:
         st.markdown(error_card_html(error_message), unsafe_allow_html=True)
 
-    data = st.session_state.get("last_result")
+    data: Mapping[str, Any] | None = st.session_state.get("last_result")
     if not data:
         return
 
     render_metrics(data)
-    col_left, col_right = st.columns([1, 1])
+    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
+
+    col_left, col_right = st.columns([1, 1], gap="medium")
     with col_left:
         render_ranked_subreddits(data["ranked_subreddits"])
     with col_right:
         render_sentiment(data["sentiment_scores"])
-        render_strategy_report(data["strategy_report"])
+        st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
+        render_strategy_report(str(data["strategy_report"]))
 
 
 if __name__ == "__main__":
     main()
+
