@@ -247,7 +247,7 @@ GLOBAL_CSS = f"""<style>
     font-weight: 700;
     color: {COLORS["text_primary"]};
     letter-spacing: -0.03em;
-    line-height: 1;
+    line-height: 1 !important;
 }}
 
 .cp-metric-sub-up {{
