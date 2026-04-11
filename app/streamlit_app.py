@@ -352,24 +352,24 @@ GLOBAL_CSS = f"""<style>
 .cp-sent-track {{
     flex: 1;
     height: 5px;
-    background: {COLORS["bg_page"]};
+    background: #EEF2F7;
     border-radius: 3px;
     overflow: hidden;
 }}
 
 .cp-sent-fill-green {{
     height: 100%;
-    background: {COLORS["green_500"]};
+    background: #10B981;
 }}
 
 .cp-sent-fill-amber {{
     height: 100%;
-    background: {COLORS["amber_400"]};
+    background: #F59E0B;
 }}
 
 .cp-sent-fill-red {{
     height: 100%;
-    background: {COLORS["red_400"]};
+    background: #F87171;
 }}
 
 .cp-sent-val {{
