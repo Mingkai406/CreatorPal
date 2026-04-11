@@ -207,7 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 # Project-specific
+.idea/
 data/raw/
+data/dataset/
 data/processed/
 *.pkl
 *.faiss
