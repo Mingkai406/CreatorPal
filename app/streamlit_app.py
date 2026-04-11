@@ -48,6 +48,48 @@ GLOBAL_CSS = f"""<style>
     background-color: {COLORS["bg_page"]} !important;
 }}
 
+@keyframes fadeInDown {{
+    from {{
+        opacity: 0;
+        transform: translateY(-14px);
+    }}
+    to {{
+        opacity: 1;
+        transform: translateY(0);
+    }}
+}}
+
+@keyframes fadeInUp {{
+    from {{
+        opacity: 0;
+        transform: translateY(18px);
+    }}
+    to {{
+        opacity: 1;
+        transform: translateY(0);
+    }}
+}}
+
+@keyframes scaleIn {{
+    from {{
+        opacity: 0;
+        transform: scale(0.97);
+    }}
+    to {{
+        opacity: 1;
+        transform: scale(1);
+    }}
+}}
+
+@keyframes shimmer {{
+    0% {{
+        background-position: -500px 0;
+    }}
+    100% {{
+        background-position: 500px 0;
+    }}
+}}
+
 [data-testid="stSidebar"] {{
     background: {COLORS["bg_card"]} !important;
     border-right: 1px solid {COLORS["border_default"]} !important;
@@ -81,6 +123,7 @@ section[data-testid="stSidebar"] {{
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
     padding: 16px 18px 10px !important;
     margin-bottom: 0 !important;
+    animation: fadeInUp 420ms 140ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
 }}
 
 [data-testid="stForm"] + div {{
@@ -132,6 +175,21 @@ section[data-testid="stSidebar"] {{
 
 [data-testid="stFormSubmitButton"] button p {{
     color: #FFFFFF !important;
+}}
+
+[data-testid="stFormSubmitButton"] button:disabled {{
+    background: linear-gradient(
+        90deg,
+        #1D4ED8 0%,
+        #3B82F6 30%,
+        #93C5FD 50%,
+        #3B82F6 70%,
+        #1D4ED8 100%
+    ) !important;
+    background-size: 500px 100% !important;
+    animation: shimmer 1.4s linear infinite !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
 }}
 
 [data-testid="stCaptionContainer"] {{
@@ -195,6 +253,14 @@ section[data-testid="stSidebar"] {{
     margin: 0;
 }}
 
+.cp-hero-logo-block {{
+    animation: fadeInDown 360ms ease both;
+}}
+
+.cp-hero-hint {{
+    animation: fadeInUp 300ms 300ms ease both;
+}}
+
 .cp-badge {{
     display: inline-block;
     font-size: 11px;
@@ -250,6 +316,42 @@ section[data-testid="stSidebar"] {{
 .cp-metric:hover {{
     transform: scale(1.018);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+}}
+
+.cp-db-header {{
+    animation: fadeInDown 300ms ease both;
+}}
+
+.cp-db-m1 {{
+    animation: fadeInUp 380ms 80ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}}
+
+.cp-db-m2 {{
+    animation: fadeInUp 380ms 140ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}}
+
+.cp-db-m3 {{
+    animation: fadeInUp 380ms 200ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}}
+
+.cp-db-m4 {{
+    animation: fadeInUp 380ms 260ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}}
+
+.cp-db-left {{
+    animation: fadeInUp 420ms 300ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}}
+
+.cp-db-right-top {{
+    animation: fadeInUp 420ms 360ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}}
+
+.cp-db-right-bot {{
+    animation: fadeInUp 420ms 420ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+}}
+
+.cp-db-error {{
+    animation: fadeInUp 350ms ease both;
 }}
 
 .cp-results-grid {{
@@ -615,7 +717,7 @@ def render_page_header() -> None:
     with col_hdr:
         st.markdown(
             """
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+<div class="cp-db-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
     <div style="width:32px;height:32px;border-radius:8px;background:#3B82F6;
                 display:flex;align-items:center;justify-content:center;flex-shrink:0">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -638,15 +740,15 @@ def render_page_header() -> None:
         )
     with col_badge:
         st.markdown(
-            '<div style="padding-top:8px;text-align:right">'
+            '<div class="cp-db-header" style="padding-top:8px;text-align:right">'
             '<span class="cp-badge cp-badge-blue">Beta</span></div>',
             unsafe_allow_html=True,
         )
 
 
-def render_idle_hero() -> tuple[str, str | None, bool]:
+def render_idle_hero(error_message: str | None = None) -> tuple[str, str | None, bool]:
     """Render centered idle hero and return submitted query payload."""
-    st.markdown("<div style='height:16vh'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:14vh'></div>", unsafe_allow_html=True)
     _, col, _ = st.columns([0.6, 2.8, 0.6])
     st.markdown(
         """
@@ -663,7 +765,7 @@ def render_idle_hero() -> tuple[str, str | None, bool]:
     with col:
         st.markdown(
             """
-<div style="display:flex;flex-direction:column;align-items:center;margin-bottom:32px">
+<div class="cp-hero-logo-block" style="display:flex;flex-direction:column;align-items:center;margin-bottom:32px">
     <div style="
         width:72px;height:72px;border-radius:20px;
         background:#3B82F6;
@@ -705,12 +807,17 @@ def render_idle_hero() -> tuple[str, str | None, bool]:
 
         st.markdown(
             """
-<div style="text-align:center;margin-top:14px;font-size:12px;color:#8E8E93">
+<div class="cp-hero-hint" style="text-align:center;margin-top:14px;font-size:12px;color:#8E8E93">
     Powered by RAG · <span style="color:#3B82F6">FAISS</span> retrieval · cross-encoder reranking
 </div>
 """,
             unsafe_allow_html=True,
         )
+        if error_message:
+            st.markdown(
+                f'<div class="cp-db-error">{error_card_html(error_message)}</div>',
+                unsafe_allow_html=True,
+            )
 
     normalized_goal = user_query.strip() or None
     return channel_or_query, normalized_goal, submitted
@@ -731,46 +838,54 @@ def render_metrics(data: Mapping[str, Any]) -> None:
     c1, c2, c3, c4 = st.columns(4, gap="small")
     with c1:
         st.markdown(
-            metric_card_html(
+            '<div class="cp-db-m1">'
+            + metric_card_html(
                 "SUBREDDITS FOUND",
                 str(len(subreddits)),
                 f"↑ from {meta['retrieval_top_k']} retrieved",
                 sub_up=True,
                 container_style="border-top:3px solid #3B82F6 !important;",
-            ),
+            )
+            + "</div>",
             unsafe_allow_html=True,
         )
     with c2:
         st.markdown(
-            metric_card_html(
+            '<div class="cp-db-m2">'
+            + metric_card_html(
                 "TOP RERANK SCORE",
                 f"{top_score:.2f}",
                 top_name,
                 sub_up=True,
                 container_style="border-top:3px solid #10B981 !important;",
-            ),
+            )
+            + "</div>",
             unsafe_allow_html=True,
         )
     with c3:
         st.markdown(
-            metric_card_html(
+            '<div class="cp-db-m3">'
+            + metric_card_html(
                 "AVG SENTIMENT",
                 f"{avg_sentiment:+.2f}",
                 sentiment_sub,
                 sub_up=True,
                 container_style="border-top:3px solid #10B981 !important;",
-            ),
+            )
+            + "</div>",
             unsafe_allow_html=True,
         )
     with c4:
         st.markdown(
-            metric_card_html(
+            '<div class="cp-db-m4">'
+            + metric_card_html(
                 "LATENCY",
                 latency_s,
                 "end-to-end",
                 sub_up=False,
                 container_style="border-top:3px solid #C7C7CC !important;",
-            ),
+            )
+            + "</div>",
             unsafe_allow_html=True,
         )
 
@@ -890,10 +1005,10 @@ def render_results_grid(data: Mapping[str, Any]) -> None:
     right_bottom = _strategy_report_card_html(str(data["strategy_report"]))
     st.markdown(
         '<div class="cp-results-grid">'
-        f'<div class="cp-results-col">{left}</div>'
+        f'<div class="cp-results-col cp-db-left">{left}</div>'
         '<div class="cp-results-col cp-results-right">'
-        f"{right_top}"
-        f"{right_bottom}"
+        f'<div class="cp-db-right-top">{right_top}</div>'
+        f'<div class="cp-db-right-bot">{right_bottom}</div>'
         "</div>"
         "</div>",
         unsafe_allow_html=True,
@@ -918,10 +1033,7 @@ def main() -> None:
 
     if data is None:
         st.markdown('<style>[data-testid="stSidebar"]{display:none !important;}</style>', unsafe_allow_html=True)
-        if error_message:
-            st.markdown(error_card_html(error_message), unsafe_allow_html=True)
-
-        channel_or_query, user_query, submitted = render_idle_hero()
+        channel_or_query, user_query, submitted = render_idle_hero(error_message=error_message)
         if submitted:
             query = channel_or_query.strip()
             if not query:
@@ -949,7 +1061,7 @@ def main() -> None:
     if using_mock:
         st.caption("Mock pipeline active — CREATORPAL_USE_MOCK_PIPELINE=1")
     if error_message:
-        st.markdown(error_card_html(error_message), unsafe_allow_html=True)
+        st.markdown(f'<div class="cp-db-error">{error_card_html(error_message)}</div>', unsafe_allow_html=True)
 
     st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
     render_metrics(data)
