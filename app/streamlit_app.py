@@ -74,6 +74,7 @@ GLOBAL_CSS = f"""<style>
     border: 1px solid {COLORS["border_default"]} !important;
     border-radius: 12px !important;
     padding: 16px 18px 10px !important;
+    margin-bottom: 0 !important;
 }}
 
 [data-testid="stTextInput"] input {{
@@ -110,6 +111,18 @@ GLOBAL_CSS = f"""<style>
 
 [data-testid="stFormSubmitButton"] button p {{
     color: #FFFFFF !important;
+}}
+
+[data-testid="stCaptionContainer"] {{
+    margin: 0 !important;
+    padding: 0 !important;
+}}
+
+[data-testid="stCaptionContainer"] p {{
+    font-size: 11px !important;
+    color: #94A3B8 !important;
+    margin: 4px 0 0 !important;
+    line-height: 1.2 !important;
 }}
 
 .cp-sidebar-shell {{
@@ -727,6 +740,7 @@ def main() -> None:
     if not data:
         return
 
+    st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
     render_metrics(data)
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
 
