@@ -51,9 +51,9 @@ GLOBAL_CSS = f"""<style>
 [data-testid="stSidebar"] {{
     background: {COLORS["bg_card"]} !important;
     border-right: 1px solid {COLORS["border_default"]} !important;
-    min-width: 56px !important;
-    max-width: 56px !important;
-    width: 56px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    width: 60px !important;
 }}
 
 [data-testid="stSidebar"] > div {{
