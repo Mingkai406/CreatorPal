@@ -713,10 +713,7 @@ def main() -> None:
                 st.session_state["last_error"] = str(exc)
 
     if using_mock:
-        if force_mock:
-            st.info("Using mock pipeline for offline verification (CREATORPAL_USE_MOCK_PIPELINE=1).")
-        else:
-            st.info("Backend pipeline is not ready. Falling back to mock pipeline for offline verification.")
+        st.caption("Mock pipeline active — CREATORPAL_USE_MOCK_PIPELINE=1")
 
     error_message = st.session_state.get("last_error")
     if error_message:
@@ -740,4 +737,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
