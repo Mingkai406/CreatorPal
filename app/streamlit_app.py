@@ -279,11 +279,11 @@ GLOBAL_CSS = f"""<style>
     font-size: 14px;
     font-weight: 600;
     color: {COLORS["text_link"]};
-    text-decoration: none;
+    text-decoration: none !important;
 }}
 
 .cp-sub-name:hover {{
-    text-decoration: underline;
+    text-decoration: underline !important;
 }}
 
 .cp-sub-reason {{
