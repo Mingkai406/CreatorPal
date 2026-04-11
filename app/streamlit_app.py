@@ -308,14 +308,14 @@ GLOBAL_CSS = f"""<style>
 
 .cp-score-track {{
     height: 4px;
-    background: {COLORS["bg_page"]};
+    background: #EEF2F7;
     border-radius: 2px;
     overflow: hidden;
 }}
 
 .cp-score-fill {{
     height: 100%;
-    background: {COLORS["blue_500"]};
+    background: #3B82F6;
 }}
 
 .cp-open-link {{
