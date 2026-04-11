@@ -221,6 +221,27 @@ section[data-testid="stSidebar"] {{
     padding: 16px 18px;
 }}
 
+.cp-card-fill-col {{
+    height: 100%;
+}}
+
+.cp-results-grid {{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: stretch;
+}}
+
+.cp-results-col {{
+    min-width: 0;
+}}
+
+.cp-results-right {{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}}
+
 .cp-card-head {{
     display: flex;
     align-items: baseline;
@@ -638,8 +659,8 @@ def render_metrics(data: Mapping[str, Any]) -> None:
         )
 
 
-def render_ranked_subreddits(subreddits: Sequence[Mapping[str, Any]]) -> None:
-    """Render recommended communities card."""
+def _ranked_subreddits_card_html(subreddits: Sequence[Mapping[str, Any]]) -> str:
+    """Build recommended communities card HTML."""
     top_items = list(subreddits)[:10]
     rows = "".join(
         subreddit_row_html(
@@ -654,20 +675,24 @@ def render_ranked_subreddits(subreddits: Sequence[Mapping[str, Any]]) -> None:
     if not rows:
         rows = '<p class="cp-empty">No communities found for this query.</p>'
 
-    st.markdown(
-        '<div class="cp-card">'
+    return (
+        '<div class="cp-card cp-card-fill-col">'
         '<div class="cp-card-head">'
         '<span class="cp-card-title">Recommended communities</span>'
         '<span class="cp-card-subtitle">top 10 by rerank</span>'
         "</div>"
         f"{rows}"
-        "</div>",
-        unsafe_allow_html=True,
+        "</div>"
     )
 
 
-def render_sentiment(sentiment_scores: Mapping[str, float]) -> None:
-    """Render community sentiment card."""
+def render_ranked_subreddits(subreddits: Sequence[Mapping[str, Any]]) -> None:
+    """Render recommended communities card."""
+    st.markdown(_ranked_subreddits_card_html(subreddits), unsafe_allow_html=True)
+
+
+def _sentiment_card_html(sentiment_scores: Mapping[str, float]) -> str:
+    """Build community sentiment card HTML."""
     avg = sum(sentiment_scores.values()) / len(sentiment_scores) if sentiment_scores else 0.0
     badge = (
         '<span class="cp-badge cp-badge-green">Positive</span>'
@@ -678,15 +703,14 @@ def render_sentiment(sentiment_scores: Mapping[str, float]) -> None:
     if not rows:
         rows = '<p class="cp-empty">No sentiment data available.</p>'
 
-    st.markdown(
+    return (
         '<div class="cp-card">'
         '<div class="cp-sent-head">'
         '<span class="cp-card-title">Community sentiment</span>'
         f"{badge}"
         "</div>"
         f"{rows}"
-        "</div>",
-        unsafe_allow_html=True,
+        "</div>"
     )
 
 
@@ -719,12 +743,38 @@ def _render_report_html(report: str) -> str:
     return "".join(blocks)
 
 
-def render_strategy_report(report: str) -> None:
-    """Render strategy report card."""
-    st.markdown(
+def render_sentiment(sentiment_scores: Mapping[str, float]) -> None:
+    """Render community sentiment card."""
+    st.markdown(_sentiment_card_html(sentiment_scores), unsafe_allow_html=True)
+
+
+def _strategy_report_card_html(report: str) -> str:
+    """Build strategy report card HTML."""
+    return (
         '<div class="cp-card">'
         '<span class="cp-card-title">Strategy report</span>'
         f'<div class="cp-report">{_render_report_html(report)}</div>'
+        "</div>"
+    )
+
+
+def render_strategy_report(report: str) -> None:
+    """Render strategy report card."""
+    st.markdown(_strategy_report_card_html(report), unsafe_allow_html=True)
+
+
+def render_results_grid(data: Mapping[str, Any]) -> None:
+    """Render equal-height two-column results area with right-side stacked cards."""
+    left = _ranked_subreddits_card_html(data["ranked_subreddits"])
+    right_top = _sentiment_card_html(data["sentiment_scores"])
+    right_bottom = _strategy_report_card_html(str(data["strategy_report"]))
+    st.markdown(
+        '<div class="cp-results-grid">'
+        f'<div class="cp-results-col">{left}</div>'
+        '<div class="cp-results-col cp-results-right">'
+        f"{right_top}"
+        f"{right_bottom}"
+        "</div>"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -777,13 +827,7 @@ def main() -> None:
     render_metrics(data)
     st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
 
-    col_left, col_right = st.columns([1, 1], gap="medium")
-    with col_left:
-        render_ranked_subreddits(data["ranked_subreddits"])
-    with col_right:
-        render_sentiment(data["sentiment_scores"])
-        st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
-        render_strategy_report(str(data["strategy_report"]))
+    render_results_grid(data)
 
 
 if __name__ == "__main__":
