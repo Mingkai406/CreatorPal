@@ -22,6 +22,8 @@ class Settings:
     faiss_metadata_path: Path
     retrieval_top_k: int = 50
     rerank_top_k: int = 10
+    hybrid_alpha_keyword: float = 0.15
+    hybrid_alpha_semantic: float = 0.85
     max_channel_videos: int = 20
     max_video_comments: int = 100
 

@@ -33,9 +33,11 @@ Core workflow:
 
 1. YouTube channel ingest (metadata, videos, comments)
 2. LLM theme extraction + HyDE query rewriting
-3. FAISS retrieval (top-50) + cross-encoder reranking (top-10)
-4. PAL analytics + subreddit sentiment scoring
-5. Final strategy report generation and Streamlit rendering
+3. **Query rewriting** – LLM generates diverse reformulations for broader recall
+4. **Hybrid retrieval** (top-50) – BM25 keyword search (15%) + FAISS dense similarity (85%)
+5. Cross-encoder reranking (top-10)
+6. PAL analytics + subreddit sentiment scoring
+7. Final strategy report generation and Streamlit rendering
 
 ---
 
@@ -46,7 +48,8 @@ Input (YouTube URL / Query)
   -> YouTube Ingest
   -> Theme Extractor
   -> HyDE Rewriter
-  -> FAISS Retriever (top-50)
+  -> Query Rewriter (multi-query expansion)
+  -> Hybrid Retriever (BM25 α=0.15 + FAISS α=0.85, top-50)
   -> CrossEncoder Reranker (top-10)
   -> PAL + Sentiment
   -> Augmented Generator
@@ -202,6 +205,31 @@ Services:
 
 ---
 
+## Retrieval Pipeline Details
+
+### Hybrid Search
+
+The retrieval stage fuses two complementary signals:
+
+| Component | Weight (α) | Description |
+|---|---|---|
+| BM25 (keyword) | 0.15 | Okapi BM25 over tokenized `chunk_text` — captures exact keyword matches |
+| FAISS (semantic) | 0.85 | Cosine similarity via `all-mpnet-base-v2` embeddings — captures meaning |
+
+Scores from each source are min-max normalised before the weighted linear combination. The fused ranking is then passed to the cross-encoder reranker for precision refinement.
+
+### Query Rewriting
+
+Before retrieval, the user query is expanded into multiple diverse reformulations via an LLM. All reformulated queries are run through the hybrid retriever; results are deduplicated and merged by score. This improves recall by surfacing documents that a single query phrasing might miss.
+
+Modules:
+
+- `src/retrieval/bm25_search.py` – BM25 keyword retriever (`rank-bm25`)
+- `src/retrieval/hybrid_search.py` – weighted fusion of BM25 + FAISS
+- `src/retrieval/query_rewriter.py` – LLM multi-query expansion
+
+---
+
 ## Current Implementation Status
 
 The project is still in scaffold-to-implementation transition:
@@ -209,6 +237,7 @@ The project is still in scaffold-to-implementation transition:
 - Interfaces and module boundaries are defined.
 - A large portion of core functions still use `NotImplementedError`.
 - Team is implementing by module ownership and integrating through `src/pipeline.py`.
+- **Hybrid search** (BM25 + FAISS) and **query rewriting** are fully implemented.
 
 ---
 
