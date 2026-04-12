@@ -60,7 +60,12 @@ Input (YouTube URL / Query)
 ```text
 creatorpal/
 ├── app/
-│   └── streamlit_app.py
+│   ├── streamlit_app.py
+│   └── helpers/
+│       ├── __init__.py
+│       ├── adapter.py
+│       ├── components.py
+│       └── mock_pipeline.py
 ├── data/
 │   ├── download_reddit.py
 │   ├── preprocess_corpus.py
