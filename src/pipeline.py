@@ -10,8 +10,11 @@ from src.config import Settings, load_settings
 from src.generator.augmented_gen import AugmentedGenerator
 from src.ingest.youtube import YouTubeIngestor
 from src.pal.executor import PALExecutor
+from src.retrieval.bm25_search import BM25Retriever
 from src.retrieval.faiss_search import FaissRetriever
+from src.retrieval.hybrid_search import HybridRetriever
 from src.retrieval.hyde import HyDEQueryRewriter
+from src.retrieval.query_rewriter import QueryRewriter
 from src.retrieval.reranker import CrossEncoderReranker
 from src.retrieval.theme_extractor import ThemeExtractor
 from src.sentiment.analyzer import SentimentAnalyzer
