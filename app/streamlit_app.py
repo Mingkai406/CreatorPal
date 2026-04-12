@@ -750,6 +750,12 @@ DARK_CSS = """<style>
 }
 
 .stApp { background-color: #0F0F10 !important; }
+html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+    background-color: #0F0F10 !important;
+}
+[data-testid="stHeader"] {
+    background-color: #0F0F10 !important;
+}
 
 [data-testid="stSidebar"] {
     background-color: #161618 !important;
@@ -775,18 +781,39 @@ section[data-testid="stSidebar"] { width: 60px !important; }
 }
 [data-testid="stForm"] + div { margin-top: 0 !important; }
 
+[data-testid="stTextInput"] div[data-baseweb="base-input"],
+[data-testid="stTextInput"] div[data-baseweb="input"] {
+    background: rgba(15, 23, 42, 0.58) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+}
+[data-testid="stTextInput"] div[data-baseweb="base-input"]:focus-within,
+[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within {
+    border-color: #60A5FA !important;
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.30) !important;
+}
 [data-testid="stTextInput"] input {
-    background-color: rgba(255, 255, 255, 0.07) !important;
-    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    background: transparent !important;
+    border: 0 !important;
     border-radius: 8px !important;
     font-size: 13px !important;
-    color: #F5F5F7 !important;
+    color: #E5E7EB !important;
+    -webkit-text-fill-color: #E5E7EB !important;
+    caret-color: #E5E7EB !important;
     padding: 9px 14px !important;
 }
-[data-testid="stTextInput"] input::placeholder { color: #52525B !important; }
-[data-testid="stTextInput"] input:focus {
-    border-color: #60A5FA !important;
+[data-testid="stTextInput"] input::placeholder { color: #71717A !important; }
+[data-testid="stTextInput"] input:focus,
+[data-testid="stTextInput"] input:active {
+    background: transparent !important;
     box-shadow: none !important;
+}
+[data-testid="stTextInput"] input:-webkit-autofill,
+[data-testid="stTextInput"] input:-webkit-autofill:hover,
+[data-testid="stTextInput"] input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #E5E7EB !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.58) inset !important;
+    box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.58) inset !important;
 }
 [data-testid="stTextInput"] label p {
     font-size: 11px !important;
