@@ -1,214 +1,167 @@
-# CreatorPal Frontend-Backend Interaction Guide (Streamlit x Pipeline)
+# CreatorPal Frontend-Backend Interaction Guide (Code-Aligned)
 
 Last Updated: 2026-04-12  
-Owner: Frontend + Pipeline Integration  
 Applies To:
 - `app/streamlit_app.py`
 - `app/helpers/adapter.py`
 - `app/helpers/components.py`
-- `src/pipeline.py` (`build_pipeline()` + `run()`)
+- `app/helpers/mock_pipeline.py`
+- `src/pipeline.py`
 
-## 1. Purpose and Scope
+## 1. Integration Objective
 
-This document defines the production-facing integration contract between the Streamlit frontend and the pipeline backend.
+Provide a stable integration boundary so the Streamlit UI can render safely whether the backend is:
+- fully implemented (`build_pipeline()` works), or
+- unavailable/incomplete (frontend falls back to `MockPipeline`)
 
-Primary goals:
-- Keep rendering stable even when backend implementation changes.
-- Enforce a strict payload contract at the integration boundary.
-- Ensure all failures are user-safe (no raw Python traceback in UI).
+The strict boundary is `adapt(raw)` in `app/helpers/adapter.py`.
 
-Layer responsibilities:
-- Orchestration/UI state: `app/streamlit_app.py`
-- Contract validation/normalization: `app/helpers/adapter.py`
-- Pure HTML builders (no `st.*`): `app/helpers/components.py`
-- Business execution and data generation: `pipeline.run(...)`
-
-## 2. Runtime State Machine
+## 2. Runtime Flow
 
 ```text
-FRESH LOAD / NEW QUERY
-        -> IDLE (last_result is None)
-        -> SUBMIT
-        -> LOADING (spinner + pipeline.run)
-        -> adapt(raw) success
-        -> st.session_state["last_result"] = data
-        -> st.rerun()
-        -> DASHBOARD
-        -> NEW QUERY
-        -> clear session + st.rerun()
-        -> IDLE
+IDLE (last_result is None)
+  -> user submits form
+  -> pipeline.run(...)
+  -> adapt(raw)
+  -> save last_result, clear last_error
+  -> rerun
+  -> DASHBOARD
+
+Error in run/adapt
+  -> save last_error
+  -> rerun
+  -> show error card
 ```
 
-Session keys used by frontend:
-- `last_result`: last successful adapted payload
-- `last_error`: last error message string
-- `dark_mode`: UI theme state only (no backend semantics)
+Session keys:
+- `last_result`
+- `last_error`
+- `dark_mode` (UI-only; not part of backend payload)
 
-## 3. Backend Interface Contract
+## 3. Backend Bootstrap Contract
 
-The backend must expose:
+Frontend pipeline acquisition (`get_pipeline(force_mock=False)`):
+1. if `force_mock` is true, return `MockPipeline`.
+2. else call `build_pipeline()`.
+3. if build fails or returned object has no `run`, return `MockPipeline`.
+4. cache result with `@st.cache_resource`.
+
+Environment switch:
+- `CREATORPAL_USE_MOCK_PIPELINE=1|true|yes|on|y` forces mock mode.
+
+## 4. Required `run()` Interface
+
+Backend object must expose:
 
 ```python
-pipeline.run(channel_or_query: str, user_query: str | None = None) -> dict[str, Any]
+run(channel_or_query: str, user_query: str | None = None) -> dict[str, Any]
 ```
 
-Frontend acquisition rule:
-- Frontend calls `build_pipeline()`.
-- Returned object must implement `.run(...)`.
+## 5. Payload Contract Enforced by `adapt(raw)`
 
-## 4. Required Payload Schema
+### 5.1 Top-Level Required Keys
 
-### 4.1 Top-level keys (all required)
+- `input`
+- `ranked_subreddits`
+- `strategy_report`
+- `pal_results`
+- `sentiment_scores`
+- `meta`
 
-| Key | Type | Required | Notes |
-|---|---|---|---|
-| `input` | object | yes | request metadata |
-| `ranked_subreddits` | array | yes | ranked recommendation list |
-| `strategy_report` | string/null | yes | null normalized to empty string |
-| `pal_results` | object | yes | PAL summary + metrics |
-| `sentiment_scores` | object | yes | subreddit -> score |
-| `meta` | object | yes | retrieval/rerank/runtime metadata |
+Missing required keys raise `ValueError`.
 
-### 4.2 `input` object (all required)
+### 5.2 `input` Required Keys
 
-| Key | Type | Constraint |
-|---|---|---|
-| `channel_or_query` | string | non-empty |
-| `user_query` | string/null | optional user intent |
-| `resolved_mode` | enum | `"channel"` or `"query"` |
-| `timestamp_utc` | string | non-empty UTC timestamp string |
+- `channel_or_query` (non-empty string)
+- `user_query` (string or `null`)
+- `resolved_mode` (`"channel"` or `"query"`)
+- `timestamp_utc` (non-empty string)
 
-### 4.3 `ranked_subreddits[i]` fields
+### 5.3 `ranked_subreddits[i]` Required Keys
 
-| Key | Type | Constraint |
-|---|---|---|
-| `rank` | int | integer only (bool rejected) |
-| `subreddit` | string | `r/` prefix allowed; normalized in adapter |
-| `retrieval_score` | number | invalid -> normalized to `None` |
-| `rerank_score` | number | invalid -> normalized to `None` |
-| `reason` | string | empty string allowed |
-| `evidence` | list[string] | null -> `[]`; invalid type is a contract error |
-| `sentiment_score` | number | invalid -> normalized to `None` |
-| `url` | string | optional; adapter synthesizes fallback if missing |
+- `rank` (integer, bool rejected)
+- `subreddit`
+- `retrieval_score`
+- `rerank_score`
+- `reason`
+- `evidence`
+- `sentiment_score`
 
-Required URL fallback behavior:
+Notes:
+- `url` is optional in incoming payload.
+- adapter synthesizes fallback URL when missing/invalid:
+  - `https://www.reddit.com/r/{subreddit}/`
 
-```text
-https://www.reddit.com/r/{normalized_subreddit}/
-```
+Normalization behavior:
+- `subreddit`: strips leading `r/` and trims slashes.
+- score fields: invalid numeric values normalize to `None`.
+- `reason`: normalized to string.
+- `evidence`: `null -> []`; non-sequence raises contract error.
 
-### 4.4 `pal_results` and `meta`
+### 5.4 `pal_results` Required Keys
 
-`pal_results` required keys:
-- `summary` (string)
-- `metrics` (object)
+- `summary` (string after normalization)
+- `metrics` (dict)
 
-`meta` required integer keys:
-- `retrieval_top_k`
-- `rerank_top_k`
-- `latency_ms`
+### 5.5 `sentiment_scores`
 
-## 5. Adapter Boundary Rules (`adapter.py`)
+- Must be a dict.
+- Keys normalized to `r/<name>` format.
+- Values must be numeric; non-numeric raises contract error.
 
-Adapter is the single contract gate before rendering.
+### 5.6 `meta` Required Keys
 
-Required behaviors:
-- Raise `ValueError` when required keys are missing.
-- Include precise key path in error message.
-- Normalize subreddit names (`r/` stripping, slash trimming).
-- Enforce Reddit URL fallback when URL is missing/invalid.
-- Normalize sentiment keys to `r/{name}` format.
-- Reject malformed data early; do not silently drop required fields.
+- `retrieval_top_k` (int)
+- `rerank_top_k` (int)
+- `latency_ms` (int)
 
-## 6. Error Handling and Recovery
+## 6. Frontend Consumption Rules
 
-Current frontend flow:
-- `pipeline.run(...)` exception -> store `last_error` -> rerun -> show error card.
-- `adapt(raw)` contract error -> same flow.
-- User can retry without page reload.
+After adapter success, UI uses payload as follows:
+- `ranked_subreddits`: top 10 rendered in recommended card.
+- `sentiment_scores`: rendered as bars + average badge.
+- `strategy_report`: parsed into headings/paragraphs by `_render_report_html`.
+- `meta.latency_ms`: shown in metric card as seconds.
 
-Engineering constraints:
-- Backend error messages must be actionable and non-empty.
-- Never include secrets, internal endpoints, or credential material in messages.
-- UI must never expose raw traceback to end users.
+Display thresholds (implemented):
+- Metric subtitle for avg sentiment: `>= 0.2` => "Positive community", else "Mixed community".
+- Sentiment card badge: average `>= 0.5` => "Positive", else "Mixed".
+- Sentiment bar color:
+  - `>= 0.5` green
+  - `>= 0.2` amber
+  - `< 0.2` red
 
-## 7. Performance and Reliability Constraints
+## 7. Error Handling Contract
 
-Minimum requirements:
-- `meta.latency_ms` must be real end-to-end runtime in integer milliseconds.
-- `run()` must always return a dict on success.
-- Schema must remain stable for same contract version.
+Error sources handled uniformly:
+- pipeline runtime exceptions
+- adapter contract violations
 
-Suggested service targets:
-- P50 latency < 3s
-- P95 latency < 8s (demo environments may be looser)
+Frontend behavior:
+- store `str(exc)` in `last_error`
+- rerun page
+- render structured error card (`Pipeline error`) without traceback UI
 
-Instance lifecycle:
-- Frontend caches pipeline with `@st.cache_resource`.
-- Backend pipeline object should be reusable and re-entrant.
+## 8. Security and Safety Guarantees in Current Code
 
-## 8. Security and Data Hygiene
+- HTML escaping is applied in `components.py` for user/backend text.
+- URLs are validated in adapter (`http/https` with netloc) or replaced with fallback.
+- Empty query is blocked before backend call.
 
-Mandatory:
-- Escape all user/backend text before HTML injection (`components.py` already does this).
-- Accept only valid `http/https` URLs or fallback to canonical Reddit URL.
-- Do not return secrets in payload fields.
+## 9. Known Repository Status
 
-Recommended:
-- Add domain allowlist checks for outbound links.
-- Limit user input length to reduce injection and failure amplification risk.
+`src/pipeline.py` currently raises `NotImplementedError` in:
+- `CreatorPalPipeline.__init__`
+- `CreatorPalPipeline.prepare_retrieval_query`
+- `CreatorPalPipeline.run`
+- `build_pipeline`
 
-## 9. Observability Requirements
+Because of this, frontend commonly runs through `MockPipeline` unless backend is implemented.
 
-Backend should emit:
-- Sanitized input summary
-- Stage-level timings (ingest/retrieval/rerank/generation)
-- Candidate and final result counts
-- Error category and code
+## 10. Change Rules for Integration Work
 
-Cross-layer tracing recommendation:
-- Add `meta.request_id`
-- Surface `request_id` in debug/error UI for triage
-
-## 10. Versioning and Compatibility
-
-Recommended metadata:
-- `meta.contract_version` (for example `1.0.0`)
-
-Compatibility rules:
-- Adding new optional fields is allowed.
-- Removing required fields is not allowed.
-- Type changes on required fields require a version bump and coordinated rollout.
-- Frontend release must include contract regression tests against real backend.
-
-## 11. Test and Acceptance Checklist
-
-Backend acceptance:
-- All required top-level keys returned.
-- Every `ranked_subreddits` item includes required keys.
-- Missing URL still renders clickable link via fallback.
-- `meta` values are integers.
-
-Frontend acceptance:
-- Empty input is blocked.
-- Loading state is visible during execution.
-- Success state renders all sections.
-- Contract violations are displayed via structured error card.
-- `last_result` persists across reruns.
-
-## 12. Current Repository Reality
-
-At time of writing, `src/pipeline.py` still contains `NotImplementedError`.  
-Frontend currently falls back to `MockPipeline` when real pipeline construction fails.
-
-Operational recommendation:
-- Allow fallback in local development.
-- Disable silent fallback in staging/production so real integration failures are visible.
-
----
-
-Change management rule:
-1. Update this guide first.
-2. Update `adapter.py` contract logic.
-3. Update `streamlit_app.py` rendering assumptions.
-4. Attach contract test evidence in PR.
+When backend payload shape changes:
+1. Update `adapter.py` first.
+2. Update `streamlit_app.py` rendering assumptions second.
+3. Update this guide in the same PR.
+4. Validate both real and mock pipeline paths.

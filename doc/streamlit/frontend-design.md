@@ -1,65 +1,40 @@
-# CreatorPal Frontend Engineering Spec (Aligned)
+# CreatorPal Frontend Engineering Guide (Implementation-Aligned)
 
-Last Updated: 2026-04-11  
-Owner: Ziqi (Person D)  
-Branch: `feature/frontend-deploy`  
-Aligned With: `structure.md` (v1.1), `UIUX.md` (v1.1)
-
-## 1. Purpose
-
-This document is the execution spec for frontend implementation.  
-It is intentionally aligned to:
-- structural boundaries in `structure.md`
-- visual and interaction standards in `UIUX.md`
-- strict pipeline contract policy confirmed by project owner
-
-## 2. Scope
-
-In scope:
+Last Updated: 2026-04-12  
+Branch Baseline: `feature/frontend-deploy`  
+Primary Files:
 - `app/streamlit_app.py`
 - `app/helpers/adapter.py`
 - `app/helpers/components.py`
-- frontend/deploy docs update in `README.md`
+- `app/helpers/mock_pipeline.py`
 
-Out of scope:
-- retrieval quality or model internals
-- PAL logic changes
-- full backend pipeline implementation
+## 1. Purpose
 
-## 3. Hard Demo Requirement
+This guide defines how to extend or modify the Streamlit frontend without breaking:
+- the UI state machine
+- the adapter contract boundary
+- light/dark rendering parity
+- local demo reliability (mock fallback)
 
-Karl demo gate is mandatory:
-- every recommended subreddit must have a clickable full Reddit URL
-- frontend must enforce fallback URL when URL is missing
+## 2. Engineering Boundaries
 
-Fallback rule:
-- `url = f"https://www.reddit.com/r/{subreddit}/"` after subreddit normalization
+Hard boundaries in current code:
+- `streamlit_app.py`: all `st.*` calls and page orchestration only.
+- `adapter.py`: contract validation + normalization only; no UI logic.
+- `components.py`: pure HTML string builders; no `st.*` calls.
+- `mock_pipeline.py`: deterministic contract-compliant fallback payload.
 
-## 4. Target Frontend Structure
+Do not move these responsibilities across files.
 
-Follow `structure.md` layout:
+## 3. Runtime Contract Between Frontend and Backend
 
-```text
-app/
-├── streamlit_app.py
-└── helpers/
-    ├── __init__.py
-    ├── adapter.py
-    └── components.py
+Frontend invokes:
+
+```python
+pipeline.run(channel_or_query: str, user_query: str | None = None) -> dict[str, Any]
 ```
 
-Boundary rules:
-- `streamlit_app.py` contains all `st.*` calls and page orchestration.
-- `helpers/adapter.py` contains schema validation and normalization only.
-- `helpers/components.py` contains pure HTML-returning functions, no `st.*`.
-
-## 5. Pipeline Contract (Strict Required Keys)
-
-`pipeline.run(channel_or_query: str, user_query: str | None = None) -> dict[str, Any]`
-
-Default contract policy:
-- all listed top-level keys are required
-- missing required key is a contract violation
+Payload must pass `adapt(raw)` before any render.
 
 Required top-level keys:
 - `input`
@@ -69,119 +44,107 @@ Required top-level keys:
 - `sentiment_scores`
 - `meta`
 
-Required per subreddit item:
-- `rank`
-- `subreddit`
-- `url` (can be synthesized by adapter fallback)
-- `retrieval_score`
-- `rerank_score`
-- `reason`
-- `evidence`
-- `sentiment_score`
+Failure policy:
+- Any exception in `run()` or `adapt()` is captured and shown as `cp-error`.
+- UI must stay interactive; no raw traceback.
 
-Required `meta` keys:
-- `retrieval_top_k`
-- `rerank_top_k`
-- `latency_ms`
+## 4. Pipeline Bootstrap Policy
 
-Rendering behavior:
-- missing required key: show structured error card and stop results render
-- `ranked_subreddits` empty: render empty state, keep report/other sections visible
+Current bootstrap behavior in `get_pipeline()`:
+- forced mock when `CREATORPAL_USE_MOCK_PIPELINE` is enabled
+- otherwise `build_pipeline()` from `src.pipeline`
+- on construction failure or invalid object, fallback to `MockPipeline`
+- object cached via `@st.cache_resource`
 
-## 6. Adapter Constraints (`app/helpers/adapter.py`)
+Implication:
+- local/demo runs remain available even while backend is incomplete.
 
-Adapter responsibilities:
-- validate raw payload type and required keys
-- normalize subreddit name (strip leading `r/`, trim whitespace)
-- enforce URL fallback rule
-- coerce invalid numeric score fields to `None`
-- return normalized payload safe for rendering
+## 5. UI State and Session Rules
 
-Adapter error policy:
-- raise `ValueError` with explicit missing key name for contract violations
-- do not silently drop required fields
+Required session keys:
+- `dark_mode` (default `False`)
+- `last_result` (default `None`)
+- `last_error` (default `None`)
 
-## 7. UI/UX Constraints (`UIUX.md` Aligned)
+State transitions:
+- IDLE hero when `last_result is None`
+- DASHBOARD when `last_result` is present
+- reset button clears `last_result` + `last_error`
+- successful submit clears `last_error`
 
-### 7.1 CSS Injection Strategy
-- one global CSS injection via `st.markdown(GLOBAL_CSS, unsafe_allow_html=True)` at top of `main()`
-- custom component HTML rendered via `st.markdown(html, unsafe_allow_html=True)`
+## 6. Styling and Motion Rules
 
-### 7.2 Color Token Policy
-- define all color values in a single `COLORS` dict
-- never hardcode hex values outside `COLORS`
+Theme model:
+- two CSS blocks (`LIGHT_CSS`, `DARK_CSS`)
+- selected by `get_css(dark)`
 
-### 7.3 Naming and Styling Policy
-- all custom classes must use `cp-` prefix
-- card surfaces use `cp-card`
-- links open with `target="_blank"`
+Global rules:
+- keep sidebar at `60px` in dashboard
+- keep theme toggle at `32x32` in both themes
+- maintain existing animation class names (`cp-db-*`, `cp-hero-*`)
+- keep `cp-` class prefix for custom elements
 
-### 7.4 Layout Policy
-- metrics row: `st.columns(4)`
-- content row: `st.columns([1, 1])`
-- keep sidebar simplified (Streamlit-native), no complex fake nav
+If adding new components:
+- implement both light and dark styles in the same change
+- verify spacing parity between themes
 
-## 8. Required Page Components
+## 7. Rendering Rules by Section
 
-In `streamlit_app.py`, implement:
-- `get_pipeline()` with `@st.cache_resource`
-- `render_metrics(data)`
-- `render_ranked_subreddits(subreddits)`
-- `render_sentiment(sentiment_scores)`
-- `render_strategy_report(report)`
-- top-level `main()`
+Hero:
+- form id remains `query_form`
+- primary input is required at submit
+- hero form width remains capped for readability (`max-width: 680px`)
 
-In `helpers/components.py`, implement pure HTML builders:
-- `metric_card_html`
-- `subreddit_row_html`
-- `sentiment_bar_html`
-- `error_card_html`
+Dashboard header:
+- includes compact logo, subtitle, Beta badge, theme toggle
 
-## 9. Runtime States (Must Be Visible and Stable)
+Metrics:
+- four cards, fixed order:
+  1. subreddits found
+  2. top rerank score
+  3. avg sentiment
+  4. latency
 
-Required states:
-- Idle: input area only
-- Loading: spinner around pipeline call
-- Success: metrics + ranked list + sentiment + report
-- Exception: error card, app still interactive
-- Contract violation: error card with missing key detail
-- Empty ranking: ranked card shows muted empty message
-- Missing URL item: adapter auto-fills URL before render
+Main content:
+- left: ranked communities (top 10)
+- right: sentiment + report stack
 
-## 10. Implementation Sequence
+## 8. Security and Data Hygiene
 
-1. Create `app/helpers/adapter.py` and enforce strict contract + normalization.
-2. Create `app/helpers/components.py` with pure HTML builders.
-3. Implement `app/streamlit_app.py` orchestration, CSS tokens, rendering, and state flow.
-4. Use mock pipeline for offline UI verification if backend contract is not ready.
-5. Switch to real pipeline integration once callable interface is available.
-6. Validate local run and docker deploy path.
-7. Update `README.md` frontend runbook and hard URL requirement.
+Current code guarantees:
+- HTML escaping for message/text fields in `components.py`
+- URL normalization/fallback in `adapter.py`
 
-## 11. Testing Checklist
+Rules for future changes:
+- never inject raw user text into HTML without escaping
+- keep URL scheme validation (`http/https`) or fallback
+- avoid exposing secrets in backend error strings
 
-1. Empty submit blocked with warning.
-2. Successful run renders all four sections.
-3. Each subreddit row has clickable full Reddit URL.
-4. Missing URL in payload becomes valid fallback URL.
-5. Missing required key triggers explicit contract violation error.
-6. Pipeline exception is handled without traceback shown to user.
-7. Empty `ranked_subreddits` still shows report section.
-8. Session state keeps last successful result across reruns.
+## 9. Change Workflow (Required)
 
-## 12. Definition of Done (DoD)
+When changing UI or contract-sensitive behavior:
+1. Modify code.
+2. Update docs in `doc/streamlit/` in the same PR.
+3. Verify light and dark mode visually.
+4. Verify mock and real pipeline code paths.
+5. Run at least one manual submit flow and one error flow.
 
-All must pass:
-- no `NotImplementedError` in frontend files owned by Person D
-- `streamlit_app.py` fully runnable with mock or real pipeline
-- every recommendation link is clickable and complete
-- docs and implementation are consistent with `structure.md` and `UIUX.md`
-- `docker-startup deploy` can bring up app service for demo
+## 10. Manual Regression Checklist
 
-## 13. Integration Note (Current Repo Reality)
+1. Idle page shows hero, no sidebar, floating theme toggle.
+2. Toggle works in idle and dashboard.
+3. Empty query submit is blocked with warning.
+4. Loading spinner appears during run.
+5. Success renders metrics + list + sentiment + report.
+6. Reset button returns to hero and clears stale data.
+7. Backend/adapter exception renders error card and app remains usable.
+8. Links in ranked card are clickable and open new tabs.
 
-Current backend skeleton may expose `build_pipeline()` instead of a concrete `Pipeline` class.  
-Frontend should keep a thin integration boundary in `get_pipeline()`:
-- use whichever backend entrypoint is currently available
-- preserve the same strict `run(...)` payload contract at adapter boundary
+## 11. Non-Goals
 
+This guide does not define:
+- retrieval/model quality targets
+- business logic inside backend pipeline components
+- infrastructure deployment topology
+
+Those belong to backend/system documentation.
