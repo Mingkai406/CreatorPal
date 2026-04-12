@@ -21,7 +21,7 @@ from app.helpers.mock_pipeline import MockPipeline
 from src.pipeline import build_pipeline
 
 COLORS: dict[str, str] = {
-    "bg_page": "#E2E8F0",
+    "bg_page": "#F5F5F7",
     "bg_card": "#FFFFFF",
     "bg_input": "#F8FAFC",
     "bg_badge_blue": "#EFF6FF",
