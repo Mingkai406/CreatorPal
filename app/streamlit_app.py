@@ -6,6 +6,7 @@ import os
 from collections.abc import Mapping, Sequence
 from html import escape
 from typing import Any
+from urllib.parse import quote
 
 import streamlit as st
 
@@ -38,6 +39,42 @@ COLORS: dict[str, str] = {
     "red_400": "#F87171",
     "rank_light": "#CBD5E1",
 }
+
+LOGO_72 = (
+    '<svg width="72" height="72" viewBox="0 0 72 72" fill="none" '
+    'xmlns="http://www.w3.org/2000/svg">'
+    '<rect width="72" height="72" rx="18" fill="#0F172A"/>'
+    '<line x1="22" y1="50" x2="50" y2="22" '
+    'stroke="white" stroke-width="5.5" stroke-linecap="round"/>'
+    '<polyline points="32,22 50,22 50,40" '
+    'fill="none" stroke="white" stroke-width="5.5" '
+    'stroke-linecap="round" stroke-linejoin="round"/>'
+    "</svg>"
+)
+
+LOGO_32 = (
+    '<svg width="32" height="32" viewBox="0 0 72 72" fill="none" '
+    'xmlns="http://www.w3.org/2000/svg">'
+    '<rect width="72" height="72" rx="18" fill="#0F172A"/>'
+    '<line x1="22" y1="50" x2="50" y2="22" '
+    'stroke="white" stroke-width="5.5" stroke-linecap="round"/>'
+    '<polyline points="32,22 50,22 50,40" '
+    'fill="none" stroke="white" stroke-width="5.5" '
+    'stroke-linecap="round" stroke-linejoin="round"/>'
+    "</svg>"
+)
+
+FAVICON_DATA_URI = "data:image/svg+xml;utf8," + quote(
+    '<svg width="64" height="64" viewBox="0 0 72 72" fill="none" '
+    'xmlns="http://www.w3.org/2000/svg">'
+    '<rect width="72" height="72" rx="18" fill="#0F172A"/>'
+    '<line x1="22" y1="50" x2="50" y2="22" '
+    'stroke="white" stroke-width="5.5" stroke-linecap="round"/>'
+    '<polyline points="32,22 50,22 50,40" '
+    'fill="none" stroke="white" stroke-width="5.5" '
+    'stroke-linecap="round" stroke-linejoin="round"/>'
+    "</svg>"
+)
 
 GLOBAL_CSS = f"""<style>
 #MainMenu, footer, header, [data-testid="stToolbar"], [data-testid="collapsedControl"] {{
@@ -716,26 +753,17 @@ def render_page_header() -> None:
     col_hdr, col_badge = st.columns([10, 1])
     with col_hdr:
         st.markdown(
-            """
-<div class="cp-db-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-    <div style="width:32px;height:32px;border-radius:8px;background:#3B82F6;
-                display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-             stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="23 7 16 12 23 17 23 7"/>
-            <rect x="1" y="5" width="15" height="14" rx="2"/>
-        </svg>
-    </div>
-    <div>
-        <div style="font-size:18px;font-weight:700;color:#1C1C1E;letter-spacing:-.02em;line-height:1">
-            CreatorPal
-        </div>
-        <div style="font-size:12px;color:#6E6E73;margin-top:1px">
-            YouTube → Reddit audience intelligence
-        </div>
-    </div>
-</div>
-""",
+            '<div class="cp-db-header" style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'
+            f"{LOGO_32}"
+            "<div>"
+            '<div style="font-size:18px;font-weight:700;color:#1C1C1E;letter-spacing:-.02em;line-height:1">'
+            "CreatorPal"
+            "</div>"
+            '<div style="font-size:12px;color:#6E6E73;margin-top:1px">'
+            "YouTube → Reddit audience intelligence"
+            "</div>"
+            "</div>"
+            "</div>",
             unsafe_allow_html=True,
         )
     with col_badge:
@@ -764,28 +792,16 @@ def render_idle_hero(error_message: str | None = None) -> tuple[str, str | None,
 
     with col:
         st.markdown(
-            """
-<div class="cp-hero-logo-block" style="display:flex;flex-direction:column;align-items:center;margin-bottom:32px">
-    <div style="
-        width:72px;height:72px;border-radius:20px;
-        background:#3B82F6;
-        display:flex;align-items:center;justify-content:center;
-        margin-bottom:18px;
-    ">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-             stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="23 7 16 12 23 17 23 7"/>
-            <rect x="1" y="5" width="15" height="14" rx="2"/>
-        </svg>
-    </div>
-    <div style="font-size:36px;font-weight:700;color:#1C1C1E;letter-spacing:-.03em;margin-bottom:10px">
-        CreatorPal
-    </div>
-    <div style="font-size:16px;color:#6E6E73;text-align:center;line-height:1.6;max-width:420px">
-        Find the right Reddit communities for your YouTube channel
-    </div>
-</div>
-""",
+            '<div class="cp-hero-logo-block" style="'
+            "display:flex;flex-direction:column;align-items:center;margin-bottom:28px\">"
+            f'<div style="margin-bottom:16px">{LOGO_72}</div>'
+            '<div style="font-size:36px;font-weight:700;color:#1C1C1E;letter-spacing:-.03em;margin-bottom:10px">'
+            "CreatorPal"
+            "</div>"
+            '<div style="font-size:16px;color:#6E6E73;text-align:center;line-height:1.6;max-width:400px">'
+            "Find the right Reddit communities for your YouTube channel"
+            "</div>"
+            "</div>",
             unsafe_allow_html=True,
         )
 
@@ -1016,7 +1032,12 @@ def render_results_grid(data: Mapping[str, Any]) -> None:
 
 
 def main() -> None:
-    st.set_page_config(page_title="CreatorPal", page_icon="🎯", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(
+        page_title="CreatorPal",
+        page_icon=FAVICON_DATA_URI,
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
     st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 
     if "last_result" not in st.session_state:
