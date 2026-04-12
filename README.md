@@ -14,6 +14,7 @@
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Repository Structure](#repository-structure)
+- [Frontend Documentation Reference](#frontend-documentation-reference)
 - [Latest Execution Plan (2026-04-10)](#latest-execution-plan-2026-04-10)
 - [Team Ownership](#team-ownership)
 - [Getting Started](#getting-started)
@@ -70,6 +71,12 @@ creatorpal/
 ├── eval/
 │   ├── retrieval_eval.py
 │   └── generation_eval.py
+├── doc/
+│   └── streamlit/
+│       ├── structure.md
+│       ├── UIUX.md
+│       ├── frontend-design.md
+│       └── frontend-backend-interaction-guide.md
 ├── src/
 │   ├── config.py
 │   ├── pipeline.py
@@ -84,6 +91,19 @@ creatorpal/
 ├── project-plan.md
 └── requirements.txt
 ```
+
+---
+
+## Frontend Documentation Reference
+
+For Streamlit frontend implementation and integration details, use the docs under `doc/streamlit/`:
+
+- [Frontend Structure](doc/streamlit/structure.md): code boundaries, module responsibilities, and runtime flow.
+- [UI/UX Specification](doc/streamlit/UIUX.md): visual system, states, theme behavior, and animation rules.
+- [Frontend Engineering Guide](doc/streamlit/frontend-design.md): implementation constraints and regression checklist.
+- [Frontend-Backend Interaction Guide](doc/streamlit/frontend-backend-interaction-guide.md): payload contract, adapter rules, and error handling.
+
+Use these docs as the reference baseline when modifying `app/streamlit_app.py` or `app/helpers/*`.
 
 ---
 
