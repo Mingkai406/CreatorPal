@@ -762,7 +762,7 @@ section[data-testid="stSidebar"] { width: 60px !important; }
 [data-testid="stSidebar"] > div:first-child { width: 60px !important; padding: 10px 6px !important; }
 [data-testid="stSidebarNav"] { display: none !important; }
 
-.block-container { padding: 2rem 2.5rem 3rem !important; max-width: 1200px !important; }
+.block-container { padding: 2rem 2.5rem 2.25rem !important; max-width: 1200px !important; }
 
 [data-testid="stForm"] {
     background: rgba(255, 255, 255, 0.05) !important;
@@ -1005,7 +1005,7 @@ a[href*="reddit.com"]:hover { background: rgba(96,165,250,0.18) !important; }
     letter-spacing: -.02em;
     margin: 0 0 2px;
 }
-.cp-page-subtitle { font-size: 14px; color: #52525B; margin: 0 0 16px; }
+.cp-page-subtitle { font-size: 14px; color: #52525B; margin: 0; }
 
 .cp-hero-logo-block { animation: scaleIn 400ms cubic-bezier(0.34,1.1,0.64,1) both; }
 .cp-hero-hint { animation: fadeInUp 300ms 300ms ease both; }
@@ -1027,17 +1027,12 @@ a[href*="reddit.com"]:hover { background: rgba(96,165,250,0.18) !important; }
     font-size: 12px !important;
     color: #71717A !important;
     padding: 4px 12px !important;
-    width: auto !important;
-    min-height: unset !important;
-    height: auto !important;
-    box-shadow: none !important;
     margin-bottom: 12px !important;
 }
 [data-testid="stButton"] button:hover {
     background: rgba(255,255,255,0.06) !important;
     color: #A1A1AA !important;
 }
-[data-testid="stButton"] button p { color: inherit !important; font-size: 12px !important; }
 
 [data-testid="stButton"][data-key="theme_toggle"] button,
 .st-key-theme_toggle [data-testid="stButton"] button,
