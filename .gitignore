@@ -220,3 +220,5 @@ models/
 .env
 *.csv
 *.json.gz
+*.zst
+data/
