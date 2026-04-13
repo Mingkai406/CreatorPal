@@ -1,3 +1,6 @@
+# macOS
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -218,4 +221,5 @@ models/
 *.csv
 *.json.gz
 INTERVIEW_PREP.md
-INTERVIEW_PROMPT_TEMPLATE.md
+INTERVIEW_PROMPT_TEMPLATE.md*.zst
+data/
