@@ -58,7 +58,10 @@ class BM25Retriever:
         if suffix == ".csv":
             df = pd.read_csv(path)
         elif suffix in (".json", ".jsonl", ".ndjson"):
-            df = pd.read_json(path, lines=True)
+            try:
+                df = pd.read_json(path, lines=True)
+            except ValueError:
+                df = pd.read_json(path)
         elif suffix == ".parquet":
             df = pd.read_parquet(path)
         else:
