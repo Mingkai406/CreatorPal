@@ -71,11 +71,13 @@ creatorpal/
 │       └── mock_pipeline.py
 ├── data/
 │   ├── download_reddit.py
-│   ├── preprocess_corpus.py
-│   ├── build_faiss_index.py
-│   ├── build_ground_truth.py
+│   ├── build_reddit_slim.py        # .zst → slim NDJSON
+│   ├── preprocess_corpus.py        # slim NDJSON → subreddit_profiles.json
+│   ├── build_faiss_index.py        # profiles → FAISS index + metadata
+│   ├── build_ground_truth.py       # extract YouTube–subreddit pairs
 │   ├── read_zst.py
-│   └── read_zst_commands.md
+│   ├── read_zst_commands.md
+│   └── run_pipeline.sh             # one-click data pipeline script
 ├── eval/
 │   ├── retrieval_eval.py
 │   └── generation_eval.py
@@ -86,13 +88,26 @@ creatorpal/
 │       ├── frontend-design.md
 │       └── frontend-backend-interaction-guide.md
 ├── src/
-│   ├── config.py
-│   ├── pipeline.py
+│   ├── config.py                   # Settings.from_env() + load_settings()
+│   ├── pipeline.py                 # CreatorPalPipeline end-to-end orchestration
 │   ├── ingest/
+│   │   └── youtube.py
 │   ├── retrieval/
+│   │   ├── faiss_search.py         # FAISS dense retriever
+│   │   ├── bm25_search.py          # BM25 keyword retriever
+│   │   ├── hybrid_search.py        # weighted BM25 + FAISS fusion
+│   │   ├── query_rewriter.py       # LLM multi-query expansion
+│   │   ├── reranker.py             # cross-encoder reranker
+│   │   ├── hyde.py                 # HyDE query rewriter (skeleton)
+│   │   └── theme_extractor.py      # channel theme extraction (skeleton)
 │   ├── pal/
+│   │   └── executor.py             # RestrictedPython PAL sandbox
 │   ├── sentiment/
+│   │   └── analyzer.py             # RoBERTa sentiment scoring
 │   └── generator/
+│       └── augmented_gen.py        # LLM report generation (skeleton)
+├── tests/
+│   └── test_retrieval_smoke.py
 ├── Dockerfile
 ├── docker-compose.yml
 ├── docker-startup
@@ -129,7 +144,7 @@ Use these docs as the reference baseline when modifying `app/streamlit_app.py` o
   - URL: https://zenodo.org/records/3608135
 - Person 1 (`download_reddit.py`): download Pushshift dataset (15.53GB) to GCP.
 - Current local strategy: first run with a small sample (first 1000 lines) for fast validation.
-- Person 2 (`preprocess_corpus.py`): build subreddit profiles (sidebar + rules + top-50 posts), filter subscriber count < 1000.
+- Person 2 (`preprocess_corpus.py`): build subreddit profiles (top-50 posts per subreddit by score), filter subreddits with fewer than 10 posts (`min_posts=10`).
 - Person 3 (`build_faiss_index.py`): 64-token window / 16-token overlap chunking, encode with `all-mpnet-base-v2`, build FAISS Flat index.
 - Person 4 (`build_ground_truth.py`): extract `(YouTube channel, subreddit)` from posts containing `youtube.com` or `youtu.be`, filter `score >= 2`.
 
@@ -183,12 +198,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-`.env`:
-
-```env
-YOUTUBE_API_KEY=your_youtube_api_key
-VLLM_ENDPOINT=http://localhost:8000/v1
-```
+Edit `.env` with your keys and paths — see [`.env.example`](.env.example) for the full list of supported variables (API keys, model names, FAISS paths, retrieval weights, etc.).
 
 ---
 
@@ -232,22 +242,37 @@ Modules:
 
 ## Current Implementation Status
 
-The project is still in scaffold-to-implementation transition:
-
-- Interfaces and module boundaries are defined.
-- A large portion of core functions still use `NotImplementedError`.
-- Team is implementing by module ownership and integrating through `src/pipeline.py`.
-- **Hybrid search** (BM25 + FAISS) and **query rewriting** are fully implemented.
+| Module | Status | Notes |
+|---|---|---|
+| `data/build_reddit_slim.py` | Done | Stream `.zst` → slim NDJSON |
+| `data/preprocess_corpus.py` | Done | Aggregate top-50 posts per subreddit, filter `min_posts=10` |
+| `data/build_faiss_index.py` | Done | 64-token chunking + `all-mpnet-base-v2` encoding |
+| `data/build_ground_truth.py` | Done | YouTube–subreddit pair extraction |
+| `data/run_pipeline.sh` | Done | One-click script for full data flow |
+| `src/config.py` | Done | `Settings.from_env()` + `load_settings()` |
+| `src/pipeline.py` | Done | End-to-end orchestration with graceful skip |
+| `src/retrieval/faiss_search.py` | Done | FAISS IndexFlatIP cosine retrieval |
+| `src/retrieval/bm25_search.py` | Done | BM25 keyword retrieval |
+| `src/retrieval/hybrid_search.py` | Done | Weighted BM25 + FAISS fusion |
+| `src/retrieval/query_rewriter.py` | Done | LLM multi-query expansion |
+| `src/retrieval/reranker.py` | Done | Cross-encoder reranking |
+| `src/pal/executor.py` | Done | RestrictedPython PAL sandbox |
+| `src/sentiment/analyzer.py` | Done | RoBERTa sentiment scoring |
+| `src/ingest/youtube.py` | Skeleton | YouTube Data API v3 ingestion |
+| `src/retrieval/hyde.py` | Skeleton | HyDE query rewriting |
+| `src/retrieval/theme_extractor.py` | Skeleton | Channel theme extraction |
+| `src/generator/augmented_gen.py` | Skeleton | LLM report generation |
 
 ---
 
 ## Development Workflow
 
 - Branches:
-  - `feature/data-pipeline`
-  - `feature/retrieval`
-  - `feature/pal-sentiment`
-  - `feature/frontend-deploy`
+  - `feature/data-pipeline` — data download, slim build, ground truth
+  - `feature/data-pipeline-config` — preprocess, config, pipeline orchestration
+  - `feature/retrieval` — hybrid search, BM25, query rewriting, reranking
+  - `feature/pal-sentiment` — PAL executor, sentiment analyzer, evaluation
+  - `feature/frontend-deploy` — Streamlit UI, Docker, deployment
 - Integration via PR to `main`.
 - Final end-to-end assembly in `src/pipeline.py`.
 
