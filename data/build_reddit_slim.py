@@ -15,6 +15,7 @@ except ImportError:
 DEFAULT_FIELDS = [
     "id",
     "subreddit",
+    "subreddit_subscribers",
     "created_utc",
     "score",
     "title",
