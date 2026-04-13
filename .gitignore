@@ -221,5 +221,6 @@ models/
 *.csv
 *.json.gz
 INTERVIEW_PREP.md
-INTERVIEW_PROMPT_TEMPLATE.md*.zst
+INTERVIEW_PROMPT_TEMPLATE.md
+*.zst
 data/
