@@ -31,7 +31,7 @@
 | Person | 模块 | 任务 | 依赖关系 |
 |---|---|---|---|
 | Person 1 | `data/download_reddit.py` | 下载 Kaggle Pushshift 数据（15.53GB）到 GCP | 先行任务 |
-| Person 2 | `data/preprocess_corpus.py` | 构建 subreddit profiles（sidebar + rules + top-50 posts），过滤 subscribers < 1000，输出 JSON | 依赖 Person 1 |
+| Person 2 | `data/preprocess_corpus.py` | 构建 subreddit profiles（按 score 取 top-50 posts），过滤帖子数 < 10 的 subreddit（`min_posts=10`），输出 JSON | 依赖 Person 1 |
 | Person 3 | `data/build_faiss_index.py` | 64-token window / 16-token overlap 切块，`all-mpnet-base-v2` 编码，构建 FAISS Flat | 依赖 Person 2 |
 | Person 4 | `data/build_ground_truth.py` | 从 Reddit 帖子中提取含 `youtube.com` / `youtu.be` 的样本，过滤 `score >= 2`，输出 `(channel, subreddit)` CSV | 可与 Person 3 并行 |
 
@@ -49,6 +49,14 @@
    - `data/processed/ground_truth_pairs.csv`
 
 如果 `reddit_slim.ndjson` 超过 GitHub 文件限制（100MB），使用 Git LFS 或转存到 GCP/Google Drive，只在仓库保留派生产物。
+
+### 2.4 一键脚本
+
+`data/run_pipeline.sh` 封装了完整数据流（下载 → slim → profiles → ground truth → FAISS index），每一步自动跳过已存在的产物，支持断点续跑：
+
+```bash
+bash data/run_pipeline.sh
+```
 
 ---
 
@@ -73,6 +81,11 @@
   - 主 pipeline 串联（调用其余三位模块）
   - 端到端集成测试与联调
 - 交付：从用户输入到最终报告的完整调用链
+- **当前状态**：
+  - ✅ `data/preprocess_corpus.py` — 已实现（流式聚合 + heapq top-50 + min_posts 过滤）
+  - ✅ `src/config.py` — 已实现（`Settings.from_env()` + `load_settings()`，15 个环境变量）
+  - ✅ `src/pipeline.py` — 已实现（9 步流水线 + graceful skip 未实现模块）
+  - ✅ `data/run_pipeline.sh` — 已实现（一键脚本）
 
 ### 4.2 Person B（Runxin）— 检索 Pipeline
 
@@ -109,10 +122,11 @@
 
 ## 5. 协作与分支策略
 
-- `feature/data-pipeline`（Person A）
-- `feature/retrieval`（Person B）
-- `feature/pal-sentiment`（Person C）
-- `feature/frontend-deploy`（Person D）
+- `feature/data-pipeline`（Person A — 数据下载、slim、ground truth）
+- `feature/data-pipeline-config`（Person A — preprocess、config、pipeline 编排）
+- `feature/retrieval`（Person B — 混合检索、BM25、query rewriting、reranking）
+- `feature/pal-sentiment`（Person C — PAL、情感分析、评估）
+- `feature/frontend-deploy`（Person D — Streamlit、Docker、部署）
 
 协作规则：
 
