@@ -1,0 +1,12 @@
+.venv
+__pycache__
+*.pyc
+.git
+.env
+data/RS_2019-04.zst
+data/processed/reddit_slim.ndjson
+data/processed/subreddit_profiles.faiss
+models/
+*.egg-info
+.mypy_cache
+.pytest_cache
