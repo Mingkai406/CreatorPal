@@ -29,6 +29,7 @@ services:
       - .env
     environment:
       - VLLM_ENDPOINT=http://vllm:8000/v1
+      - PYTHONPATH=/workspace
     command: streamlit run app/streamlit_app.py --server.address=0.0.0.0 --server.port=8501
     volumes:
       - ./data:/workspace/data
