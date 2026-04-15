@@ -222,6 +222,7 @@ models/
 *.json.gz
 INTERVIEW_PREP.md
 INTERVIEW_PROMPT_TEMPLATE.md
+INTERVIEW_GUIDE.md
 *.zst
 data/
 incomplete_label_problem.txt
