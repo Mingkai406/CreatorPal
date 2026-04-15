@@ -140,8 +140,8 @@ class CreatorPalPipeline:
                     max_comments_per_video=self.settings.max_video_comments,
                 )
                 stages.append("youtube_ingest")
-            except NotImplementedError:
-                logger.warning("YouTubeIngestor.ingest_channel not implemented – skipping")
+            except Exception as exc:
+                logger.warning("YouTube ingestion failed – skipping: %s", exc)
 
         # 2. Theme extraction
         channel_themes: list[str] = []
@@ -149,8 +149,8 @@ class CreatorPalPipeline:
             try:
                 channel_themes = self.theme_extractor.extract_themes(channel_context)
                 stages.append("theme_extraction")
-            except NotImplementedError:
-                logger.warning("ThemeExtractor.extract_themes not implemented – skipping")
+            except Exception as exc:
+                logger.warning("Theme extraction failed – skipping: %s", exc)
 
         # 3. Build retrieval query
         retrieval_query = self.prepare_retrieval_query(
@@ -221,8 +221,8 @@ class CreatorPalPipeline:
                     sentiment_scores=sentiment_scores,
                 )
                 stages.append("generation")
-            except NotImplementedError:
-                logger.warning("AugmentedGenerator not implemented – skipping report")
+            except Exception as exc:
+                logger.warning("Report generation failed – skipping: %s", exc)
 
         elapsed_ms = int((time.monotonic() - t0) * 1000)
 
