@@ -73,7 +73,7 @@ Each section lists the modules that person owned, the specific files they commit
 | `doc/backend/retrieval.md` | Retrieval stack deep dive — fusion algorithm, HyDE, reranking, tuning guide |
 | `doc/backend/corpus.md` | Offline corpus build reference |
 | `doc/frontend/*.md` | All four frontend specification documents |
-| `CONTRIBUTING.md`, `TEAM.md`, `README.md` | Project-level documentation |
+| `doc/collab/contributing.md`, `doc/collab/team.md`, `README.md` | Project-level documentation |
 
 ### Key Technical Decisions
 - Implemented a strict adapter boundary (`adapt()`) between the backend and UI so that the frontend never renders unvalidated data and pipeline failures surface as structured error cards rather than crashes.

@@ -83,6 +83,9 @@ creatorpal/
 ├── doc/
 │   ├── product/
 │   │   └── overview.md             # product narrative, user journey, and vision
+│   ├── collab/
+│   │   ├── contributing.md         # development workflow, branch strategy, PR process
+│   │   └── team.md                 # member contributions and module ownership
 │   ├── backend/
 │   │   ├── pipeline.md             # runtime inference pipeline reference
 │   │   ├── retrieval.md            # retrieval stack deep dive
@@ -121,7 +124,6 @@ creatorpal/
 │   ├── test_eval.py
 │   └── test_sentiment.py
 ├── .env.example
-├── CONTRIBUTING.md
 ├── Dockerfile
 ├── docker-compose.yml
 ├── docker-startup
@@ -258,7 +260,8 @@ A hypothetical subreddit profile document is synthesized by an LLM and encoded t
 | [`doc/frontend/UIUX.md`](doc/frontend/UIUX.md) | Visual system, UI states, theme tokens, animations |
 | [`doc/frontend/frontend-design.md`](doc/frontend/frontend-design.md) | Implementation constraints and regression checklist |
 | [`doc/frontend/frontend-backend-interaction-guide.md`](doc/frontend/frontend-backend-interaction-guide.md) | Payload contract, adapter rules, error handling |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Development workflow, branch strategy, PR process |
+| [`doc/collab/contributing.md`](doc/collab/contributing.md) | Development workflow, branch strategy, PR process |
+| [`doc/collab/team.md`](doc/collab/team.md) | Member contributions and module ownership |
 
 ---
 
