@@ -186,6 +186,10 @@ continues; PAL analytics are treated as an optional enrichment layer.
 
 ---
 
-[cross-encoder-paper]: https://arxiv.org/abs/1901.04085
-[roberta-paper]: https://arxiv.org/abs/1907.11692
-[pal-paper]: https://arxiv.org/abs/2211.10435
+## References
+
+[1] R. Nogueira and K. Cho, "Passage Re-ranking with BERT," *arXiv preprint arXiv:1901.04085*, 2019. https://arxiv.org/abs/1901.04085
+
+[2] Y. Liu, M. Ott, N. Goyal, J. Du, M. Joshi, D. Chen, O. Levy, M. Lewis, L. Zettlemoyer, and V. Stoyanov, "RoBERTa: A Robustly Optimized BERT Pretraining Approach," *arXiv preprint arXiv:1907.11692*, 2019. https://arxiv.org/abs/1907.11692
+
+[3] L. Gao, A. Madaan, S. Zhou, U. Alon, P. Liu, Y. Yang, J. Liang, and G. Neubig, "PAL: Program-aided Language Models," in *Proc. ICML*, Honolulu, 2023. https://arxiv.org/abs/2211.10435

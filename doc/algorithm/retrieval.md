@@ -190,6 +190,10 @@ can under-weight.
 
 ---
 
-[bm25-paper]: https://dl.acm.org/doi/10.1561/1500000019
-[sbert-paper]: https://arxiv.org/abs/1908.10084
-[faiss-paper]: https://arxiv.org/abs/1702.08734
+## References
+
+[1] S. E. Robertson and H. Zaragoza, "The Probabilistic Relevance Framework: BM25 and Beyond," *Foundations and Trends in Information Retrieval*, vol. 3, no. 4, pp. 333–389, 2009. https://doi.org/10.1561/1500000019
+
+[2] N. Reimers and I. Gurevych, "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks," in *Proc. EMNLP*, Hong Kong, 2019, pp. 3982–3992. https://arxiv.org/abs/1908.10084
+
+[3] J. Johnson, M. Douze, and H. Jégou, "Billion-Scale Similarity Search with GPUs," *IEEE Transactions on Big Data*, vol. 7, no. 3, pp. 535–547, 2021. https://arxiv.org/abs/1702.08734

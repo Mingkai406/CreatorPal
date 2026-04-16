@@ -165,5 +165,8 @@ path produced each candidate.
 
 ---
 
-[hyde-paper]: https://arxiv.org/abs/2212.10496
-[multi-query-paper]: https://arxiv.org/abs/2305.02156
+## References
+
+[1] L. Gao, X. Ma, J. Lin, and J. Callan, "Precise Zero-Shot Dense Retrieval without Relevance Labels," in *Proc. ACL*, Toronto, 2023, pp. 1762–1777. https://arxiv.org/abs/2212.10496
+
+[2] X. Ma, Y. Wang, N. Peng, F. Mi, R. Nallapati, Z. Noeman, and B. Xiang, "Query Rewriting for Retrieval-Augmented Large Language Models," in *Proc. EMNLP*, Singapore, 2023. https://arxiv.org/abs/2305.02156
