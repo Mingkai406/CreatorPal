@@ -12,6 +12,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Team & Collaboration](#team--collaboration)
 - [Architecture](#architecture)
 - [Repository Structure](#repository-structure)
 - [Getting Started](#getting-started)
@@ -27,7 +28,7 @@
 
 ## Overview
 
-CreatorPal answers one practical question for creators: **Which Reddit communities should I target, and what engagement strategy should I use?**
+Reddit has 3.4 million active communities, and most YouTube creators have no systematic way to know which ones are worth their time — which tolerate creator posts, which engage with their specific content type, and which will remove them on sight. CreatorPal solves that matching problem: paste in a YouTube channel URL and in under two minutes it returns the ten subreddits most likely to embrace your content, scored by topical fit and community sentiment, alongside a tailored engagement strategy grounded in real community data. For the full product narrative and user journey, read the [Product Overview](doc/product/overview.md).
 
 Core workflow:
 
@@ -39,6 +40,23 @@ Core workflow:
 6. [Cross-encoder reranking](doc/algorithm/analytics.md) (top-10)
 7. [PAL analytics](doc/algorithm/analytics.md) + [subreddit sentiment scoring](doc/algorithm/analytics.md)
 8. Strategy report generation and [Streamlit rendering](doc/frontend/structure.md)
+
+---
+
+## Team & Collaboration
+
+CreatorPal was built by four people, each owning a distinct vertical of the system end-to-end:
+
+| Member | Role |
+|---|---|
+| Runxin Shao | Retrieval pipeline + backend integration (`src/retrieval/`, `src/pipeline.py`) |
+| Ziqi Yang | Frontend + deployment + project documentation (`app/`, `doc/`, `Dockerfile`) |
+| Gaoyuan Shi | Data pipeline (`data/build_*.py`, `data/preprocess_corpus.py`) |
+| Mingkai Gao | Analytics + evaluation + project initialization (`src/pal/`, `src/sentiment/`, `eval/`) |
+
+Each member owned their modules from design through tests, with shared ownership at integration boundaries (payload contract, config schema, pipeline orchestration). Development followed a feature-branch workflow — five topic branches integrating into `main` via pull request, with cross-area review required for any change touching the frontend–backend payload contract.
+
+For a detailed breakdown of module ownership, files committed, and key technical decisions per member, see [Team Contributions](doc/collab/team.md). For branch naming conventions, PR guidelines, and quality gates, see [Contributing](doc/collab/contributing.md).
 
 ---
 
