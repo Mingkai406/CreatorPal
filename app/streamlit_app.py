@@ -1315,13 +1315,21 @@ def render_idle_hero(dark: bool, error_message: str | None = None) -> tuple[str,
     return channel_or_query, normalized_goal, submitted
 
 
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    """Convert value to float safely, returning default on invalid input."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def render_metrics(data: Mapping[str, Any]) -> None:
     """Render the four metric cards."""
     subreddits = data["ranked_subreddits"]
     sentiment_scores = data["sentiment_scores"]
     meta = data["meta"]
 
-    top_score = float(subreddits[0]["rerank_score"]) if subreddits else 0.0
+    top_score = _safe_float(subreddits[0].get("rerank_score")) if subreddits else 0.0
     top_name = f'r/{subreddits[0]["subreddit"]}' if subreddits else "-"
     avg_sentiment = sum(sentiment_scores.values()) / len(sentiment_scores) if sentiment_scores else 0.0
     latency_s = f'{meta["latency_ms"] / 1000:.1f}s'
