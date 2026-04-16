@@ -35,8 +35,8 @@ All branches integrate into `main` via pull request.
 ## Pull Request Guidelines
 
 - Keep PRs focused on a single concern.
-- **Frontend changes** (`app/` or `app/helpers/`): update the relevant doc under `doc/streamlit/` in the same PR.
-- **Payload shape changes** (`src/pipeline.py` → `adapt()`): update `app/helpers/adapter.py` and `doc/streamlit/frontend-backend-interaction-guide.md` in the same PR.
+- **Frontend changes** (`app/` or `app/helpers/`): update the relevant doc under `doc/frontend/` in the same PR.
+- **Payload shape changes** (`src/pipeline.py` → `adapt()`): update `app/helpers/adapter.py` and `doc/frontend/frontend-backend-interaction-guide.md` in the same PR.
 - Verify both light and dark themes visually before merging frontend changes.
 - Run the relevant tests before opening a PR (see [Testing](#testing)).
 

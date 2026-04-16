@@ -81,10 +81,11 @@ creatorpal/
 │   ├── read_zst_commands.md        # usage examples for read_zst.py
 │   └── run_pipeline.sh             # one-click idempotent data pipeline
 ├── doc/
-│   ├── backend.md                  # backend pipeline reference
-│   ├── corpus.md                   # offline corpus and FAISS index build
-│   ├── retrieval.md                # retrieval stack deep dive
-│   └── streamlit/
+│   ├── backend/
+│   │   ├── pipeline.md             # runtime inference pipeline reference
+│   │   ├── retrieval.md            # retrieval stack deep dive
+│   │   └── corpus.md               # offline corpus and FAISS index build
+│   └── frontend/
 │       ├── structure.md
 │       ├── UIUX.md
 │       ├── frontend-design.md
@@ -186,7 +187,7 @@ LIMIT_POSTS=10000 bash data/run_pipeline.sh
 | 3. Ground truth | `build_ground_truth.py` | `data/processed/ground_truth_pairs.csv` |
 | 4. FAISS index | `build_faiss_index.py` | `data/processed/subreddit_profiles.faiss` + `.json` |
 
-For the full pipeline reference, individual script options, and GCP/large-scale setup, see [`doc/corpus.md`](doc/corpus.md).
+For the full pipeline reference, individual script options, and GCP/large-scale setup, see [`doc/backend/corpus.md`](doc/backend/corpus.md).
 
 ---
 
@@ -247,13 +248,13 @@ A hypothetical subreddit profile document is synthesized by an LLM and encoded t
 
 | Document | Description |
 |---|---|
-| [`doc/backend.md`](doc/backend.md) | Backend pipeline: component init, 9-step execution flow, graceful degradation, return payload |
-| [`doc/retrieval.md`](doc/retrieval.md) | Retrieval stack: BM25, FAISS, hybrid fusion, query rewriting, HyDE, reranking, tuning guide |
-| [`doc/corpus.md`](doc/corpus.md) | Offline corpus build: dataset download, build stages, per-script options, GCP setup |
-| [`doc/streamlit/structure.md`](doc/streamlit/structure.md) | Frontend code boundaries and runtime lifecycle |
-| [`doc/streamlit/UIUX.md`](doc/streamlit/UIUX.md) | Visual system, UI states, theme tokens, animations |
-| [`doc/streamlit/frontend-design.md`](doc/streamlit/frontend-design.md) | Implementation constraints and regression checklist |
-| [`doc/streamlit/frontend-backend-interaction-guide.md`](doc/streamlit/frontend-backend-interaction-guide.md) | Payload contract, adapter rules, error handling |
+| [`doc/backend/pipeline.md`](doc/backend/pipeline.md) | Backend pipeline: component init, 9-step execution flow, graceful degradation, return payload |
+| [`doc/backend/retrieval.md`](doc/backend/retrieval.md) | Retrieval stack: BM25, FAISS, hybrid fusion, query rewriting, HyDE, reranking, tuning guide |
+| [`doc/backend/corpus.md`](doc/backend/corpus.md) | Offline corpus build: dataset download, build stages, per-script options, GCP setup |
+| [`doc/frontend/structure.md`](doc/frontend/structure.md) | Frontend code boundaries and runtime lifecycle |
+| [`doc/frontend/UIUX.md`](doc/frontend/UIUX.md) | Visual system, UI states, theme tokens, animations |
+| [`doc/frontend/frontend-design.md`](doc/frontend/frontend-design.md) | Implementation constraints and regression checklist |
+| [`doc/frontend/frontend-backend-interaction-guide.md`](doc/frontend/frontend-backend-interaction-guide.md) | Payload contract, adapter rules, error handling |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Development workflow, branch strategy, PR process |
 
 ---

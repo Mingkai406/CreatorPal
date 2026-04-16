@@ -179,7 +179,7 @@ When changing frontend behavior:
 1. Update code in `streamlit_app.py` / helpers.
 2. Re-verify both light and dark themes.
 3. Validate adapter contract assumptions.
-4. Update `doc/streamlit/*.md` in same PR (this file + UIUX + interaction guide).
+4. Update `doc/frontend/*.md` in same PR (this file + UIUX + interaction guide).
 
 ## 12. Local Run
 
