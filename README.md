@@ -81,7 +81,9 @@ creatorpal/
 │   ├── read_zst_commands.md        # usage examples for read_zst.py
 │   └── run_pipeline.sh             # one-click idempotent data pipeline
 ├── doc/
-│   ├── data-pipeline.md            # data pipeline reference
+│   ├── backend.md                  # backend pipeline reference
+│   ├── corpus.md                   # offline corpus and FAISS index build
+│   ├── retrieval.md                # retrieval stack deep dive
 │   └── streamlit/
 │       ├── structure.md
 │       ├── UIUX.md
@@ -184,7 +186,7 @@ LIMIT_POSTS=10000 bash data/run_pipeline.sh
 | 3. Ground truth | `build_ground_truth.py` | `data/processed/ground_truth_pairs.csv` |
 | 4. FAISS index | `build_faiss_index.py` | `data/processed/subreddit_profiles.faiss` + `.json` |
 
-For the full pipeline reference, individual script options, and GCP/large-scale setup, see [`doc/data-pipeline.md`](doc/data-pipeline.md).
+For the full pipeline reference, individual script options, and GCP/large-scale setup, see [`doc/corpus.md`](doc/corpus.md).
 
 ---
 
@@ -245,9 +247,9 @@ A hypothetical subreddit profile document is synthesized by an LLM and encoded t
 
 | Document | Description |
 |---|---|
-| [`doc/pipeline.md`](doc/pipeline.md) | Backend pipeline: component init, 9-step execution flow, graceful degradation, return payload |
+| [`doc/backend.md`](doc/backend.md) | Backend pipeline: component init, 9-step execution flow, graceful degradation, return payload |
 | [`doc/retrieval.md`](doc/retrieval.md) | Retrieval stack: BM25, FAISS, hybrid fusion, query rewriting, HyDE, reranking, tuning guide |
-| [`doc/data-pipeline.md`](doc/data-pipeline.md) | Data pipeline: download, build stages, per-script options, GCP setup |
+| [`doc/corpus.md`](doc/corpus.md) | Offline corpus build: dataset download, build stages, per-script options, GCP setup |
 | [`doc/streamlit/structure.md`](doc/streamlit/structure.md) | Frontend code boundaries and runtime lifecycle |
 | [`doc/streamlit/UIUX.md`](doc/streamlit/UIUX.md) | Visual system, UI states, theme tokens, animations |
 | [`doc/streamlit/frontend-design.md`](doc/streamlit/frontend-design.md) | Implementation constraints and regression checklist |
