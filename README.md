@@ -81,6 +81,8 @@ creatorpal/
 │   ├── read_zst_commands.md        # usage examples for read_zst.py
 │   └── run_pipeline.sh             # one-click idempotent data pipeline
 ├── doc/
+│   ├── product/
+│   │   └── overview.md             # product narrative, user journey, and vision
 │   ├── backend/
 │   │   ├── pipeline.md             # runtime inference pipeline reference
 │   │   ├── retrieval.md            # retrieval stack deep dive
@@ -248,6 +250,7 @@ A hypothetical subreddit profile document is synthesized by an LLM and encoded t
 
 | Document | Description |
 |---|---|
+| [`doc/product/overview.md`](doc/product/overview.md) | Product narrative: problem, user journey, value proposition, and vision |
 | [`doc/backend/pipeline.md`](doc/backend/pipeline.md) | Backend pipeline: component init, 9-step execution flow, graceful degradation, return payload |
 | [`doc/backend/retrieval.md`](doc/backend/retrieval.md) | Retrieval stack: BM25, FAISS, hybrid fusion, query rewriting, HyDE, reranking, tuning guide |
 | [`doc/backend/corpus.md`](doc/backend/corpus.md) | Offline corpus build: dataset download, build stages, per-script options, GCP setup |
