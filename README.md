@@ -245,7 +245,9 @@ A hypothetical subreddit profile document is synthesized by an LLM and encoded t
 
 | Document | Description |
 |---|---|
-| [`doc/data-pipeline.md`](doc/data-pipeline.md) | Data pipeline reference: download, build stages, GCP setup |
+| [`doc/pipeline.md`](doc/pipeline.md) | Backend pipeline: component init, 9-step execution flow, graceful degradation, return payload |
+| [`doc/retrieval.md`](doc/retrieval.md) | Retrieval stack: BM25, FAISS, hybrid fusion, query rewriting, HyDE, reranking, tuning guide |
+| [`doc/data-pipeline.md`](doc/data-pipeline.md) | Data pipeline: download, build stages, per-script options, GCP setup |
 | [`doc/streamlit/structure.md`](doc/streamlit/structure.md) | Frontend code boundaries and runtime lifecycle |
 | [`doc/streamlit/UIUX.md`](doc/streamlit/UIUX.md) | Visual system, UI states, theme tokens, animations |
 | [`doc/streamlit/frontend-design.md`](doc/streamlit/frontend-design.md) | Implementation constraints and regression checklist |
