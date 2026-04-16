@@ -64,33 +64,27 @@ This strips punctuation and normalizes case before indexing and at query time.
 
 ### Scoring Formula
 
-For query Q containing terms q_1 … q_n and document d:
+For query $Q$ containing terms $q_1, \ldots, q_n$ and document $d$:
 
-```
-         n    IDF(q_i) × f(q_i, d) × (k1 + 1)
-score =  Σ   ─────────────────────────────────────────────────────
-        i=1   f(q_i, d) + k1 × (1 − b + b × |d| / avgdl)
-```
+$$\text{score}(Q, d) = \sum_{i=1}^{n} \text{IDF}(q_i) \cdot \frac{f(q_i,\, d) \cdot (k_1 + 1)}{f(q_i,\, d) + k_1 \cdot \left(1 - b + b \cdot \dfrac{|d|}{\text{avgdl}}\right)}$$
 
-Where:
+Where the IDF term is:
 
-```
-IDF(q_i) = log( (N − n(q_i) + 0.5) / (n(q_i) + 0.5) + 1 )
-```
+$$\text{IDF}(q_i) = \log\!\left(\frac{N - n(q_i) + 0.5}{n(q_i) + 0.5} + 1\right)$$
 
 Symbol definitions:
 
-| Symbol      | Meaning |
-|-------------|---------|
-| `f(q_i, d)` | Term frequency of q_i in document d |
-| `\|d\|`     | Length of d in tokens |
-| `avgdl`     | Average document length across the corpus |
-| `N`         | Total number of documents in the corpus |
-| `n(q_i)`    | Number of documents containing q_i |
-| `k1`        | Saturation parameter — default `1.5` |
-| `b`         | Length normalization parameter — default `0.75` |
+| Symbol | Meaning |
+|--------|---------|
+| $f(q_i, d)$ | Term frequency of $q_i$ in document $d$ |
+| $\|d\|$ | Length of $d$ in tokens |
+| $\text{avgdl}$ | Average document length across the corpus |
+| $N$ | Total number of documents in the corpus |
+| $n(q_i)$ | Number of documents containing $q_i$ |
+| $k_1$ | Saturation parameter — default $1.5$ |
+| $b$ | Length normalization parameter — default $0.75$ |
 
-The `+1` inside the IDF logarithm prevents negative IDF scores for near-universal terms.
+The $+1$ inside the IDF logarithm prevents negative scores for near-universal terms.
 
 **Implementation:** `rank_bm25.BM25Okapi` initialized over all chunk texts at startup.
 The index is held in memory; no persistence is required because it is rebuilt from the
@@ -101,7 +95,7 @@ NDJSON profile file on each application start.
 ## 3. Bi-Encoder Dense Retrieval
 
 Dense retrieval encodes both the query and each chunk into a shared vector space and
-retrieves the nearest neighbors by cosine similarity. FAISS is used as the approximate
+retrieves the nearest neighbors by cosine similarity. FAISS is used as the
 nearest-neighbor index.
 
 ### Embedding Model
@@ -111,17 +105,13 @@ nearest-neighbor index.
 
 ### Cosine Similarity via Inner Product
 
-Cosine similarity between two vectors u and v is:
+Cosine similarity between two vectors $\mathbf{u}$ and $\mathbf{v}$ is:
 
-```
-cos(u, v) = (u · v) / (‖u‖ × ‖v‖)
-```
+$$\cos(\mathbf{u}, \mathbf{v}) = \frac{\mathbf{u} \cdot \mathbf{v}}{\|\mathbf{u}\| \cdot \|\mathbf{v}\|}$$
 
-If both vectors are pre-normalized to unit length (‖u‖ = ‖v‖ = 1):
+If both vectors are pre-normalized to unit length ($\|\mathbf{u}\| = \|\mathbf{v}\| = 1$):
 
-```
-cos(u, v) = u · v
-```
+$$\cos(\mathbf{u}, \mathbf{v}) = \mathbf{u} \cdot \mathbf{v}$$
 
 This lets FAISS `IndexFlatIP` (inner product index) compute cosine similarity directly
 without an explicit division at query time.
@@ -130,8 +120,8 @@ without an explicit division at query time.
 
 ```
 for each chunk c in corpus:
-    e_c ← encode(c)          # shape (768,)
-    e_c ← e_c / ‖e_c‖        # L2 normalize
+    e_c ← encode(c)           # shape (768,)
+    e_c ← e_c / ‖e_c‖         # L2 normalize to unit length
     add e_c to IndexFlatIP
 
 store chunk_to_subreddit mapping alongside index
@@ -165,29 +155,24 @@ candidates. Candidates are keyed by subreddit name.
 
 ### Step 2 — Min-Max Normalization
 
-For a score list S = {s_1, s_2, …, s_n}:
+For a score list $S = \{s_1, s_2, \ldots, s_n\}$:
 
-```
-s_norm_i = (s_i − min(S)) / (max(S) − min(S) + ε)
-```
+$$\hat{s}_i = \frac{s_i - \min(S)}{\max(S) - \min(S) + \varepsilon}$$
 
-`ε = 1e-9` prevents division by zero when all scores are equal.
-
+$\varepsilon = 10^{-9}$ prevents division by zero when all scores are equal.
 Normalization is applied separately to BM25 scores and FAISS scores before any fusion.
 
 ### Step 3 — Weighted Linear Combination
 
-```
-score_fused(d) = α_sem × score_faiss_norm(d) + α_kw × score_bm25_norm(d)
-```
+$$\text{score}_\text{fused}(d) = \alpha_\text{sem} \cdot \hat{s}_\text{FAISS}(d) + \alpha_\text{kw} \cdot \hat{s}_\text{BM25}(d)$$
 
-| Weight   | Value | Signal |
-|----------|-------|--------|
-| `α_sem`  | 0.85  | FAISS semantic similarity |
-| `α_kw`   | 0.15  | BM25 keyword match |
+| Weight | Value | Signal |
+|--------|-------|--------|
+| $\alpha_\text{sem}$ | 0.85 | FAISS semantic similarity |
+| $\alpha_\text{kw}$ | 0.15 | BM25 keyword match |
 
-Documents present in only one retriever receive a normalized score of 0.0 for the
-missing signal, not a penalty.
+Documents present in only one retriever receive $\hat{s} = 0$ for the missing signal,
+not a penalty.
 
 ### Step 4 — Sort and Truncate
 

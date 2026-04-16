@@ -43,7 +43,7 @@ a relevance score (higher = more relevant).
 ### Procedure
 
 ```
-pairs ← [(query, chunk_text) for each candidate in pool]
+pairs  ← [(query, chunk_text) for each candidate in pool]
 scores ← cross_encoder.predict(pairs, batch_size=len(pairs))
 ranked ← sort_descending(zip(candidates, scores))
 top_10 ← ranked[:10]
@@ -56,13 +56,11 @@ length across the batch.
 ### Score Scale
 
 MS-MARCO cross-encoders output unbounded logits. For display purposes scores are
-passed through a sigmoid:
+passed through a sigmoid to map them into $(0, 1)$:
 
-```
-relevance = 1 / (1 + exp(−logit))
-```
+$$\text{relevance} = \frac{1}{1 + e^{-\text{logit}}}$$
 
-The resulting value is in (0, 1) and is shown as the "Fit Score" in the UI.
+The resulting value is shown as the "Fit Score" in the UI.
 
 ---
 
@@ -79,48 +77,44 @@ on Twitter data for three-class sentiment classification: Negative, Neutral, Pos
 
 ### Label-to-Score Mapping
 
-The model outputs a probability distribution over three classes. The classes are
-mapped to a signed score:
+The model outputs a probability distribution over three classes. Let $\hat{c}$ be the
+winning class and $p_{\hat{c}}$ its probability:
 
-| Label    | Score |
-|----------|-------|
-| Positive | +confidence |
-| Neutral  | 0.0 |
-| Negative | −confidence |
+$$\hat{c} = \operatorname*{argmax}_{c} \operatorname{softmax}(\mathbf{logits})_c$$
 
-Where `confidence` is the model's probability for the winning class:
+$$\text{signed\_score} = \sigma(\hat{c}) \cdot p_{\hat{c}}$$
 
-```
-label, confidence ← argmax over softmax(logits)
-signed_score ← label_sign × confidence
-```
+where the sign function $\sigma$ is:
 
-This encoding means a document classified as Positive with 90% confidence contributes
-`+0.90` and one classified as Negative with 60% confidence contributes `−0.60`.
+| $\hat{c}$ | $\sigma(\hat{c})$ |
+|-----------|-------------------|
+| Positive  | $+1$ |
+| Neutral   | $0$ |
+| Negative  | $-1$ |
+
+A chunk classified Positive with 90% confidence contributes $+0.90$; one classified
+Negative with 60% confidence contributes $-0.60$.
 
 ### Per-Subreddit Aggregation
 
-Each subreddit profile is segmented into chunks. Each chunk is scored independently
-and the subreddit's final sentiment is the mean signed score across all chunks:
+Let $C_r$ be the set of chunks belonging to subreddit $r$. Each chunk is scored
+independently and the subreddit sentiment is the mean signed score:
 
-```
-signed_scores ← [score(chunk) for chunk in subreddit_chunks]
-sentiment(subreddit) ← mean(signed_scores)
-```
+$$\text{sentiment}(r) = \frac{1}{|C_r|} \sum_{c \,\in\, C_r} \text{signed\_score}(c)$$
 
 Mean aggregation is used rather than majority vote because it preserves magnitude:
 a community where half the posts are mildly positive and half are strongly negative
-will correctly surface as negative overall.
+will correctly surface as net negative overall.
 
 ### Display Thresholds
 
-| Score range       | UI label        |
-|-------------------|-----------------|
-| ≥ 0.5             | Very Positive   |
-| 0.1 to 0.5        | Positive        |
-| −0.1 to 0.1       | Mixed           |
-| −0.5 to −0.1      | Negative        |
-| < −0.5            | Very Negative   |
+| Score range | UI label |
+|---|---|
+| $\geq 0.5$ | Very Positive |
+| $[0.1,\; 0.5)$ | Positive |
+| $(-0.1,\; 0.1)$ | Mixed |
+| $(-0.5,\; -0.1]$ | Negative |
+| $< -0.5$ | Very Negative |
 
 ---
 

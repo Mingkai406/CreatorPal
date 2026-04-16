@@ -45,39 +45,36 @@ a subreddit that ranks highly for any reformulation is considered a strong candi
 
 ### LLM Configuration
 
-| Parameter   | Value |
-|-------------|-------|
-| Model       | configured via `VLLM_MODEL` (default: `meta-llama/Llama-3.1-8B-Instruct`) |
+| Parameter | Value |
+|-----------|-------|
+| Model | configured via `VLLM_MODEL` (default: `meta-llama/Llama-3.1-8B-Instruct`) |
 | Temperature | 0.7 — introduces lexical diversity between reformulations |
-| Max tokens  | 256 per reformulation batch |
-| Dedup       | exact string match before indexing |
+| Max tokens | 256 per reformulation batch |
+| Dedup | exact string match before indexing |
 
 ### Why Temperature 0.7
 
-Temperature controls the softmax sharpness over the token distribution. At `T=0.7`
-the model samples from a moderately broad distribution:
+Temperature $T$ controls the sharpness of the softmax over the token distribution.
+At each decoding step the model samples from:
 
-```
-P(token_i | context) = exp(logit_i / T) / Σ_j exp(logit_j / T)
-```
+$$P(\text{token}_i \mid \text{context}) = \frac{\exp\!\left(\text{logit}_i \,/\, T\right)}{\displaystyle\sum_j \exp\!\left(\text{logit}_j \,/\, T\right)}$$
 
-Lower values (T → 0) would produce near-identical reformulations, defeating the
-purpose of expansion. Higher values (T → 1) introduce noise that degrades query
-coherence. T=0.7 is the standard default for creative-but-coherent generation.
+As $T \to 0$ the distribution collapses to a one-hot (greedy decoding), producing
+near-identical reformulations that defeat the purpose of expansion. As $T \to 1$ the
+distribution flattens, introducing noise that degrades query coherence. $T = 0.7$ is
+the standard default for creative-but-coherent generation.
 
 ### Recall Effect
 
-If a single query has recall R at cutoff K, and n independent reformulations are
-generated with per-query recall R, the expected recall of the merged set is bounded by:
+Let $R$ be the recall at cutoff $K$ for a single query. If $n$ reformulations were
+independent, the expected recall of the merged set would be bounded by:
 
-```
-R_merged ≤ 1 − (1 − R)^n
-```
+$$R_\text{merged} \;\leq\; 1 - (1 - R)^n$$
 
-In practice the reformulations are not independent (they share the same information
-need), so the actual gain is lower. Empirical results on the CreatorPal evaluation
-set show Recall@10 improves by approximately 8–12 percentage points with 3 reformulations
-versus a single query.
+In practice the reformulations share the same information need, so they are not
+independent and the actual gain is lower than this bound. Empirical results on the
+CreatorPal evaluation set show Recall@10 improves by approximately 8–12 percentage
+points with 3 reformulations versus a single query.
 
 ---
 
@@ -156,8 +153,8 @@ Multi-query expansion and HyDE run sequentially in the pipeline:
 
 ```
 theme_query
-  → QueryRewriter  (3 reformulations, hybrid retrieval per query → max merge)
-  → HyDEQueryRewriter (1 pseudo-doc, FAISS-only → append to pool)
+  → QueryRewriter      (3 reformulations, hybrid retrieval per query → max merge)
+  → HyDEQueryRewriter  (1 pseudo-doc, FAISS-only → append to pool)
   → CrossEncoderReranker (top-50 fused pool → top-10)
 ```
 
