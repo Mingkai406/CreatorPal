@@ -220,6 +220,10 @@ class CreatorPalPipeline:
                 pal_results = {"summary": f"PAL error: {exc}", "metrics": {}}
 
         # 7. Sentiment analysis
+        # NOTE: sentiment is scored over the Reddit post chunks (chunk_text)
+        # that were retrieved and reranked — not over YouTube video comments.
+        # YouTube comments fetched during ingest are used for theme/context
+        # only; community tone is inferred from the subreddit's own posts.
         sentiment_scores: dict[str, float] = {}
         if self.sentiment is not None and ranked_raw:
             try:
