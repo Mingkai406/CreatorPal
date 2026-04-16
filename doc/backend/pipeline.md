@@ -10,7 +10,7 @@ This document describes `src/pipeline.py` — the end-to-end orchestration layer
 
 - accepts a YouTube channel URL or a freeform topic query
 - invokes all backend components in a defined order
-- assembles and returns a dict conforming to the frontend adapter contract (see `doc/streamlit/frontend-backend-interaction-guide.md`)
+- assembles and returns a dict conforming to the frontend adapter contract (see `doc/frontend/frontend-backend-interaction-guide.md`)
 
 The pipeline is instantiated once per process by `build_pipeline()` and cached by Streamlit's `@st.cache_resource`. It is **stateless across invocations**: all intermediate data lives in local variables inside `run()`. The same instance is reused for every user request.
 
@@ -140,7 +140,7 @@ Outputs → candidates: list[dict]
 
 Each dict in `candidates` contains: `subreddit`, `chunk_text`, `hybrid_score`, `faiss_score`, `bm25_score`, plus all passthrough metadata columns from the index.
 
-See `doc/retrieval.md` for the detailed fusion algorithm.
+See `doc/backend/retrieval.md` for the detailed fusion algorithm.
 
 ---
 
@@ -280,4 +280,4 @@ The pipeline always produces a structurally valid payload, even when most option
 1. Implement the component class in the appropriate `src/<module>/` directory with a clear public interface.
 2. Instantiate it in `CreatorPalPipeline.__init__()`. Use `_try_init()` if the component is optional.
 3. Insert the call at the correct position in `run()`. Store output in a local variable; append a label to `stages` on success.
-4. If the output contributes a new top-level key to the return payload, update `app/helpers/adapter.py` to validate and normalize it, and update `doc/streamlit/frontend-backend-interaction-guide.md` in the same PR.
+4. If the output contributes a new top-level key to the return payload, update `app/helpers/adapter.py` to validate and normalize it, and update `doc/frontend/frontend-backend-interaction-guide.md` in the same PR.
