@@ -166,6 +166,29 @@ class CreatorPalPipeline:
         )
         stages.extend(["query_rewriting", "hybrid_retrieval"])
 
+        # 4b. HyDE retrieval – merge FAISS hits from a hypothetical subreddit document
+        if self.hyde is not None:
+            try:
+                hyde_hits = self.hyde.retrieve(
+                    user_query=retrieval_query,
+                    channel_themes=channel_themes,
+                    faiss_retriever=self.faiss_retriever,
+                    top_k=self.settings.retrieval_top_k,
+                )
+                seen_keys: set[str] = {
+                    f"{c.get('subreddit', '')}|{c.get('chunk_text', '')[:80]}"
+                    for c in candidates
+                }
+                for hit in hyde_hits:
+                    key = f"{hit.get('subreddit', '')}|{hit.get('chunk_text', '')[:80]}"
+                    if key not in seen_keys:
+                        seen_keys.add(key)
+                        candidates.append(hit)
+                stages.append("hyde_retrieval")
+                logger.info("HyDE added %d new candidates", len(hyde_hits))
+            except Exception as exc:
+                logger.warning("HyDE retrieval failed – skipping: %s", exc)
+
         # 5. Cross-encoder reranking
         ranked_raw = self.reranker.rerank(
             query=retrieval_query,
