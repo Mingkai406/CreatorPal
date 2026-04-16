@@ -90,11 +90,15 @@ creatorpal/
 │   │   ├── pipeline.md             # runtime inference pipeline reference
 │   │   ├── retrieval.md            # retrieval stack deep dive
 │   │   └── corpus.md               # offline corpus and FAISS index build
-│   └── frontend/
-│       ├── structure.md
-│       ├── UIUX.md
-│       ├── frontend-design.md
-│       └── frontend-backend-interaction-guide.md
+│   ├── frontend/
+│   │   ├── structure.md
+│   │   ├── UIUX.md
+│   │   ├── frontend-design.md
+│   │   └── frontend-backend-interaction-guide.md
+│   └── algorithm/
+│       ├── retrieval.md            # BM25, FAISS, chunking, hybrid fusion
+│       ├── query-expansion.md      # multi-query expansion and HyDE
+│       └── analytics.md            # cross-encoder reranking, sentiment, PAL
 ├── eval/
 │   ├── retrieval_eval.py           # Recall@K, MRR metrics
 │   ├── generation_eval.py          # generation quality assessment
@@ -262,6 +266,9 @@ A hypothetical subreddit profile document is synthesized by an LLM and encoded t
 | [`doc/frontend/frontend-backend-interaction-guide.md`](doc/frontend/frontend-backend-interaction-guide.md) | Payload contract, adapter rules, error handling |
 | [`doc/collab/contributing.md`](doc/collab/contributing.md) | Development workflow, branch strategy, PR process |
 | [`doc/collab/team.md`](doc/collab/team.md) | Member contributions and module ownership |
+| [`doc/algorithm/retrieval.md`](doc/algorithm/retrieval.md) | BM25 scoring, bi-encoder FAISS retrieval, sliding-window chunking, hybrid fusion |
+| [`doc/algorithm/query-expansion.md`](doc/algorithm/query-expansion.md) | Multi-query LLM expansion and HyDE hypothetical document retrieval |
+| [`doc/algorithm/analytics.md`](doc/algorithm/analytics.md) | Cross-encoder reranking, RoBERTa sentiment scoring, PAL sandboxed execution |
 
 ---
 
