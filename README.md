@@ -47,9 +47,10 @@ Core workflow:
 Input (YouTube URL / Query)
   -> YouTube Ingest
   -> Theme Extractor
-  -> HyDE Rewriter
   -> Query Rewriter (multi-query expansion)
   -> Hybrid Retriever (BM25 α=0.15 + FAISS α=0.85, top-50)
+       ↳ HyDE Retriever (supplementary; merges FAISS hits from a
+         hypothetical subreddit document, deduplicates into candidates)
   -> CrossEncoder Reranker (top-10)
   -> PAL + Sentiment
   -> Augmented Generator
@@ -98,14 +99,14 @@ creatorpal/
 │   │   ├── hybrid_search.py        # weighted BM25 + FAISS fusion
 │   │   ├── query_rewriter.py       # LLM multi-query expansion
 │   │   ├── reranker.py             # cross-encoder reranker
-│   │   ├── hyde.py                 # HyDE query rewriter (skeleton)
-│   │   └── theme_extractor.py      # channel theme extraction (skeleton)
+│   │   ├── hyde.py                 # HyDE supplementary retriever
+│   │   └── theme_extractor.py      # channel theme extraction
 │   ├── pal/
 │   │   └── executor.py             # RestrictedPython PAL sandbox
 │   ├── sentiment/
 │   │   └── analyzer.py             # RoBERTa sentiment scoring
 │   └── generator/
-│       └── augmented_gen.py        # LLM report generation (skeleton)
+│       └── augmented_gen.py        # LLM report generation
 ├── tests/
 │   └── test_retrieval_smoke.py
 ├── Dockerfile
@@ -258,10 +259,10 @@ Modules:
 | `src/retrieval/reranker.py` | Done | Cross-encoder reranking |
 | `src/pal/executor.py` | Done | RestrictedPython PAL sandbox |
 | `src/sentiment/analyzer.py` | Done | RoBERTa sentiment scoring |
-| `src/ingest/youtube.py` | Skeleton | YouTube Data API v3 ingestion |
-| `src/retrieval/hyde.py` | Skeleton | HyDE query rewriting |
-| `src/retrieval/theme_extractor.py` | Skeleton | Channel theme extraction |
-| `src/generator/augmented_gen.py` | Skeleton | LLM report generation |
+| `src/ingest/youtube.py` | Done | YouTube Data API v3 ingestion (requires `YOUTUBE_API_KEY`) |
+| `src/retrieval/hyde.py` | Done | Supplementary HyDE retrieval; merges into candidates after hybrid search |
+| `src/retrieval/theme_extractor.py` | Done | LLM-based channel theme extraction |
+| `src/generator/augmented_gen.py` | Done | LLM strategy report generation |
 
 ---
 
