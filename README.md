@@ -33,12 +33,12 @@ Core workflow:
 
 1. YouTube channel ingest (metadata, videos, comments)
 2. LLM theme extraction
-3. **[Query rewriting][query-expansion-doc]** – LLM generates diverse reformulations for broader recall
-4. **[Hybrid retrieval][algo-retrieval-doc]** (top-50) – [Okapi BM25][algo-retrieval-doc] keyword search (15%) + [FAISS dense similarity][algo-retrieval-doc] (85%)
-5. **[HyDE][query-expansion-doc]** – supplementary retrieval from a hypothetical subreddit document; merged into candidates
-6. [Cross-encoder reranking][algo-analytics-doc] (top-10)
-7. [PAL analytics][algo-analytics-doc] + [subreddit sentiment scoring][algo-analytics-doc]
-8. Strategy report generation and [Streamlit rendering][frontend-structure-doc]
+3. **[Query rewriting](doc/algorithm/query-expansion.md)** – LLM generates diverse reformulations for broader recall
+4. **[Hybrid retrieval](doc/algorithm/retrieval.md)** (top-50) – [Okapi BM25](doc/algorithm/retrieval.md) keyword search (15%) + [FAISS dense similarity](doc/algorithm/retrieval.md) (85%)
+5. **[HyDE](doc/algorithm/query-expansion.md)** – supplementary retrieval from a hypothetical subreddit document; merged into candidates
+6. [Cross-encoder reranking](doc/algorithm/analytics.md) (top-10)
+7. [PAL analytics](doc/algorithm/analytics.md) + [subreddit sentiment scoring](doc/algorithm/analytics.md)
+8. Strategy report generation and [Streamlit rendering](doc/frontend/structure.md)
 
 ---
 
@@ -58,7 +58,7 @@ Input (YouTube URL or topic query)
   → Streamlit UI (ranked subreddit links + strategy report)
 ```
 
-See the [pipeline orchestration reference][pipeline-doc] for component initialization order, graceful-skip behavior, and the full return payload schema.
+See the [pipeline orchestration reference](doc/backend/pipeline.md) for component initialization order, graceful-skip behavior, and the full return payload schema.
 
 ---
 
@@ -157,7 +157,7 @@ cp .env.example .env
 # Edit .env with your API keys and model/path settings
 ```
 
-See [`.env.example`](.env.example) for the full list of supported variables. The [pipeline configuration reference][pipeline-doc] documents each of the 14 environment variables with their types and defaults.
+See [`.env.example`](.env.example) for the full list of supported variables. The [pipeline configuration reference](doc/backend/pipeline.md) documents each of the 14 environment variables with their types and defaults.
 
 ### Run locally with mock pipeline (no backend required)
 
@@ -168,7 +168,7 @@ streamlit run app/streamlit_app.py --server.port 8501
 
 ### Run locally with real pipeline
 
-Requires a populated [FAISS index][corpus-doc] and a running vLLM endpoint. See [Data Pipeline](#data-pipeline) and [Deployment](#deployment).
+Requires a populated [FAISS index](doc/backend/corpus.md) and a running vLLM endpoint. See [Data Pipeline](#data-pipeline) and [Deployment](#deployment).
 
 ```bash
 streamlit run app/streamlit_app.py --server.port 8501
@@ -197,7 +197,7 @@ LIMIT_POSTS=10000 bash data/run_pipeline.sh
 | 3. Ground truth | `build_ground_truth.py` | `data/processed/ground_truth_pairs.csv` |
 | 4. FAISS index | `build_faiss_index.py` | `data/processed/subreddit_profiles.faiss` + `.json` |
 
-For the full pipeline reference, individual script options, and GCP/large-scale setup, see [`doc/backend/corpus.md`][corpus-doc].
+For the full pipeline reference, individual script options, and GCP/large-scale setup, see [`doc/backend/corpus.md`](doc/backend/corpus.md).
 
 ---
 
@@ -242,15 +242,15 @@ The retrieval stage fuses two complementary signals:
 | BM25 (keyword) | 0.15 | Okapi BM25 over tokenized `chunk_text` — captures exact keyword matches |
 | FAISS (semantic) | 0.85 | Cosine similarity via `all-mpnet-base-v2` embeddings — captures meaning |
 
-Scores from each source are [min-max normalized][algo-retrieval-doc] before the weighted linear combination. The fused ranking is then passed to the [cross-encoder reranker][algo-analytics-doc] for precision refinement. For the full scoring formulas, weight selection rationale, and tuning guide, see the [retrieval stack reference][retrieval-doc].
+Scores from each source are [min-max normalized](doc/algorithm/retrieval.md) before the weighted linear combination. The fused ranking is then passed to the [cross-encoder reranker](doc/algorithm/analytics.md) for precision refinement. For the full scoring formulas, weight selection rationale, and tuning guide, see the [retrieval stack reference](doc/backend/retrieval.md).
 
 ### Query Rewriting
 
-The user query is expanded into multiple [diverse reformulations][query-expansion-doc] via an LLM. All reformulations are run through the hybrid retriever; results are deduplicated and merged by score. This improves recall by surfacing documents that a single query phrasing might miss.
+The user query is expanded into multiple [diverse reformulations](doc/algorithm/query-expansion.md) via an LLM. All reformulations are run through the hybrid retriever; results are deduplicated and merged by score. This improves recall by surfacing documents that a single query phrasing might miss.
 
 ### HyDE (Hypothetical Document Embedding)
 
-A [hypothetical subreddit profile document][query-expansion-doc] is synthesized by an LLM and encoded to retrieve additional FAISS candidates. These are deduplicated and merged into the hybrid retrieval pool before reranking. HyDE results are append-only — they cannot displace candidates that already scored well on real signals.
+A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is synthesized by an LLM and encoded to retrieve additional FAISS candidates. These are deduplicated and merged into the hybrid retrieval pool before reranking. HyDE results are append-only — they cannot displace candidates that already scored well on real signals.
 
 ---
 
@@ -302,13 +302,3 @@ A [hypothetical subreddit profile document][query-expansion-doc] is synthesized 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
-[pipeline-doc]: doc/backend/pipeline.md
-[retrieval-doc]: doc/backend/retrieval.md
-[corpus-doc]: doc/backend/corpus.md
-[frontend-structure-doc]: doc/frontend/structure.md
-[frontend-contract-doc]: doc/frontend/frontend-backend-interaction-guide.md
-[algo-retrieval-doc]: doc/algorithm/retrieval.md
-[query-expansion-doc]: doc/algorithm/query-expansion.md
-[algo-analytics-doc]: doc/algorithm/analytics.md
-[contributing-doc]: doc/collab/contributing.md
