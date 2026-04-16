@@ -5,6 +5,14 @@
 
 Each section lists the modules that person owned, the specific files they committed, and the key technical decisions they made.
 
+## Table of Contents
+
+- [Runxin Shao — Retrieval Pipeline + Backend Integration](#runxin-shao)
+- [Ziqi Yang — Frontend + Deployment + Project Documentation](#ziqi-yang)
+- [Gaoyuan Shi — Data Pipeline](#gaoyuan-shi)
+- [Mingkai Gao — Analytics + Evaluation + Project Initialization](#mingkai-gao)
+- [Summary](#summary)
+
 ---
 
 ## Runxin Shao
