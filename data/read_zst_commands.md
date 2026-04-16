@@ -14,4 +14,4 @@ python data/read_zst.py RS_2019-04.zst --subreddit AskReddit --min-score 10 --li
 python data/read_zst.py RS_2019-04.zst --subreddit AskReddit --count
 ```
 
-For the full option reference see [`doc/data-pipeline.md`](../doc/data-pipeline.md#inspecting-raw-data).
+For the full option reference see [`doc/corpus.md`](../doc/corpus.md#inspecting-raw-data).
