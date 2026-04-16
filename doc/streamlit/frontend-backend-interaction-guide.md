@@ -150,13 +150,16 @@ Frontend behavior:
 
 ## 9. Known Repository Status
 
-`src/pipeline.py` currently raises `NotImplementedError` in:
-- `CreatorPalPipeline.__init__`
-- `CreatorPalPipeline.prepare_retrieval_query`
-- `CreatorPalPipeline.run`
-- `build_pipeline`
+`src/pipeline.py` is fully implemented end-to-end. All pipeline stages
+(YouTube ingest, theme extraction, hybrid retrieval, HyDE, reranking,
+PAL, sentiment, report generation) are wired and guarded with
+`_try_init` / try-except so that unavailable components are skipped
+gracefully rather than aborting the run.
 
-Because of this, frontend commonly runs through `MockPipeline` unless backend is implemented.
+`get_pipeline()` falls back to `MockPipeline` in two cases:
+1. `CREATORPAL_USE_MOCK_PIPELINE=1|true|yes|on|y` is set in the environment.
+2. `build_pipeline()` raises any exception (e.g. missing FAISS index, no
+   vLLM endpoint) or returns an object without a `run` method.
 
 ## 10. Change Rules for Integration Work
 
