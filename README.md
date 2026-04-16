@@ -12,6 +12,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Team & Collaboration](#team--collaboration)
 - [Architecture](#architecture)
 - [Repository Structure](#repository-structure)
 - [Getting Started](#getting-started)
@@ -27,18 +28,35 @@
 
 ## Overview
 
-CreatorPal answers one practical question for creators: **Which Reddit communities should I target, and what engagement strategy should I use?**
+Reddit has 3.4 million active communities, and most YouTube creators have no systematic way to know which ones are worth their time — which tolerate creator posts, which engage with their specific content type, and which will remove them on sight. CreatorPal solves that matching problem: paste in a YouTube channel URL and in under two minutes it returns the ten subreddits most likely to embrace your content, scored by topical fit and community sentiment, alongside a tailored engagement strategy grounded in real community data. For the full product narrative and user journey, read the [Product Overview](doc/product/overview.md).
 
 Core workflow:
 
 1. YouTube channel ingest (metadata, videos, comments)
 2. LLM theme extraction
-3. **Query rewriting** – LLM generates diverse reformulations for broader recall
-4. **Hybrid retrieval** (top-50) – BM25 keyword search (15%) + FAISS dense similarity (85%)
-5. **HyDE** – supplementary retrieval from a hypothetical subreddit document; merged into candidates
-6. Cross-encoder reranking (top-10)
-7. PAL analytics + subreddit sentiment scoring
-8. Strategy report generation and Streamlit rendering
+3. **[Query rewriting](doc/algorithm/query-expansion.md)** – LLM generates diverse reformulations for broader recall
+4. **[Hybrid retrieval](doc/algorithm/retrieval.md)** (top-50) – [Okapi BM25](doc/algorithm/retrieval.md) keyword search (15%) + [FAISS dense similarity](doc/algorithm/retrieval.md) (85%)
+5. **[HyDE](doc/algorithm/query-expansion.md)** – supplementary retrieval from a hypothetical subreddit document; merged into candidates
+6. [Cross-encoder reranking](doc/algorithm/analytics.md) (top-10)
+7. [PAL analytics](doc/algorithm/analytics.md) + [subreddit sentiment scoring](doc/algorithm/analytics.md)
+8. Strategy report generation and [Streamlit rendering](doc/frontend/structure.md)
+
+---
+
+## Team & Collaboration
+
+CreatorPal was built by four people, each owning a distinct vertical of the system end-to-end:
+
+| Member | Role |
+|---|---|
+| Runxin Shao | Retrieval pipeline + backend integration (`src/retrieval/`, `src/pipeline.py`) |
+| Ziqi Yang | Frontend + deployment + project documentation (`app/`, `doc/`, `Dockerfile`) |
+| Gaoyuan Shi | Data pipeline (`data/build_*.py`, `data/preprocess_corpus.py`) |
+| Mingkai Gao | Analytics + evaluation + project initialization (`src/pal/`, `src/sentiment/`, `eval/`) |
+
+Each member owned their modules from design through tests, with shared ownership at integration boundaries (payload contract, config schema, pipeline orchestration). Development followed a feature-branch workflow — five topic branches integrating into `main` via pull request, with cross-area review required for any change touching the frontend–backend payload contract.
+
+For a detailed breakdown of module ownership, files committed, and key technical decisions per member, see [Team Contributions](doc/collab/team.md). For branch naming conventions, PR guidelines, and quality gates, see [Contributing](doc/collab/contributing.md).
 
 ---
 
@@ -57,6 +75,8 @@ Input (YouTube URL or topic query)
   → Augmented Generator (strategy report)
   → Streamlit UI (ranked subreddit links + strategy report)
 ```
+
+See the [pipeline orchestration reference](doc/backend/pipeline.md) for component initialization order, graceful-skip behavior, and the full return payload schema.
 
 ---
 
@@ -81,12 +101,24 @@ creatorpal/
 │   ├── read_zst_commands.md        # usage examples for read_zst.py
 │   └── run_pipeline.sh             # one-click idempotent data pipeline
 ├── doc/
-│   ├── data-pipeline.md            # data pipeline reference
-│   └── streamlit/
-│       ├── structure.md
-│       ├── UIUX.md
-│       ├── frontend-design.md
-│       └── frontend-backend-interaction-guide.md
+│   ├── product/
+│   │   └── overview.md             # product narrative, user journey, and vision
+│   ├── collab/
+│   │   ├── contributing.md         # development workflow, branch strategy, PR process
+│   │   └── team.md                 # member contributions and module ownership
+│   ├── backend/
+│   │   ├── pipeline.md             # runtime inference pipeline reference
+│   │   ├── retrieval.md            # retrieval stack deep dive
+│   │   └── corpus.md               # offline corpus and FAISS index build
+│   ├── frontend/
+│   │   ├── structure.md
+│   │   ├── UIUX.md
+│   │   ├── frontend-design.md
+│   │   └── frontend-backend-interaction-guide.md
+│   └── algorithm/
+│       ├── retrieval.md            # BM25, FAISS, chunking, hybrid fusion
+│       ├── query-expansion.md      # multi-query expansion and HyDE
+│       └── analytics.md            # cross-encoder reranking, sentiment, PAL
 ├── eval/
 │   ├── retrieval_eval.py           # Recall@K, MRR metrics
 │   ├── generation_eval.py          # generation quality assessment
@@ -116,7 +148,6 @@ creatorpal/
 │   ├── test_eval.py
 │   └── test_sentiment.py
 ├── .env.example
-├── CONTRIBUTING.md
 ├── Dockerfile
 ├── docker-compose.yml
 ├── docker-startup
@@ -144,7 +175,7 @@ cp .env.example .env
 # Edit .env with your API keys and model/path settings
 ```
 
-See [`.env.example`](.env.example) for the full list of supported variables.
+See [`.env.example`](.env.example) for the full list of supported variables. The [pipeline configuration reference](doc/backend/pipeline.md) documents each of the 14 environment variables with their types and defaults.
 
 ### Run locally with mock pipeline (no backend required)
 
@@ -155,7 +186,7 @@ streamlit run app/streamlit_app.py --server.port 8501
 
 ### Run locally with real pipeline
 
-Requires a populated FAISS index and a running vLLM endpoint. See [Data Pipeline](#data-pipeline) and [Deployment](#deployment).
+Requires a populated [FAISS index](doc/backend/corpus.md) and a running vLLM endpoint. See [Data Pipeline](#data-pipeline) and [Deployment](#deployment).
 
 ```bash
 streamlit run app/streamlit_app.py --server.port 8501
@@ -184,7 +215,7 @@ LIMIT_POSTS=10000 bash data/run_pipeline.sh
 | 3. Ground truth | `build_ground_truth.py` | `data/processed/ground_truth_pairs.csv` |
 | 4. FAISS index | `build_faiss_index.py` | `data/processed/subreddit_profiles.faiss` + `.json` |
 
-For the full pipeline reference, individual script options, and GCP/large-scale setup, see [`doc/data-pipeline.md`](doc/data-pipeline.md).
+For the full pipeline reference, individual script options, and GCP/large-scale setup, see [`doc/backend/corpus.md`](doc/backend/corpus.md).
 
 ---
 
@@ -229,15 +260,15 @@ The retrieval stage fuses two complementary signals:
 | BM25 (keyword) | 0.15 | Okapi BM25 over tokenized `chunk_text` — captures exact keyword matches |
 | FAISS (semantic) | 0.85 | Cosine similarity via `all-mpnet-base-v2` embeddings — captures meaning |
 
-Scores from each source are min-max normalized before the weighted linear combination. The fused ranking is then passed to the cross-encoder reranker for precision refinement.
+Scores from each source are [min-max normalized](doc/algorithm/retrieval.md) before the weighted linear combination. The fused ranking is then passed to the [cross-encoder reranker](doc/algorithm/analytics.md) for precision refinement. For the full scoring formulas, weight selection rationale, and tuning guide, see the [retrieval stack reference](doc/backend/retrieval.md).
 
 ### Query Rewriting
 
-The user query is expanded into multiple diverse reformulations via an LLM. All reformulations are run through the hybrid retriever; results are deduplicated and merged by score. This improves recall by surfacing documents that a single query phrasing might miss.
+The user query is expanded into multiple [diverse reformulations](doc/algorithm/query-expansion.md) via an LLM. All reformulations are run through the hybrid retriever; results are deduplicated and merged by score. This improves recall by surfacing documents that a single query phrasing might miss.
 
 ### HyDE (Hypothetical Document Embedding)
 
-A hypothetical subreddit profile document is synthesized by an LLM and encoded to retrieve additional FAISS candidates. These are deduplicated and merged into the hybrid retrieval pool before reranking.
+A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is synthesized by an LLM and encoded to retrieve additional FAISS candidates. These are deduplicated and merged into the hybrid retrieval pool before reranking. HyDE results are append-only — they cannot displace candidates that already scored well on real signals.
 
 ---
 
@@ -245,12 +276,19 @@ A hypothetical subreddit profile document is synthesized by an LLM and encoded t
 
 | Document | Description |
 |---|---|
-| [`doc/data-pipeline.md`](doc/data-pipeline.md) | Data pipeline reference: download, build stages, GCP setup |
-| [`doc/streamlit/structure.md`](doc/streamlit/structure.md) | Frontend code boundaries and runtime lifecycle |
-| [`doc/streamlit/UIUX.md`](doc/streamlit/UIUX.md) | Visual system, UI states, theme tokens, animations |
-| [`doc/streamlit/frontend-design.md`](doc/streamlit/frontend-design.md) | Implementation constraints and regression checklist |
-| [`doc/streamlit/frontend-backend-interaction-guide.md`](doc/streamlit/frontend-backend-interaction-guide.md) | Payload contract, adapter rules, error handling |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Development workflow, branch strategy, PR process |
+| [`doc/product/overview.md`](doc/product/overview.md) | Product narrative: problem, user journey, value proposition, and vision |
+| [`doc/backend/pipeline.md`](doc/backend/pipeline.md) | Backend pipeline: component init, 9-step execution flow, graceful degradation, return payload |
+| [`doc/backend/retrieval.md`](doc/backend/retrieval.md) | Retrieval stack: BM25, FAISS, hybrid fusion, query rewriting, HyDE, reranking, tuning guide |
+| [`doc/backend/corpus.md`](doc/backend/corpus.md) | Offline corpus build: dataset download, build stages, per-script options, GCP setup |
+| [`doc/frontend/structure.md`](doc/frontend/structure.md) | Frontend code boundaries and runtime lifecycle |
+| [`doc/frontend/UIUX.md`](doc/frontend/UIUX.md) | Visual system, UI states, theme tokens, animations |
+| [`doc/frontend/frontend-design.md`](doc/frontend/frontend-design.md) | Implementation constraints and regression checklist |
+| [`doc/frontend/frontend-backend-interaction-guide.md`](doc/frontend/frontend-backend-interaction-guide.md) | Payload contract, adapter rules, error handling |
+| [`doc/collab/contributing.md`](doc/collab/contributing.md) | Development workflow, branch strategy, PR process |
+| [`doc/collab/team.md`](doc/collab/team.md) | Member contributions and module ownership |
+| [`doc/algorithm/retrieval.md`](doc/algorithm/retrieval.md) | BM25 scoring, bi-encoder FAISS retrieval, sliding-window chunking, hybrid fusion |
+| [`doc/algorithm/query-expansion.md`](doc/algorithm/query-expansion.md) | Multi-query LLM expansion and HyDE hypothetical document retrieval |
+| [`doc/algorithm/analytics.md`](doc/algorithm/analytics.md) | Cross-encoder reranking, RoBERTa sentiment scoring, PAL sandboxed execution |
 
 ---
 

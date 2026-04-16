@@ -124,7 +124,7 @@ Rules for future changes:
 
 When changing UI or contract-sensitive behavior:
 1. Modify code.
-2. Update docs in `doc/streamlit/` in the same PR.
+2. Update docs in `doc/frontend/` in the same PR.
 3. Verify light and dark mode visually.
 4. Verify mock and real pipeline code paths.
 5. Run at least one manual submit flow and one error flow.
