@@ -8,7 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from eval.retrieval_eval import mean_reciprocal_rank, recall_at_k, run_retrieval_evaluation
+from eval.retrieval_eval import (
+    mean_reciprocal_rank,
+    precision_at_k,
+    recall_at_k,
+    run_retrieval_evaluation,
+)
 from eval.generation_eval import load_rubric, summarize_scores
 
 
@@ -49,6 +54,31 @@ class TestRecallAtK:
 
     def test_empty_relevant(self) -> None:
         assert recall_at_k(["a", "b"], set(), k=2) == 0.0
+
+
+# ---------------------------------------------------------------------------
+# precision_at_k
+# ---------------------------------------------------------------------------
+
+class TestPrecisionAtK:
+    """Tests for precision_at_k."""
+
+    def test_perfect_precision(self) -> None:
+        retrieved = ["a", "b", "c"]
+        relevant = {"a", "b", "c", "d"}
+        # all 3 of top-3 are relevant -> 3/3 = 1.0
+        assert precision_at_k(retrieved, relevant, k=3) == pytest.approx(1.0)
+
+    def test_partial_precision(self) -> None:
+        retrieved = ["a", "x", "b", "y"]
+        relevant = {"a", "b", "c"}
+        # top-4 contains a and b -> 2/4 = 0.5
+        assert precision_at_k(retrieved, relevant, k=4) == pytest.approx(0.5)
+
+    def test_zero_precision(self) -> None:
+        retrieved = ["x", "y", "z"]
+        relevant = {"a", "b"}
+        assert precision_at_k(retrieved, relevant, k=3) == pytest.approx(0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -119,6 +149,10 @@ class TestRunRetrievalEvaluation:
         assert metrics["recall@2"] == pytest.approx(0.75)
         # channel1 recall@3: 2/2 = 1.0, channel2 recall@3: 1/1 = 1.0 -> avg 1.0
         assert metrics["recall@3"] == pytest.approx(1.0)
+        # channel1 precision@2: 1/2 = 0.5, channel2 precision@2: 1/2 = 0.5 -> avg 0.5
+        assert metrics["precision@2"] == pytest.approx(0.5)
+        # channel1 precision@3: 2/3, channel2 precision@3: 1/3 (only 2 preds) -> avg 0.5
+        assert metrics["precision@3"] == pytest.approx(0.5)
         # channel1 MRR: 1/1 = 1.0, channel2 MRR: 1/2 = 0.5 -> avg 0.75
         assert metrics["mrr"] == pytest.approx(0.75)
 
