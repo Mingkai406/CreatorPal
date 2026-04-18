@@ -28,6 +28,24 @@ def recall_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:
     return min(hits / len(relevant), 1.0)
 
 
+def precision_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:
+    """Compute Precision@K for one query.
+
+    Args:
+        retrieved: Ordered list of retrieved subreddit names.
+        relevant: Set of ground-truth relevant subreddits.
+        k: Cutoff rank.
+
+    Returns:
+        Fraction of top-k retrieved items that are in the relevant set.
+    """
+    if k <= 0:
+        return 0.0
+    top_k = retrieved[:k]
+    hits = sum(1 for item in top_k if item in relevant)
+    return hits / k
+
+
 def mean_reciprocal_rank(retrieved: list[str], relevant: set[str]) -> float:
     """Compute reciprocal rank for one query.
 
@@ -57,7 +75,7 @@ def run_retrieval_evaluation(
         k_values: List of k cutoffs for Recall@K.
 
     Returns:
-        Dict with average Recall@K for each k and average MRR.
+        Dict with average Recall@K and Precision@K for each k, plus average MRR.
     """
     gt_df = pd.read_csv(ground_truth_path)
     pred_df = pd.read_csv(predictions_path)
@@ -77,10 +95,12 @@ def run_retrieval_evaluation(
     channels = set(gt_by_channel) & set(pred_by_channel)
     if not channels:
         metrics: dict[str, float] = {f"recall@{k}": 0.0 for k in k_values}
+        metrics.update({f"precision@{k}": 0.0 for k in k_values})
         metrics["mrr"] = 0.0
         return metrics
 
     recall_scores: dict[int, list[float]] = {k: [] for k in k_values}
+    precision_scores: dict[int, list[float]] = {k: [] for k in k_values}
     mrr_scores: list[float] = []
 
     for channel_id in channels:
@@ -88,9 +108,13 @@ def run_retrieval_evaluation(
         retrieved = pred_by_channel[channel_id]
         for k in k_values:
             recall_scores[k].append(recall_at_k(retrieved, relevant, k))
+            precision_scores[k].append(precision_at_k(retrieved, relevant, k))
         mrr_scores.append(mean_reciprocal_rank(retrieved, relevant))
 
     metrics = {f"recall@{k}": float(np.mean(recall_scores[k])) for k in k_values}
+    metrics.update(
+        {f"precision@{k}": float(np.mean(precision_scores[k])) for k in k_values}
+    )
     metrics["mrr"] = float(np.mean(mrr_scores))
     return metrics
 
