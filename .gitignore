@@ -211,6 +211,7 @@ __marimo__/
 
 # Project-specific
 .idea/
+.claude/
 data/raw/
 data/dataset/
 data/processed/
