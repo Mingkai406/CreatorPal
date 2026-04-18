@@ -5,6 +5,8 @@ from __future__ import annotations
 import base64
 import os
 import sys
+import threading
+import time
 from collections.abc import Mapping, Sequence
 from html import escape
 from io import BytesIO
@@ -79,6 +81,12 @@ LOGO_72_SMALL = LOGO_32
 MAX_BG_WIDTH = 1920
 MAX_BG_BYTES = 700_000
 RESAMPLE_LANCZOS = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.LANCZOS
+LOADING_STEPS = [
+    "Fetching channel metadata",
+    "Extracting themes with HyDE",
+    "Running FAISS retrieval · top 50",
+    "Cross-encoder reranking · top 10",
+]
 
 FAVICON_DATA_URI = "data:image/svg+xml;utf8," + quote(
     '<svg width="64" height="64" viewBox="0 0 72 72" fill="none" '
@@ -96,6 +104,11 @@ LIGHT_CSS = f"""<style>
 #MainMenu, footer, header, [data-testid="stToolbar"], [data-testid="collapsedControl"] {{
     display: none !important;
 }}
+
+/* Hide default Streamlit spinner/status widgets */
+[data-testid="stSpinner"] {{ display: none !important; }}
+[data-testid="stStatusWidget"] {{ display: none !important; }}
+.stAlert[kind="info"] {{ display: none !important; }}
 
 .stApp {{
     position: relative !important;
@@ -163,6 +176,33 @@ LIGHT_CSS = f"""<style>
     }}
     100% {{
         background-position: 500px 0;
+    }}
+}}
+
+@keyframes cp-spin {{
+    to {{
+        transform: rotate(360deg);
+    }}
+}}
+
+@keyframes cp-bar {{
+    0% {{
+        transform: scaleX(0);
+    }}
+    15% {{
+        transform: scaleX(0.25);
+    }}
+    40% {{
+        transform: scaleX(0.55);
+    }}
+    70% {{
+        transform: scaleX(0.78);
+    }}
+    90% {{
+        transform: scaleX(0.92);
+    }}
+    100% {{
+        transform: scaleX(0.97);
     }}
 }}
 
@@ -284,6 +324,62 @@ section[data-testid="stSidebar"] {{
 
 [data-testid="stCaptionContainer"] + div {{
     margin-top: 0 !important;
+}}
+
+/* Loading card — light mode */
+.cp-loading {{
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 22px 24px 20px;
+    max-width: 640px;
+    margin: 14px auto 0;
+}}
+
+.cp-loading-top {{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}}
+
+.cp-loading-ring {{
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(0, 0, 0, 0.10);
+    border-top-color: #1C1C1E;
+    animation: cp-spin 0.9s linear infinite;
+    flex-shrink: 0;
+}}
+
+.cp-loading-title {{
+    font-size: 14px;
+    font-weight: 600;
+    color: #1C1C1E;
+    margin-bottom: 3px;
+}}
+
+.cp-loading-sub {{
+    font-size: 12px;
+    color: #8E8E93;
+}}
+
+.cp-loading-bar-wrap {{
+    height: 2px;
+    background: rgba(0, 0, 0, 0.07);
+    border-radius: 1px;
+    overflow: hidden;
+}}
+
+.cp-loading-bar-fill {{
+    height: 100%;
+    background: #1C1C1E;
+    border-radius: 1px;
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: cp-bar 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }}
 
 .cp-sidebar-shell {{
@@ -777,6 +873,11 @@ a[href*="reddit.com"]:hover {{
 DARK_CSS = """<style>
 #MainMenu, footer, header, [data-testid="stToolbar"], [data-testid="collapsedControl"] { display: none !important; }
 
+/* Hide default Streamlit spinner/status widgets */
+[data-testid="stSpinner"] { display: none !important; }
+[data-testid="stStatusWidget"] { display: none !important; }
+.stAlert[kind="info"] { display: none !important; }
+
 @keyframes fadeInDown {
     from { opacity: 0; transform: translateY(-14px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -792,6 +893,17 @@ DARK_CSS = """<style>
 @keyframes shimmer {
     0%   { background-position: -500px 0; }
     100% { background-position:  500px 0; }
+}
+@keyframes cp-spin {
+    to { transform: rotate(360deg); }
+}
+@keyframes cp-bar {
+    0%  { transform: scaleX(0); }
+    15% { transform: scaleX(0.25); }
+    40% { transform: scaleX(0.55); }
+    70% { transform: scaleX(0.78); }
+    90% { transform: scaleX(0.92); }
+    100%{ transform: scaleX(0.97); }
 }
 
 .stApp {
@@ -916,6 +1028,48 @@ section[data-testid="stSidebar"] { display: none !important; }
 [data-testid="stAlert"] { border-radius: 8px !important; }
 [data-testid="stHorizontalBlock"] { align-items: flex-start !important; }
 [data-testid="stTextInput"] input, [data-testid="stFormSubmitButton"] button { box-shadow: none !important; }
+
+/* Loading card — dark mode */
+.cp-loading {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.40);
+    padding: 22px 24px 20px;
+    max-width: 640px;
+    margin: 14px auto 0;
+}
+.cp-loading-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+.cp-loading-ring {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(255, 255, 255, 0.12);
+    border-top-color: #F5F5F7;
+    animation: cp-spin 0.9s linear infinite;
+    flex-shrink: 0;
+}
+.cp-loading-title { font-size: 14px; font-weight: 600; color: #F5F5F7; margin-bottom: 3px; }
+.cp-loading-sub { font-size: 12px; color: #52525B; }
+.cp-loading-bar-wrap {
+    height: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 1px;
+    overflow: hidden;
+}
+.cp-loading-bar-fill {
+    height: 100%;
+    background: #F5F5F7;
+    border-radius: 1px;
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: cp-bar 8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
 .cp-sidebar-shell {
     height: calc(100vh - 24px);
@@ -1260,6 +1414,84 @@ def get_pipeline(force_mock: bool = False) -> Any:
         return pipeline
     except Exception:
         return MockPipeline(runtime_delay_s=1.2)
+
+
+def _loading_card_html(current_step: int = 2) -> str:
+    step = max(1, min(current_step, len(LOADING_STEPS)))
+    step_label = escape(LOADING_STEPS[step - 1])
+    return (
+        '<div class="cp-loading">'
+        '<div class="cp-loading-top">'
+        '<div class="cp-loading-ring"></div>'
+        "<div>"
+        '<div class="cp-loading-title">Analyzing your channel</div>'
+        f'<div class="cp-loading-sub">{step_label} · step {step} of {len(LOADING_STEPS)}</div>'
+        "</div>"
+        "</div>"
+        '<div class="cp-loading-bar-wrap">'
+        '<div class="cp-loading-bar-fill"></div>'
+        "</div>"
+        "</div>"
+    )
+
+
+def render_loading_card(dark: bool, current_step: int = 2) -> None:
+    """Render the custom loading card."""
+    _ = dark  # Theme is handled by shared class names in LIGHT_CSS/DARK_CSS.
+    st.markdown(_loading_card_html(current_step=current_step), unsafe_allow_html=True)
+
+
+def run_with_loading(
+    pipeline: Any,
+    channel_or_query: str,
+    user_query: str | None,
+    dark: bool,
+) -> dict[str, Any]:
+    """Run the pipeline while showing a custom loading card with simulated steps."""
+    loading_placeholder = st.empty()
+    st.session_state["loading_step"] = 1
+
+    result_box: dict[str, Any] = {}
+    error_box: dict[str, Exception] = {}
+
+    def _run_pipeline() -> None:
+        try:
+            result_box["raw"] = pipeline.run(
+                channel_or_query=channel_or_query,
+                user_query=user_query,
+            )
+        except Exception as exc:  # pragma: no cover - runtime fallback path
+            error_box["exc"] = exc
+
+    worker = threading.Thread(target=_run_pipeline, daemon=True)
+    worker.start()
+
+    with loading_placeholder:
+        render_loading_card(dark=dark, current_step=1)
+
+    last_step_tick = time.monotonic()
+    while worker.is_alive():
+        time.sleep(0.12)
+        now = time.monotonic()
+        if now - last_step_tick < 1.8:
+            continue
+        last_step_tick = now
+        step = int(st.session_state.get("loading_step", 1))
+        if step < len(LOADING_STEPS):
+            st.session_state["loading_step"] = step + 1
+        with loading_placeholder:
+            render_loading_card(dark=dark, current_step=int(st.session_state.get("loading_step", 1)))
+
+    worker.join()
+    loading_placeholder.empty()
+    st.session_state.pop("loading_step", None)
+
+    if "exc" in error_box:
+        raise error_box["exc"]
+    raw = result_box.get("raw")
+    if not isinstance(raw, Mapping):
+        raise RuntimeError("Pipeline returned an invalid response.")
+    return dict(raw)
 
 
 def _svg_icon(path: str, stroke: str, bg: str) -> str:
@@ -1685,10 +1917,14 @@ def main() -> None:
                 st.warning("Please enter a YouTube channel URL or topic keyword.")
                 return
             try:
-                with st.spinner("Analyzing..."):
-                    pipeline = get_pipeline(force_mock=force_mock)
-                    st.session_state["pipeline_is_mock"] = isinstance(pipeline, MockPipeline)
-                    raw = pipeline.run(channel_or_query=query, user_query=user_query)
+                pipeline = get_pipeline(force_mock=force_mock)
+                st.session_state["pipeline_is_mock"] = isinstance(pipeline, MockPipeline)
+                raw = run_with_loading(
+                    pipeline=pipeline,
+                    channel_or_query=query,
+                    user_query=user_query,
+                    dark=dark,
+                )
                 st.session_state["last_result"] = adapt(raw)
                 st.session_state["last_error"] = None
                 st.rerun()
