@@ -88,6 +88,24 @@ LOADING_STEPS = [
     "Cross-encoder reranking · top 10",
 ]
 
+KEYFRAMES = """<style>
+@keyframes cp-spin {
+    to { transform: rotate(360deg); }
+}
+@keyframes cp-bar {
+    0%   { transform: scaleX(0); }
+    15%  { transform: scaleX(0.25); }
+    40%  { transform: scaleX(0.55); }
+    70%  { transform: scaleX(0.78); }
+    90%  { transform: scaleX(0.92); }
+    100% { transform: scaleX(0.97); }
+}
+@keyframes cp-fade-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+</style>"""
+
 FAVICON_DATA_URI = "data:image/svg+xml;utf8," + quote(
     '<svg width="64" height="64" viewBox="0 0 72 72" fill="none" '
     'xmlns="http://www.w3.org/2000/svg">'
@@ -179,33 +197,6 @@ LIGHT_CSS = f"""<style>
     }}
 }}
 
-@keyframes cp-spin {{
-    to {{
-        transform: rotate(360deg);
-    }}
-}}
-
-@keyframes cp-bar {{
-    0% {{
-        transform: scaleX(0);
-    }}
-    15% {{
-        transform: scaleX(0.25);
-    }}
-    40% {{
-        transform: scaleX(0.55);
-    }}
-    70% {{
-        transform: scaleX(0.78);
-    }}
-    90% {{
-        transform: scaleX(0.92);
-    }}
-    100% {{
-        transform: scaleX(0.97);
-    }}
-}}
-
 [data-testid="stSidebar"] {{
     display: none !important;
 }}
@@ -232,148 +223,178 @@ section[data-testid="stSidebar"] {{
     background: transparent !important;
 }}
 
+/* Strip form card */
 [data-testid="stForm"] {{
-    background: rgba(255, 255, 255, 0.75) !important;
-    border: 1px solid rgba(255, 255, 255, 0.90) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border-radius: 14px !important;
-    box-shadow: 0 2px 24px rgba(0,0,0,0.08) !important;
-    padding: 16px 18px 10px !important;
-    margin-bottom: 0 !important;
-    animation: fadeInUp 420ms 140ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }}
-
+[data-testid="stForm"] > div {{
+    border: none !important;
+    padding: 0 !important;
+}}
 [data-testid="stForm"] + div {{
     margin-top: 0 !important;
 }}
 
-[data-testid="stTextInput"] input {{
-    background: rgba(255, 255, 255, 0.60) !important;
-    border: 1px solid rgba(255, 255, 255, 0.90) !important;
-    border-radius: 8px !important;
-    color: #1C1C1E !important;
-    font-size: 13px !important;
-    padding: 9px 14px !important;
+/* Input area — no card */
+.cp-input-labels {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    max-width: 600px;
+    margin-bottom: 5px;
 }}
-
-[data-testid="stTextInput"] label p {{
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    color: #6E6E73 !important;
-    letter-spacing: 0.04em !important;
-    text-transform: uppercase !important;
+.cp-input-label {{
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #A0A0A8;
+    padding: 0 2px;
 }}
-
-[data-testid="stTextInput"] input::placeholder {{
-    color: #C7C7CC !important;
+.cp-input-row {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(0, 0, 0, 0.09);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 600px;
+    margin-bottom: 16px;
 }}
-
-[data-testid="stTextInput"] input:focus {{
-    background: rgba(255, 255, 255, 0.85) !important;
-    border-color: {COLORS["blue_500"]} !important;
+.cp-input-cell {{
+    background: rgba(255, 255, 255, 0.78);
+    padding: 12px 16px;
+}}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:first-of-type {{
+    gap: 1px !important;
+    background: rgba(0, 0, 0, 0.09);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 600px;
+    margin-bottom: 16px;
+}}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:first-of-type [data-testid="stColumn"] {{
+    background: rgba(255, 255, 255, 0.78);
+    padding: 12px 16px;
+}}
+[data-testid="stTextInput"] > div {{
+    background: transparent !important;
+}}
+[data-testid="stTextInput"] div[data-baseweb="base-input"],
+[data-testid="stTextInput"] div[data-baseweb="input"] {{
+    background: transparent !important;
+    border: none !important;
     box-shadow: none !important;
 }}
-
-[data-testid="stFormSubmitButton"] button {{
-    background-color: #3B82F6 !important;
-    color: #FFFFFF !important;
+[data-testid="stTextInput"] input {{
+    background: transparent !important;
     border: none !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    padding: 9px 0 !important;
-    width: 100% !important;
-}}
-
-[data-testid="stFormSubmitButton"] button:hover {{
-    background: {COLORS["blue_hover"]} !important;
-    border: none !important;
-}}
-
-[data-testid="stFormSubmitButton"] button p {{
-    color: #FFFFFF !important;
-}}
-
-[data-testid="stFormSubmitButton"] button:disabled {{
-    background: linear-gradient(
-        90deg,
-        #1D4ED8 0%,
-        #3B82F6 30%,
-        #93C5FD 50%,
-        #3B82F6 70%,
-        #1D4ED8 100%
-    ) !important;
-    background-size: 500px 100% !important;
-    animation: shimmer 1.4s linear infinite !important;
-    opacity: 1 !important;
-    cursor: not-allowed;
-}}
-
-[data-testid="stCaptionContainer"] {{
-    margin: 0 !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+    color: #1C1C1E !important;
+    -webkit-text-fill-color: #1C1C1E !important;
+    caret-color: #1C1C1E !important;
     padding: 0 !important;
 }}
-
-[data-testid="stCaptionContainer"] p {{
-    font-size: 11px !important;
-    color: #8E8E93 !important;
-    margin: 4px 0 0 !important;
-    line-height: 1.2 !important;
+[data-testid="stTextInput"] input::placeholder {{
+    color: #C0C0C8 !important;
+}}
+[data-testid="stTextInput"] label {{
+    display: none !important;
 }}
 
-[data-testid="stCaptionContainer"] + div {{
-    margin-top: 0 !important;
+/* Button row */
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:nth-of-type(2) {{
+    align-items: center !important;
+    max-width: 600px;
 }}
-
-/* Loading card — light mode */
-.cp-loading {{
-    background: rgba(255, 255, 255, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.95);
-    border-radius: 14px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    padding: 22px 24px 20px;
-    max-width: 640px;
-    margin: 14px auto 0;
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:nth-of-type(2) [data-testid="stColumn"] {{
+    display: flex;
+    align-items: center;
 }}
-
-.cp-loading-top {{
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:nth-of-type(2) [data-testid="stColumn"]:last-of-type {{
+    padding-left: 10px;
+}}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:nth-of-type(2) [data-testid="stMarkdown"] {{
+    margin: 0 !important;
+}}
+.cp-btn-row {{
     display: flex;
     align-items: center;
     gap: 16px;
-    margin-bottom: 18px;
+    max-width: 600px;
+}}
+[data-testid="stFormSubmitButton"] {{
+    width: fit-content !important;
+}}
+[data-testid="stFormSubmitButton"] button {{
+    background: #1C1C1E !important;
+    color: #FAFAFA !important;
+    border: none !important;
+    border-radius: 30px !important;
+    padding: 11px 34px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+    width: auto !important;
+}}
+[data-testid="stFormSubmitButton"] button:hover {{
+    background: #2A2A2D !important;
+    border: none !important;
+}}
+[data-testid="stFormSubmitButton"] button p {{
+    color: #FAFAFA !important;
+}}
+.cp-btn-hint {{
+    font-size: 12px;
+    color: #A0A0A8;
+    line-height: 1.4;
 }}
 
+/* Loading — no card */
+.cp-loading-wrap {{
+    max-width: 600px;
+    animation: cp-fade-up 280ms ease both;
+}}
+.cp-loading-top {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}}
 .cp-loading-ring {{
-    width: 36px;
-    height: 36px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    border: 2.5px solid rgba(0, 0, 0, 0.10);
+    border: 2px solid rgba(0, 0, 0, 0.10);
     border-top-color: #1C1C1E;
-    animation: cp-spin 0.9s linear infinite;
+    animation: cp-spin 0.85s linear infinite;
     flex-shrink: 0;
 }}
-
-.cp-loading-title {{
-    font-size: 14px;
-    font-weight: 600;
+.cp-loading-label {{
+    font-size: 15px;
+    font-weight: 500;
     color: #1C1C1E;
-    margin-bottom: 3px;
 }}
-
 .cp-loading-sub {{
-    font-size: 12px;
+    font-size: 13px;
     color: #8E8E93;
+    margin-left: 34px;
+    margin-bottom: 20px;
 }}
-
-.cp-loading-bar-wrap {{
-    height: 2px;
-    background: rgba(0, 0, 0, 0.07);
+.cp-bar-track {{
+    height: 1.5px;
+    background: rgba(0, 0, 0, 0.10);
     border-radius: 1px;
     overflow: hidden;
+    max-width: 600px;
 }}
-
-.cp-loading-bar-fill {{
+.cp-bar-fill {{
     height: 100%;
     background: #1C1C1E;
     border-radius: 1px;
@@ -894,17 +915,6 @@ DARK_CSS = """<style>
     0%   { background-position: -500px 0; }
     100% { background-position:  500px 0; }
 }
-@keyframes cp-spin {
-    to { transform: rotate(360deg); }
-}
-@keyframes cp-bar {
-    0%  { transform: scaleX(0); }
-    15% { transform: scaleX(0.25); }
-    40% { transform: scaleX(0.55); }
-    70% { transform: scaleX(0.78); }
-    90% { transform: scaleX(0.92); }
-    100%{ transform: scaleX(0.97); }
-}
 
 .stApp {
     position: relative !important;
@@ -949,120 +959,167 @@ section[data-testid="stSidebar"] { display: none !important; }
 }
 
 [data-testid="stForm"] {
-    background: rgba(10, 10, 10, 0.55) !important;
-    border: 1px solid rgba(255, 255, 255, 0.10) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border-radius: 14px !important;
-    box-shadow: 0 2px 24px rgba(0,0,0,0.40) !important;
-    padding: 16px 18px 10px !important;
-    margin-bottom: 0 !important;
-    animation: fadeInUp 420ms 140ms cubic-bezier(0.34,1.1,0.64,1) both;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+[data-testid="stForm"] > div {
+    border: none !important;
+    padding: 0 !important;
 }
 [data-testid="stForm"] + div { margin-top: 0 !important; }
 
+.cp-input-labels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    max-width: 600px;
+    margin-bottom: 5px;
+}
+.cp-input-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #52525B;
+    padding: 0 2px;
+}
+.cp-input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 600px;
+    margin-bottom: 16px;
+}
+.cp-input-cell {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 16px;
+}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:first-of-type {
+    gap: 1px !important;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 600px;
+    margin-bottom: 16px;
+}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:first-of-type [data-testid="stColumn"] {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px 16px;
+}
+[data-testid="stTextInput"] > div {
+    background: transparent !important;
+}
 [data-testid="stTextInput"] div[data-baseweb="base-input"],
 [data-testid="stTextInput"] div[data-baseweb="input"] {
-    background: rgba(15, 23, 42, 0.58) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-radius: 8px !important;
-}
-[data-testid="stTextInput"] div[data-baseweb="base-input"]:focus-within,
-[data-testid="stTextInput"] div[data-baseweb="input"]:focus-within {
-    border-color: #60A5FA !important;
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.30) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 [data-testid="stTextInput"] input {
     background: transparent !important;
-    border: 0 !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    color: #E5E7EB !important;
-    -webkit-text-fill-color: #E5E7EB !important;
-    caret-color: #E5E7EB !important;
-    padding: 9px 14px !important;
-}
-[data-testid="stTextInput"] input::placeholder { color: #71717A !important; }
-[data-testid="stTextInput"] input:focus,
-[data-testid="stTextInput"] input:active {
-    background: transparent !important;
-    box-shadow: none !important;
-}
-[data-testid="stTextInput"] input:-webkit-autofill,
-[data-testid="stTextInput"] input:-webkit-autofill:hover,
-[data-testid="stTextInput"] input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #E5E7EB !important;
-    -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.58) inset !important;
-    box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.58) inset !important;
-}
-[data-testid="stTextInput"] label p {
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    color: #52525B !important;
-    letter-spacing: 0.04em !important;
-    text-transform: uppercase !important;
-}
-
-[data-testid="stFormSubmitButton"] button {
-    background-color: #3B82F6 !important;
-    color: #FFFFFF !important;
     border: none !important;
-    border-radius: 8px !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    padding: 9px 0 !important;
-    width: 100% !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+    color: #F5F5F7 !important;
+    -webkit-text-fill-color: #F5F5F7 !important;
+    caret-color: #F5F5F7 !important;
+    padding: 0 !important;
 }
-[data-testid="stFormSubmitButton"] button:hover { background-color: #2563EB !important; border: none !important; }
-[data-testid="stFormSubmitButton"] button p { color: #FFFFFF !important; }
-[data-testid="stFormSubmitButton"] button:disabled {
-    background: linear-gradient(90deg,#1D4ED8 0%,#3B82F6 30%,#93C5FD 50%,#3B82F6 70%,#1D4ED8 100%) !important;
-    background-size: 500px 100% !important;
-    animation: shimmer 1.4s linear infinite !important;
-    opacity: 1 !important;
+[data-testid="stTextInput"] input::placeholder { color: #3F3F46 !important; }
+[data-testid="stTextInput"] label { display: none !important; }
+
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:nth-of-type(2) {
+    align-items: center !important;
+    max-width: 600px;
+}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:nth-of-type(2) [data-testid="stColumn"] {
+    display: flex;
+    align-items: center;
+}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:nth-of-type(2) [data-testid="stColumn"]:last-of-type {
+    padding-left: 10px;
+}
+[data-testid="stForm"] [data-testid="stHorizontalBlock"]:nth-of-type(2) [data-testid="stMarkdown"] {
+    margin: 0 !important;
+}
+.cp-btn-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 600px;
+}
+[data-testid="stFormSubmitButton"] {
+    width: fit-content !important;
+}
+[data-testid="stFormSubmitButton"] button {
+    background: #FAFAFA !important;
+    color: #0A0A0A !important;
+    border: none !important;
+    border-radius: 30px !important;
+    padding: 11px 34px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em !important;
+    width: auto !important;
+}
+[data-testid="stFormSubmitButton"] button:hover {
+    background: #EFEFF1 !important;
+    border: none !important;
+}
+[data-testid="stFormSubmitButton"] button p {
+    color: #0A0A0A !important;
+}
+.cp-btn-hint {
+    font-size: 12px;
+    color: #52525B;
+    line-height: 1.4;
 }
 
-[data-testid="stCaptionContainer"] { margin: 0 !important; padding: 0 !important; }
-[data-testid="stCaptionContainer"] p { font-size: 11px !important; color: #52525B !important; margin: 4px 0 0 !important; line-height: 1.2 !important; }
-[data-testid="stCaptionContainer"] + div { margin-top: 0 !important; }
-[data-testid="stAlert"] { border-radius: 8px !important; }
-[data-testid="stHorizontalBlock"] { align-items: flex-start !important; }
-[data-testid="stTextInput"] input, [data-testid="stFormSubmitButton"] button { box-shadow: none !important; }
-
-/* Loading card — dark mode */
-.cp-loading {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 14px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.40);
-    padding: 22px 24px 20px;
-    max-width: 640px;
-    margin: 14px auto 0;
+.cp-loading-wrap {
+    max-width: 600px;
+    animation: cp-fade-up 280ms ease both;
 }
 .cp-loading-top {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 18px;
+    gap: 12px;
+    margin-bottom: 6px;
 }
 .cp-loading-ring {
-    width: 36px;
-    height: 36px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    border: 2.5px solid rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.12);
     border-top-color: #F5F5F7;
-    animation: cp-spin 0.9s linear infinite;
+    animation: cp-spin 0.85s linear infinite;
     flex-shrink: 0;
 }
-.cp-loading-title { font-size: 14px; font-weight: 600; color: #F5F5F7; margin-bottom: 3px; }
-.cp-loading-sub { font-size: 12px; color: #52525B; }
-.cp-loading-bar-wrap {
-    height: 2px;
-    background: rgba(255, 255, 255, 0.08);
+.cp-loading-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: #F5F5F7;
+}
+.cp-loading-sub {
+    font-size: 13px;
+    color: #52525B;
+    margin-left: 34px;
+    margin-bottom: 20px;
+}
+.cp-bar-track {
+    height: 1.5px;
+    background: rgba(255, 255, 255, 0.10);
     border-radius: 1px;
     overflow: hidden;
+    max-width: 600px;
 }
-.cp-loading-bar-fill {
+.cp-bar-fill {
     height: 100%;
     background: #F5F5F7;
     border-radius: 1px;
@@ -1416,43 +1473,48 @@ def get_pipeline(force_mock: bool = False) -> Any:
         return MockPipeline(runtime_delay_s=1.2)
 
 
-def _loading_card_html(current_step: int = 2) -> str:
-    step = max(1, min(current_step, len(LOADING_STEPS)))
-    step_label = escape(LOADING_STEPS[step - 1])
+def _loading_card_html(step: int = 2) -> str:
+    current = max(1, min(step, len(LOADING_STEPS)))
+    step_label = escape(LOADING_STEPS[current - 1])
     return (
-        '<div class="cp-loading">'
+        '<div class="cp-loading-wrap">'
         '<div class="cp-loading-top">'
         '<div class="cp-loading-ring"></div>'
-        "<div>"
-        '<div class="cp-loading-title">Analyzing your channel</div>'
-        f'<div class="cp-loading-sub">{step_label} · step {step} of {len(LOADING_STEPS)}</div>'
+        '<span class="cp-loading-label">Analyzing your channel</span>'
         "</div>"
-        "</div>"
-        '<div class="cp-loading-bar-wrap">'
-        '<div class="cp-loading-bar-fill"></div>'
+        f'<div class="cp-loading-sub">{step_label} · step {current} of {len(LOADING_STEPS)}</div>'
+        '<div class="cp-bar-track">'
+        '<div class="cp-bar-fill"></div>'
         "</div>"
         "</div>"
     )
 
 
-def render_loading_card(dark: bool, current_step: int = 2) -> None:
-    """Render the custom loading card."""
-    _ = dark  # Theme is handled by shared class names in LIGHT_CSS/DARK_CSS.
-    st.markdown(_loading_card_html(current_step=current_step), unsafe_allow_html=True)
+def render_loading_card(dark: bool, step: int = 2) -> None:
+    """Render the custom loading indicator."""
+    _ = dark  # Theme colors are controlled by LIGHT_CSS / DARK_CSS.
+    st.markdown(_loading_card_html(step=step), unsafe_allow_html=True)
 
 
 def run_with_loading(
-    pipeline: Any,
     channel_or_query: str,
     user_query: str | None,
     dark: bool,
-) -> dict[str, Any]:
-    """Run the pipeline while showing a custom loading card with simulated steps."""
-    loading_placeholder = st.empty()
+    force_mock: bool,
+    loading_placeholder: Any,
+) -> tuple[dict[str, Any], bool]:
+    """Run pipeline work in a worker thread while animating estimated loading steps."""
     st.session_state["loading_step"] = 1
 
     result_box: dict[str, Any] = {}
     error_box: dict[str, Exception] = {}
+
+    current_step = 1
+    with loading_placeholder:
+        render_loading_card(dark=dark, step=current_step)
+
+    pipeline = get_pipeline(force_mock=force_mock)
+    pipeline_is_mock = isinstance(pipeline, MockPipeline)
 
     def _run_pipeline() -> None:
         try:
@@ -1466,9 +1528,6 @@ def run_with_loading(
     worker = threading.Thread(target=_run_pipeline, daemon=True)
     worker.start()
 
-    with loading_placeholder:
-        render_loading_card(dark=dark, current_step=1)
-
     last_step_tick = time.monotonic()
     while worker.is_alive():
         time.sleep(0.12)
@@ -1476,22 +1535,21 @@ def run_with_loading(
         if now - last_step_tick < 1.8:
             continue
         last_step_tick = now
-        step = int(st.session_state.get("loading_step", 1))
-        if step < len(LOADING_STEPS):
-            st.session_state["loading_step"] = step + 1
-        with loading_placeholder:
-            render_loading_card(dark=dark, current_step=int(st.session_state.get("loading_step", 1)))
+        if current_step < len(LOADING_STEPS):
+            current_step += 1
+            st.session_state["loading_step"] = current_step
+            with loading_placeholder:
+                render_loading_card(dark=dark, step=current_step)
 
     worker.join()
-    loading_placeholder.empty()
-    st.session_state.pop("loading_step", None)
 
     if "exc" in error_box:
         raise error_box["exc"]
+
     raw = result_box.get("raw")
     if not isinstance(raw, Mapping):
         raise RuntimeError("Pipeline returned an invalid response.")
-    return dict(raw)
+    return dict(raw), pipeline_is_mock
 
 
 def _svg_icon(path: str, stroke: str, bg: str) -> str:
@@ -1596,58 +1654,75 @@ def render_page_header(dark: bool) -> None:
         render_theme_toggle()
 
 
-def render_idle_hero(dark: bool, error_message: str | None = None) -> tuple[str, str | None, bool]:
-    """Render centered hero content and return submitted query payload."""
+def _hero_intro_html(dark: bool) -> str:
     title_color = "#FAFAFA" if dark else "#1C1C1E"
-    tagline_color = "rgba(255,255,255,0.55)" if dark else "#52525B"
-    hint_color = "rgba(255,255,255,0.30)" if dark else "#8E8E93"
+    tagline_color = "rgba(255,255,255,0.52)" if dark else "#6E6E73"
+    return (
+        '<div style="margin-bottom:44px">'
+        '<div style="display:flex;align-items:center;gap:9px;margin-bottom:52px">'
+        '<div style="width:30px;height:30px;border-radius:8px;background:#0F172A;display:flex;'
+        'align-items:center;justify-content:center;flex-shrink:0">'
+        '<svg width="15" height="15" viewBox="0 0 72 72" fill="none">'
+        '<rect width="72" height="72" rx="16" fill="#0F172A"/>'
+        '<line x1="22" y1="50" x2="50" y2="22" stroke="white" stroke-width="6" stroke-linecap="round"/>'
+        '<polyline points="32,22 50,22 50,40" fill="none" stroke="white" stroke-width="6" '
+        'stroke-linecap="round" stroke-linejoin="round"/>'
+        "</svg>"
+        "</div>"
+        f'<span style="font-size:14px;font-weight:600;color:{title_color};letter-spacing:-.01em">CreatorPal</span>'
+        "</div>"
+        f'<div style="font-size:60px;font-weight:800;color:{title_color};letter-spacing:-.05em;'
+        'line-height:1.01;margin-bottom:16px">Find your<br>audience.<br>Own your niche.</div>'
+        f'<div style="font-size:16px;color:{tagline_color};line-height:1.6;max-width:420px">'
+        "Match your YouTube channel to the Reddit communities that will actually engage."
+        "</div>"
+        "</div>"
+    )
 
-    st.markdown("<div style='height:16vh'></div>", unsafe_allow_html=True)
-    _, col, _ = st.columns([0.5, 3, 0.5])
+
+def render_idle_hero(dark: bool, error_message: str | None = None) -> tuple[str, str | None, bool]:
+    """Render hero + form in the idle state and return submitted query payload."""
+    label_color = "rgba(255,255,255,0.35)" if dark else "#A0A0A8"
+    hint_color = "rgba(255,255,255,0.28)" if dark else "#A0A0A8"
+
+    st.markdown("<div style='height:10vh'></div>", unsafe_allow_html=True)
+    _, col, _ = st.columns([0.4, 3, 0.4])
     with col:
-        hero_html = (
-            '<div style="margin-bottom:40px;">'
-            '<div style="display:flex;align-items:center;gap:10px;margin-bottom:48px;">'
-            '<div style="width:34px;height:34px;border-radius:9px;background:#0F172A;display:flex;'
-            'align-items:center;justify-content:center;flex-shrink:0;">'
-            '<svg width="18" height="18" viewBox="0 0 72 72" fill="none">'
-            '<rect width="72" height="72" rx="16" fill="#0F172A"></rect>'
-            '<line x1="22" y1="50" x2="50" y2="22" stroke="white" stroke-width="5.5" stroke-linecap="round"></line>'
-            '<polyline points="32,22 50,22 50,40" fill="none" stroke="white" stroke-width="5.5" '
-            'stroke-linecap="round" stroke-linejoin="round"></polyline>'
-            '</svg>'
-            '</div>'
-            f'<span style="font-size:16px;font-weight:600;color:{title_color};letter-spacing:-.01em;">CreatorPal</span>'
-            '</div>'
-            f'<div style="font-size:60px;font-weight:800;color:{title_color};letter-spacing:-.045em;'
-            'line-height:1.02;margin-bottom:20px;">Find your<br>audience.<br>Own your niche.</div>'
-            f'<div style="font-size:17px;color:{tagline_color};line-height:1.65;max-width:440px;margin-bottom:40px;">'
-            'Match your YouTube channel to the Reddit communities that will actually engage.'
-            '</div>'
-            '</div>'
+        st.markdown(_hero_intro_html(dark=dark), unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="cp-input-labels">'
+            f'<span class="cp-input-label" style="color:{label_color}">Channel or topic</span>'
+            f'<span class="cp-input-label" style="color:{label_color}">Your goal (optional)</span>'
+            "</div>",
+            unsafe_allow_html=True,
         )
-        st.markdown(hero_html, unsafe_allow_html=True)
 
         with st.form("query_form", clear_on_submit=False):
-            col_a, col_b = st.columns([5, 4], gap="small")
+            col_a, col_b = st.columns([1, 1], gap="small")
             with col_a:
                 channel_or_query = st.text_input(
-                    "Channel or topic",
-                    placeholder="https://youtube.com/@channel",
+                    "channel",
+                    placeholder="youtube.com/@yourchannel",
+                    label_visibility="collapsed",
                 )
             with col_b:
                 user_query = st.text_input(
-                    "Your goal (optional)",
-                    placeholder="e.g. grow subscribers in EU",
+                    "goal",
+                    placeholder="e.g. grow EU subscribers",
+                    label_visibility="collapsed",
                 )
-            submitted = st.form_submit_button("Analyze →", use_container_width=True)
 
-        st.markdown(
-            f'<div style="text-align:left;margin-top:14px;font-size:12px;color:{hint_color}">'
-            'Powered by RAG · <span style="color:#3B82F6">FAISS</span> retrieval · '
-            "cross-encoder reranking</div>",
-            unsafe_allow_html=True,
-        )
+            btn_col, hint_col = st.columns([0.36, 0.64], gap="small")
+            with btn_col:
+                submitted = st.form_submit_button("Analyze →", use_container_width=False)
+            with hint_col:
+                st.markdown(
+                    f'<div class="cp-btn-hint" style="color:{hint_color}">'
+                    "Powered by FAISS · cross-encoder reranking"
+                    "</div>",
+                    unsafe_allow_html=True,
+                )
+
         if error_message:
             st.markdown(
                 f'<div class="cp-db-error">{error_card_html(error_message)}</div>',
@@ -1656,6 +1731,18 @@ def render_idle_hero(dark: bool, error_message: str | None = None) -> tuple[str,
 
     normalized_goal = user_query.strip() or None
     return channel_or_query, normalized_goal, submitted
+
+
+def render_loading_hero(dark: bool, step: int = 1) -> Any:
+    """Render hero + loading indicator in the same position as the idle form."""
+    st.markdown("<div style='height:10vh'></div>", unsafe_allow_html=True)
+    _, col, _ = st.columns([0.4, 3, 0.4])
+    with col:
+        st.markdown(_hero_intro_html(dark=dark), unsafe_allow_html=True)
+        loading_placeholder = st.empty()
+        with loading_placeholder:
+            render_loading_card(dark=dark, step=step)
+    return loading_placeholder
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -1870,12 +1957,15 @@ def main() -> None:
 
     dark = st.session_state["dark_mode"]
     bg = load_bg(str(resolve_bg_path(dark)))
+    st.markdown(KEYFRAMES, unsafe_allow_html=True)
     st.markdown(get_css(dark=dark, bg=bg), unsafe_allow_html=True)
 
     if "last_result" not in st.session_state:
         st.session_state["last_result"] = None
     if "last_error" not in st.session_state:
         st.session_state["last_error"] = None
+    if "is_loading" not in st.session_state:
+        st.session_state["is_loading"] = False
 
     force_mock = _env_flag_enabled("CREATORPAL_USE_MOCK_PIPELINE")
     if "pipeline_is_mock" not in st.session_state:
@@ -1884,6 +1974,7 @@ def main() -> None:
 
     data: Mapping[str, Any] | None = st.session_state.get("last_result")
     error_message = st.session_state.get("last_error")
+    is_loading = bool(st.session_state.get("is_loading", False))
 
     if data is None:
         st.markdown('<style>[data-testid="stSidebar"]{display:none !important;}</style>', unsafe_allow_html=True)
@@ -1907,6 +1998,40 @@ def main() -> None:
             unsafe_allow_html=True,
         )
         render_theme_toggle()
+
+        if is_loading:
+            query = str(st.session_state.get("pending_query", "")).strip()
+            goal = st.session_state.get("pending_goal")
+            if not query:
+                st.session_state["is_loading"] = False
+                st.session_state["last_error"] = "Missing query payload."
+                st.rerun()
+
+            loading_placeholder = render_loading_hero(
+                dark=dark,
+                step=int(st.session_state.get("loading_step", 1)),
+            )
+            try:
+                raw, pipeline_is_mock = run_with_loading(
+                    channel_or_query=query,
+                    user_query=goal,
+                    dark=dark,
+                    force_mock=force_mock,
+                    loading_placeholder=loading_placeholder,
+                )
+                st.session_state["last_result"] = adapt(raw)
+                st.session_state["pipeline_is_mock"] = pipeline_is_mock
+                st.session_state["last_error"] = None
+            except Exception as exc:
+                st.session_state["last_result"] = None
+                st.session_state["last_error"] = str(exc)
+            finally:
+                st.session_state["is_loading"] = False
+                st.session_state.pop("loading_step", None)
+                st.session_state.pop("pending_query", None)
+                st.session_state.pop("pending_goal", None)
+                st.rerun()
+
         channel_or_query, user_query, submitted = render_idle_hero(
             dark=dark,
             error_message=error_message,
@@ -1916,21 +2041,13 @@ def main() -> None:
             if not query:
                 st.warning("Please enter a YouTube channel URL or topic keyword.")
                 return
-            try:
-                pipeline = get_pipeline(force_mock=force_mock)
-                st.session_state["pipeline_is_mock"] = isinstance(pipeline, MockPipeline)
-                raw = run_with_loading(
-                    pipeline=pipeline,
-                    channel_or_query=query,
-                    user_query=user_query,
-                    dark=dark,
-                )
-                st.session_state["last_result"] = adapt(raw)
-                st.session_state["last_error"] = None
-                st.rerun()
-            except Exception as exc:
-                st.session_state["last_error"] = str(exc)
-                st.rerun()
+            st.session_state["is_loading"] = True
+            st.session_state["pending_query"] = query
+            st.session_state["pending_goal"] = user_query
+            st.session_state["loading_step"] = 1
+            st.session_state["last_error"] = None
+            st.rerun()
+
         if using_mock:
             st.caption("Mock pipeline active — CREATORPAL_USE_MOCK_PIPELINE=1")
         return
@@ -1939,6 +2056,10 @@ def main() -> None:
     if st.button("← New query", key="reset"):
         st.session_state["last_result"] = None
         st.session_state["last_error"] = None
+        st.session_state["is_loading"] = False
+        st.session_state.pop("loading_step", None)
+        st.session_state.pop("pending_query", None)
+        st.session_state.pop("pending_goal", None)
         st.rerun()
     if using_mock:
         st.caption("Mock pipeline active — CREATORPAL_USE_MOCK_PIPELINE=1")
