@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 import os
+import sys
 from collections.abc import Mapping, Sequence
 from html import escape
+from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
 import streamlit as st
+
+# Ensure absolute imports work no matter where Streamlit is launched from.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.helpers.adapter import adapt
 from app.helpers.components import (
@@ -128,20 +135,15 @@ LIGHT_CSS = f"""<style>
 }}
 
 [data-testid="stSidebar"] {{
-    background: {COLORS["bg_card"]} !important;
-    border-right: 1px solid {COLORS["border_default"]} !important;
-    min-width: 60px !important;
-    max-width: 60px !important;
-    width: 60px !important;
+    display: none !important;
 }}
 
 section[data-testid="stSidebar"] {{
-    width: 60px !important;
+    display: none !important;
 }}
 
 [data-testid="stSidebar"] > div:first-child {{
-    width: 60px !important;
-    padding: 10px 6px !important;
+    display: none !important;
 }}
 
 [data-testid="stSidebarNav"] {{
@@ -757,15 +759,9 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
     background-color: #0F0F10 !important;
 }
 
-[data-testid="stSidebar"] {
-    background-color: #161618 !important;
-    border-right: 1px solid rgba(255,255,255,0.07) !important;
-    min-width: 60px !important;
-    max-width: 60px !important;
-    width: 60px !important;
-}
-section[data-testid="stSidebar"] { width: 60px !important; }
-[data-testid="stSidebar"] > div:first-child { width: 60px !important; padding: 10px 6px !important; }
+[data-testid="stSidebar"] { display: none !important; }
+section[data-testid="stSidebar"] { display: none !important; }
+[data-testid="stSidebar"] > div:first-child { display: none !important; }
 [data-testid="stSidebarNav"] { display: none !important; }
 
 .block-container { padding: 2rem 2.5rem 2.25rem !important; max-width: 1200px !important; }
@@ -1581,7 +1577,6 @@ def main() -> None:
             st.caption("Mock pipeline active — CREATORPAL_USE_MOCK_PIPELINE=1")
         return
 
-    render_sidebar(dark=dark)
     render_page_header(dark=dark)
     if st.button("← New query", key="reset"):
         st.session_state["last_result"] = None
