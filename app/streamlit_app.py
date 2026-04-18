@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import sys
 from collections.abc import Mapping, Sequence
 from html import escape
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
 import streamlit as st
+from PIL import Image
 
 # Ensure absolute imports work no matter where Streamlit is launched from.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -71,6 +74,12 @@ LOGO_32 = (
     "</svg>"
 )
 
+LOGO_72_SMALL = LOGO_32
+
+MAX_BG_WIDTH = 1920
+MAX_BG_BYTES = 700_000
+RESAMPLE_LANCZOS = Image.Resampling.LANCZOS if hasattr(Image, "Resampling") else Image.LANCZOS
+
 FAVICON_DATA_URI = "data:image/svg+xml;utf8," + quote(
     '<svg width="64" height="64" viewBox="0 0 72 72" fill="none" '
     'xmlns="http://www.w3.org/2000/svg">'
@@ -89,7 +98,30 @@ LIGHT_CSS = f"""<style>
 }}
 
 .stApp {{
-    background-color: {COLORS["bg_page"]} !important;
+    position: relative !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    background-image:
+        linear-gradient(
+            110deg,
+            rgba(245,245,247,0.91) 0%,
+            rgba(245,245,247,0.75) 40%,
+            rgba(245,245,247,0.15) 100%
+        ),
+        __BG__ !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: scroll !important;
+    background-color: #F5F5F7 !important;
+}}
+
+[data-testid="stAppViewContainer"] {{
+    position: relative !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
 }}
 
 @keyframes fadeInDown {{
@@ -151,15 +183,22 @@ section[data-testid="stSidebar"] {{
 }}
 
 .block-container {{
-    padding: 2rem 2.5rem 2.25rem !important;
+    background: transparent !important;
+    padding: 0 2.5rem 2.25rem !important;
     max-width: 1200px !important;
 }}
 
+[data-testid="stMainBlockContainer"] {{
+    background: transparent !important;
+}}
+
 [data-testid="stForm"] {{
-    background: rgba(255, 255, 255, 0.78) !important;
-    border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    background: rgba(255, 255, 255, 0.75) !important;
+    border: 1px solid rgba(255, 255, 255, 0.90) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
     border-radius: 14px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.08) !important;
     padding: 16px 18px 10px !important;
     margin-bottom: 0 !important;
     animation: fadeInUp 420ms 140ms cubic-bezier(0.34, 1.1, 0.64, 1) both;
@@ -332,8 +371,10 @@ section[data-testid="stSidebar"] {{
 }}
 
 .cp-card {{
-    background: rgba(255, 255, 255, 0.78) !important;
+    background: rgba(255, 255, 255, 0.88) !important;
     border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
     border-radius: 14px !important;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     padding: 16px 18px;
@@ -435,8 +476,10 @@ section[data-testid="stSidebar"] {{
 }}
 
 .cp-metric {{
-    background: rgba(255, 255, 255, 0.78) !important;
+    background: rgba(255, 255, 255, 0.88) !important;
     border: 1px solid rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
     border-radius: 14px !important;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     padding: 14px 16px;
@@ -751,12 +794,31 @@ DARK_CSS = """<style>
     100% { background-position:  500px 0; }
 }
 
-.stApp { background-color: #0F0F10 !important; }
-html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
-    background-color: #0F0F10 !important;
+.stApp {
+    position: relative !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    background-image:
+        linear-gradient(
+            110deg,
+            rgba(8,8,8,0.90) 0%,
+            rgba(8,8,8,0.65) 40%,
+            rgba(8,8,8,0.10) 100%
+        ),
+        __BG__ !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: scroll !important;
+    background-color: #080808 !important;
 }
-[data-testid="stHeader"] {
-    background-color: #0F0F10 !important;
+
+[data-testid="stAppViewContainer"] {
+    position: relative !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
 }
 
 [data-testid="stSidebar"] { display: none !important; }
@@ -764,13 +826,23 @@ section[data-testid="stSidebar"] { display: none !important; }
 [data-testid="stSidebar"] > div:first-child { display: none !important; }
 [data-testid="stSidebarNav"] { display: none !important; }
 
-.block-container { padding: 2rem 2.5rem 2.25rem !important; max-width: 1200px !important; }
+.block-container {
+    background: transparent !important;
+    padding: 0 2.5rem 2.25rem !important;
+    max-width: 1200px !important;
+}
+
+[data-testid="stMainBlockContainer"] {
+    background: transparent !important;
+}
 
 [data-testid="stForm"] {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    background: rgba(10, 10, 10, 0.55) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
     border-radius: 14px !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.40) !important;
     padding: 16px 18px 10px !important;
     margin-bottom: 0 !important;
     animation: fadeInUp 420ms 140ms cubic-bezier(0.34,1.1,0.64,1) both;
@@ -878,8 +950,10 @@ section[data-testid="stSidebar"] { display: none !important; }
 .cp-results-right { display: flex; flex-direction: column; gap: 14px; }
 
 .cp-card {
-    background: rgba(255, 255, 255, 0.06) !important;
+    background: rgba(12, 12, 14, 0.82) !important;
     border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
     border-radius: 14px !important;
     box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
     padding: 16px 18px;
@@ -892,8 +966,10 @@ section[data-testid="stSidebar"] { display: none !important; }
 }
 
 .cp-metric {
-    background: rgba(255, 255, 255, 0.06) !important;
+    background: rgba(12, 12, 14, 0.82) !important;
     border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
     border-radius: 14px !important;
     box-shadow: 0 1px 4px rgba(0,0,0,0.4) !important;
     padding: 14px 16px;
@@ -1115,8 +1191,56 @@ a[href*="reddit.com"]:hover { background: rgba(96,165,250,0.18) !important; }
 </style>"""
 
 
-def get_css(dark: bool) -> str:
-    return DARK_CSS if dark else LIGHT_CSS
+@st.cache_data(show_spinner=False)
+def load_bg(path: str) -> str:
+    """Read local image, compress it, and return a CSS-safe base64 url()."""
+    img_path = Path(path)
+    try:
+        with Image.open(img_path) as img:
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            if img.width > MAX_BG_WIDTH:
+                ratio = MAX_BG_WIDTH / float(img.width)
+                new_height = int(img.height * ratio)
+                img = img.resize((MAX_BG_WIDTH, new_height), RESAMPLE_LANCZOS)
+
+            buffer = BytesIO()
+            img.save(buffer, format="JPEG", quality=74, optimize=True)
+            payload = buffer.getvalue()
+
+            if len(payload) > MAX_BG_BYTES:
+                buffer = BytesIO()
+                img.save(buffer, format="JPEG", quality=64, optimize=True)
+                payload = buffer.getvalue()
+
+            if len(payload) > MAX_BG_BYTES:
+                return "none"
+
+            b64 = base64.b64encode(payload).decode()
+            return f"url('data:image/jpeg;base64,{b64}')"
+    except FileNotFoundError:
+        return "none"
+    except Exception:
+        return "none"
+
+
+def resolve_bg_path(dark: bool) -> Path:
+    """Pick the first existing hero background file for the active theme."""
+    name = "dark" if dark else "white"
+    candidates = [
+        PROJECT_ROOT / "app" / "background" / f"{name}.jpg",
+        PROJECT_ROOT / "app" / "background" / f"{name}.jpeg",
+        PROJECT_ROOT / "app" / "background" / f"{name}.png",
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return candidates[0]
+
+
+def get_css(dark: bool, bg: str = "none") -> str:
+    base = DARK_CSS if dark else LIGHT_CSS
+    return base.replace("__BG__", bg)
 
 
 def _env_flag_enabled(name: str) -> bool:
@@ -1241,44 +1365,39 @@ def render_page_header(dark: bool) -> None:
 
 
 def render_idle_hero(dark: bool, error_message: str | None = None) -> tuple[str, str | None, bool]:
-    """Render centered idle hero and return submitted query payload."""
-    title_color = "#F5F5F7" if dark else "#1C1C1E"
-    sub_color = "#52525B" if dark else "#6E6E73"
-    hint_color = "#52525B" if dark else "#8E8E93"
-    link_color = "#60A5FA" if dark else "#3B82F6"
+    """Render centered hero content and return submitted query payload."""
+    title_color = "#FAFAFA" if dark else "#1C1C1E"
+    tagline_color = "rgba(255,255,255,0.55)" if dark else "#52525B"
+    hint_color = "rgba(255,255,255,0.30)" if dark else "#8E8E93"
 
-    st.markdown("<div style='height:14vh'></div>", unsafe_allow_html=True)
-    _, col, _ = st.columns([0.6, 2.8, 0.6])
-    st.markdown(
-        """
-<style>
-[data-testid="stForm"] {
-    max-width: 680px !important;
-    margin: 0 auto !important;
-}
-</style>
-""",
-        unsafe_allow_html=True,
-    )
-
+    st.markdown("<div style='height:16vh'></div>", unsafe_allow_html=True)
+    _, col, _ = st.columns([0.5, 3, 0.5])
     with col:
-        st.markdown(
-            '<div class="cp-hero-logo-block" style="display:flex;flex-direction:column;'
-            'align-items:center;margin-bottom:28px">'
-            f'<div style="margin-bottom:16px">{LOGO_72}</div>'
-            f'<div style="font-size:36px;font-weight:700;color:{title_color};'
-            'letter-spacing:-.03em;margin-bottom:10px">'
-            "CreatorPal"
-            "</div>"
-            f'<div style="font-size:16px;color:{sub_color};text-align:center;line-height:1.6;max-width:400px">'
-            "Find the right Reddit communities for your YouTube channel"
-            "</div>"
-            "</div>",
-            unsafe_allow_html=True,
+        hero_html = (
+            '<div style="margin-bottom:40px;">'
+            '<div style="display:flex;align-items:center;gap:10px;margin-bottom:48px;">'
+            '<div style="width:34px;height:34px;border-radius:9px;background:#0F172A;display:flex;'
+            'align-items:center;justify-content:center;flex-shrink:0;">'
+            '<svg width="18" height="18" viewBox="0 0 72 72" fill="none">'
+            '<rect width="72" height="72" rx="16" fill="#0F172A"></rect>'
+            '<line x1="22" y1="50" x2="50" y2="22" stroke="white" stroke-width="5.5" stroke-linecap="round"></line>'
+            '<polyline points="32,22 50,22 50,40" fill="none" stroke="white" stroke-width="5.5" '
+            'stroke-linecap="round" stroke-linejoin="round"></polyline>'
+            '</svg>'
+            '</div>'
+            f'<span style="font-size:16px;font-weight:600;color:{title_color};letter-spacing:-.01em;">CreatorPal</span>'
+            '</div>'
+            f'<div style="font-size:60px;font-weight:800;color:{title_color};letter-spacing:-.045em;'
+            'line-height:1.02;margin-bottom:20px;">Find your<br>audience.<br>Own your niche.</div>'
+            f'<div style="font-size:17px;color:{tagline_color};line-height:1.65;max-width:440px;margin-bottom:40px;">'
+            'Match your YouTube channel to the Reddit communities that will actually engage.'
+            '</div>'
+            '</div>'
         )
+        st.markdown(hero_html, unsafe_allow_html=True)
 
         with st.form("query_form", clear_on_submit=False):
-            col_a, col_b, col_btn = st.columns([5, 4, 2], gap="small")
+            col_a, col_b = st.columns([5, 4], gap="small")
             with col_a:
                 channel_or_query = st.text_input(
                     "Channel or topic",
@@ -1289,16 +1408,12 @@ def render_idle_hero(dark: bool, error_message: str | None = None) -> tuple[str,
                     "Your goal (optional)",
                     placeholder="e.g. grow subscribers in EU",
                 )
-            with col_btn:
-                st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-                submitted = st.form_submit_button("Analyze →", use_container_width=True)
+            submitted = st.form_submit_button("Analyze →", use_container_width=True)
 
         st.markdown(
-            '<div class="cp-hero-hint" style="text-align:center;margin-top:14px;'
-            f'font-size:12px;color:{hint_color}">'
-            f'Powered by RAG · <span style="color:{link_color}">FAISS</span> retrieval · '
-            "cross-encoder reranking"
-            "</div>",
+            f'<div style="text-align:left;margin-top:14px;font-size:12px;color:{hint_color}">'
+            'Powered by RAG · <span style="color:#3B82F6">FAISS</span> retrieval · '
+            "cross-encoder reranking</div>",
             unsafe_allow_html=True,
         )
         if error_message:
@@ -1522,7 +1637,8 @@ def main() -> None:
         st.session_state["dark_mode"] = False
 
     dark = st.session_state["dark_mode"]
-    st.markdown(get_css(dark), unsafe_allow_html=True)
+    bg = load_bg(str(resolve_bg_path(dark)))
+    st.markdown(get_css(dark=dark, bg=bg), unsafe_allow_html=True)
 
     if "last_result" not in st.session_state:
         st.session_state["last_result"] = None
@@ -1530,8 +1646,9 @@ def main() -> None:
         st.session_state["last_error"] = None
 
     force_mock = _env_flag_enabled("CREATORPAL_USE_MOCK_PIPELINE")
-    pipeline = get_pipeline(force_mock=force_mock)
-    using_mock = isinstance(pipeline, MockPipeline)
+    if "pipeline_is_mock" not in st.session_state:
+        st.session_state["pipeline_is_mock"] = force_mock
+    using_mock = bool(st.session_state.get("pipeline_is_mock", False))
 
     data: Mapping[str, Any] | None = st.session_state.get("last_result")
     error_message = st.session_state.get("last_error")
@@ -1558,7 +1675,10 @@ def main() -> None:
             unsafe_allow_html=True,
         )
         render_theme_toggle()
-        channel_or_query, user_query, submitted = render_idle_hero(dark=dark, error_message=error_message)
+        channel_or_query, user_query, submitted = render_idle_hero(
+            dark=dark,
+            error_message=error_message,
+        )
         if submitted:
             query = channel_or_query.strip()
             if not query:
@@ -1566,6 +1686,8 @@ def main() -> None:
                 return
             try:
                 with st.spinner("Analyzing..."):
+                    pipeline = get_pipeline(force_mock=force_mock)
+                    st.session_state["pipeline_is_mock"] = isinstance(pipeline, MockPipeline)
                     raw = pipeline.run(channel_or_query=query, user_query=user_query)
                 st.session_state["last_result"] = adapt(raw)
                 st.session_state["last_error"] = None
