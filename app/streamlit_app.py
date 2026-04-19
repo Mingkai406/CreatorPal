@@ -60,7 +60,7 @@ from app.helpers.components import (
     subreddit_row_html,
 )
 from app.helpers.mock_pipeline import MockPipeline
-from src.pipeline import build_pipeline
+from src.pipeline_vllm import build_pipeline
 
 COLORS: dict[str, str] = {
     "bg_page": "#F5F5F7",
