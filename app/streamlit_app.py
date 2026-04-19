@@ -1,9 +1,39 @@
-"""CreatorPal Streamlit frontend aligned to strict dashboard design."""
+"""CreatorPal Streamlit 前端主文件。
+
+# 主页面（Dashboard）改进说明
+# ============================================================
+#
+# 指标卡片（顶部4个数字）
+#   改动前 → 改动后
+#   顶部重排分数（负数无意义）  → 适配分 0–100（越高越好，min-max归一化）
+#   平均情感（原始小数）        → 社区氛围（Friendly / Warm / Mixed / Cautious / Hostile）
+#   找到的 Subreddit 数         → 高置信社区数（适配分 ≥ 70 的数量）
+#   延迟时间                    → 已分析社区总数（延迟移至页面底部小字）
+#
+# 左栏：从"排名列表"变成"行动卡片"
+#   每张卡片包含：
+#     - 适配分徽章 + 风险标签（Low / Medium / High）
+#     - 发帖角度：一句话告诉你怎么切入这个社区
+#     - 匹配理由：2–3 条具体证据
+#     - View rules → 链接直达版规
+#   剩余社区折叠进"查看全部"展开栏
+#
+# 右栏：新增两个模块
+#   1. Top 3 对比表：并排展示前三社区的适配分、氛围、风险
+#   2. 第一帖草稿：自动生成建议标题 + 开场白 + ⚠ 避免用语清单
+#
+# 总体定位：
+#   改版前 → 展示模型输出的数据面板
+#   改版后 → 告诉你在哪里发、为什么发、第一条怎么写的行动决策界面
+#
+# ============================================================
+"""
 
 from __future__ import annotations
 
 import base64
 import os
+import re
 import sys
 import threading
 import time
@@ -87,6 +117,9 @@ LOADING_STEPS = [
     "Running FAISS retrieval · top 50",
     "Cross-encoder reranking · top 10",
 ]
+
+RISK_COLORS: dict[str, str] = {"Low": "#10B981", "Medium": "#F59E0B", "High": "#F87171"}
+RISK_BG:     dict[str, str] = {"Low": "#ECFDF5", "Medium": "#FFFBEB", "High": "#FEF2F2"}
 
 KEYFRAMES = """<style>
 @keyframes cp-spin {
@@ -1753,6 +1786,90 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
         return default
 
 
+def normalize_fit_score(rerank_score: float, all_scores: list[float]) -> int:
+    if not all_scores or len(all_scores) == 1:
+        return 85
+    min_s = min(all_scores)
+    max_s = max(all_scores)
+    if max_s == min_s:
+        return 85
+    normalized = (rerank_score - min_s) / (max_s - min_s)
+    return round(normalized * 100)
+
+
+def sentiment_label(score: float) -> tuple[str, str]:
+    if score >= 0.4:
+        return "Friendly",  "#10B981"
+    elif score >= 0.1:
+        return "Warm",      "#34D399"
+    elif score >= -0.1:
+        return "Mixed",     "#F59E0B"
+    elif score >= -0.3:
+        return "Cautious",  "#F97316"
+    else:
+        return "Hostile",   "#F87171"
+
+
+def derive_risk_level(sentiment_score: float, self_promo: bool | None = None) -> str:
+    if self_promo is False:
+        return "High"
+    if sentiment_score < -0.2:
+        return "High"
+    if sentiment_score < 0.1:
+        return "Medium"
+    return "Low"
+
+
+def action_card_html(s: dict[str, Any], dark: bool) -> str:
+    fit      = s.get("fit_score", 0)
+    risk     = s.get("risk_level") or derive_risk_level(s.get("sentiment_score") or 0)
+    angle    = s.get("posting_angle", "")
+    evidence = s.get("evidence", [])
+    url      = s.get("url") or f"https://www.reddit.com/r/{s['subreddit']}/"
+    tone_lbl, tone_col = sentiment_label(s.get("sentiment_score") or 0)
+
+    risk_col = RISK_COLORS.get(risk, "#F59E0B")
+    risk_bg  = RISK_BG.get(risk, "#FFFBEB")
+
+    ev_items = "".join(
+        f'<li style="font-size:12px;color:#6E6E73;margin-bottom:4px">{escape(e)}</li>'
+        for e in evidence[:3]
+    )
+
+    card_bg   = "rgba(255,255,255,0.06)" if dark else "rgba(255,255,255,0.82)"
+    border    = "rgba(255,255,255,0.10)" if dark else "rgba(0,0,0,0.08)"
+    name_col  = "#60A5FA" if dark else "#3B82F6"
+    title_col = "#F5F5F7" if dark else "#1C1C1E"
+    safe_url  = escape(url, quote=True)
+    safe_name = escape(s["subreddit"])
+
+    return (
+        f'<div style="background:{card_bg};border:1px solid {border};border-radius:14px;'
+        f'padding:18px 20px;margin-bottom:10px">'
+        f'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">'
+        f'<a href="{safe_url}" target="_blank" style="font-size:16px;font-weight:700;'
+        f'color:{name_col};text-decoration:none">r/{safe_name}</a>'
+        f'<div style="display:flex;align-items:center;gap:6px">'
+        f'<span style="font-size:11px;font-weight:600;background:#EFF6FF;color:#3B82F6;'
+        f'padding:3px 8px;border-radius:6px">{fit}/100 fit</span>'
+        f'<span style="font-size:11px;font-weight:600;background:{risk_bg};color:{risk_col};'
+        f'padding:3px 8px;border-radius:6px">{escape(risk)} risk</span>'
+        f'</div></div>'
+        f'<p style="font-size:13px;color:{title_col};font-style:italic;margin-bottom:14px;'
+        f'line-height:1.5">"{escape(angle)}"</p>'
+        f'<div style="border-top:1px solid rgba(0,0,0,0.06);padding-top:12px;margin-bottom:12px">'
+        f'<p style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;'
+        f'color:#A0A0A8;margin-bottom:8px">Why this matches</p>'
+        f'<ul style="list-style:none;padding:0;margin:0">{ev_items}</ul>'
+        f'</div>'
+        f'<div style="display:flex;align-items:center;justify-content:space-between">'
+        f'<span style="font-size:12px;color:{tone_col};font-weight:500">● {escape(tone_lbl)} community</span>'
+        f'<a href="{safe_url}about/rules" target="_blank" style="font-size:12px;'
+        f'color:#A0A0A8;text-decoration:none">View rules →</a>'
+        f'</div></div>'
+    )
+
+
 def render_metrics(data: Mapping[str, Any]) -> None:
     """Render the four metric cards."""
     subreddits = data["ranked_subreddits"]
@@ -1906,8 +2023,9 @@ def _render_report_html(report: str) -> str:
     return "".join(blocks)
 
 
-def render_sentiment(sentiment_scores: Mapping[str, float]) -> None:
+def render_sentiment(sentiment_scores: Mapping[str, float], dark: bool = False) -> None:
     """Render community sentiment card."""
+    _ = dark
     st.markdown(_sentiment_card_html(sentiment_scores), unsafe_allow_html=True)
 
 
@@ -1928,6 +2046,11 @@ def render_strategy_report(report: str) -> None:
     st.markdown(_strategy_report_card_html(report), unsafe_allow_html=True)
 
 
+def render_report(report: str, dark: bool = False) -> None:
+    _ = dark
+    st.markdown(_strategy_report_card_html(report), unsafe_allow_html=True)
+
+
 def render_results_grid(data: Mapping[str, Any]) -> None:
     """Render equal-height two-column results area with right-side stacked cards."""
     left = _ranked_subreddits_card_html(data["ranked_subreddits"])
@@ -1941,6 +2064,248 @@ def render_results_grid(data: Mapping[str, Any]) -> None:
         f'<div class="cp-db-right-bot">{right_bottom}</div>'
         "</div>"
         "</div>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_action_cards(data: Mapping[str, Any], dark: bool) -> None:
+    st.markdown(
+        '<p style="font-size:11px;font-weight:600;letter-spacing:.07em;'
+        'text-transform:uppercase;color:#A0A0A8;margin-bottom:12px">'
+        'Top communities to post in</p>',
+        unsafe_allow_html=True,
+    )
+    top3 = list(data["ranked_subreddits"])[:3]
+    for s in top3:
+        st.markdown(action_card_html(s, dark), unsafe_allow_html=True)
+
+    remaining = list(data["ranked_subreddits"])[3:]
+    if remaining:
+        with st.expander(f"See all {len(data['ranked_subreddits'])} communities"):
+            for s in remaining:
+                st.markdown(
+                    subreddit_row_html(
+                        s["rank"], s["subreddit"], s["url"],
+                        s["rerank_score"], s.get("reason", ""),
+                    ),
+                    unsafe_allow_html=True,
+                )
+
+
+def render_compare(data: Mapping[str, Any], dark: bool) -> None:
+    top3 = list(data["ranked_subreddits"])[:3]
+    if len(top3) < 2:
+        return
+
+    card_bg  = "rgba(255,255,255,0.06)" if dark else "rgba(255,255,255,0.82)"
+    border   = "rgba(255,255,255,0.10)" if dark else "rgba(0,0,0,0.08)"
+    text_col = "#F5F5F7" if dark else "#1C1C1E"
+    muted    = "#71717A"  if dark else "#A0A0A8"
+
+    metrics: list[tuple[str, Any]] = [
+        ("Fit score", lambda s: f'{s.get("fit_score", 0)}/100'),
+        ("Tone",      lambda s: sentiment_label(s.get("sentiment_score") or 0)[0]),
+        ("Risk",      lambda s: s.get("risk_level", "—")),
+    ]
+
+    cols_html = "".join(
+        f'<th style="text-align:center;font-size:13px;font-weight:600;'
+        f'color:{text_col};padding:8px 12px">'
+        f'<a href="{escape(s["url"], quote=True)}" target="_blank" '
+        f'style="color:#3B82F6;text-decoration:none">r/{escape(s["subreddit"])}</a></th>'
+        for s in top3
+    )
+    header = (
+        f'<tr><th style="text-align:left;color:{muted};font-size:11px;padding:8px 12px"></th>'
+        f'{cols_html}</tr>'
+    )
+
+    rows = []
+    for label, fn in metrics:
+        cells = "".join(
+            f'<td style="text-align:center;font-size:13px;color:{text_col};'
+            f'padding:8px 12px">{escape(str(fn(s)))}</td>'
+            for s in top3
+        )
+        rows.append(
+            f'<tr style="border-top:1px solid rgba(0,0,0,0.05)">'
+            f'<td style="font-size:11px;font-weight:500;letter-spacing:.05em;'
+            f'text-transform:uppercase;color:{muted};padding:8px 12px">{label}</td>'
+            f'{cells}</tr>'
+        )
+
+    table = (
+        f'<div style="background:{card_bg};border:1px solid {border};'
+        f'border-radius:14px;padding:4px 0;margin-bottom:14px;overflow:hidden">'
+        f'<table style="width:100%;border-collapse:collapse">'
+        f'<thead>{header}</thead>'
+        f'<tbody>{"".join(rows)}</tbody>'
+        f'</table></div>'
+    )
+
+    st.markdown(
+        '<p style="font-size:11px;font-weight:600;letter-spacing:.07em;'
+        'text-transform:uppercase;color:#A0A0A8;margin-bottom:10px">'
+        'Compare top 3</p>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(table, unsafe_allow_html=True)
+
+
+def extract_first_post_draft(strategy_report: str, top_subreddit: str) -> dict[str, Any]:
+    title_match = re.search(
+        r'(?:title|headline|post title)[:\s]+(.+?)(?:\n|$)',
+        strategy_report, re.IGNORECASE,
+    )
+    draft_title = title_match.group(1).strip() if title_match else (
+        f"[Question] What's your experience with [your topic] on r/{top_subreddit}?"
+    )
+
+    action_match = re.search(
+        r'(?:recommended action|first post|how to post)[:\s\n]+(.+?)(?:\n\n|##|$)',
+        strategy_report, re.IGNORECASE | re.DOTALL,
+    )
+    draft_body = action_match.group(1).strip()[:300] if action_match else (
+        "Hi r/{sub}! I've been creating content about [topic] and wanted to get "
+        "your community's perspective on [specific question]. What do you think about..."
+    ).format(sub=top_subreddit)
+
+    return {
+        "title": draft_title,
+        "body":  draft_body,
+        "avoid_words": [
+            "subscribe", "check out my channel", "I made a video",
+            "follow me", "watch my", "link in bio",
+        ],
+    }
+
+
+def render_first_post_draft(data: Mapping[str, Any], dark: bool) -> None:
+    top_sub  = data["ranked_subreddits"][0]["subreddit"] if data["ranked_subreddits"] else ""
+    draft    = extract_first_post_draft(str(data["strategy_report"]), top_sub)
+
+    card_bg  = "rgba(255,255,255,0.06)" if dark else "rgba(255,255,255,0.82)"
+    border   = "rgba(255,255,255,0.10)" if dark else "rgba(0,0,0,0.08)"
+    text_col = "#F5F5F7" if dark else "#1C1C1E"
+    sub_col  = "#A1A1AA"  if dark else "#6E6E73"
+    tag_bg   = "#FEF2F2"
+    tag_col  = "#F87171"
+
+    avoid_tags = "".join(
+        f'<span style="background:{tag_bg};color:{tag_col};font-size:11px;'
+        f'padding:2px 8px;border-radius:4px;margin-right:6px;margin-bottom:4px;'
+        f'display:inline-block">{escape(w)}</span>'
+        for w in draft["avoid_words"]
+    )
+
+    html = (
+        f'<div style="background:{card_bg};border:1px solid {border};'
+        f'border-radius:14px;padding:18px 20px">'
+        f'<p style="font-size:11px;font-weight:600;letter-spacing:.06em;'
+        f'text-transform:uppercase;color:#A0A0A8;margin-bottom:14px">'
+        f'First post draft · r/{escape(top_sub)}</p>'
+        f'<p style="font-size:10px;font-weight:500;letter-spacing:.05em;'
+        f'text-transform:uppercase;color:#A0A0A8;margin-bottom:4px">Title</p>'
+        f'<p style="font-size:14px;font-weight:600;color:{text_col};'
+        f'margin-bottom:16px;line-height:1.4">{escape(draft["title"])}</p>'
+        f'<p style="font-size:10px;font-weight:500;letter-spacing:.05em;'
+        f'text-transform:uppercase;color:#A0A0A8;margin-bottom:4px">Opening</p>'
+        f'<p style="font-size:13px;color:{sub_col};line-height:1.65;'
+        f'margin-bottom:16px">{escape(draft["body"])}</p>'
+        f'<p style="font-size:10px;font-weight:500;letter-spacing:.05em;'
+        f'text-transform:uppercase;color:#F87171;margin-bottom:8px">⚠ Avoid these phrases</p>'
+        f'<div>{avoid_tags}</div>'
+        f'</div>'
+    )
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_dashboard(data: Mapping[str, Any], dark: bool) -> None:
+    subs       = data["ranked_subreddits"]
+    scores     = data["sentiment_scores"]
+    meta       = data["meta"]
+    all_rerank = [s["rerank_score"] for s in subs if s["rerank_score"] is not None]
+
+    for s in subs:
+        s["fit_score"] = normalize_fit_score(s["rerank_score"] or 0, all_rerank)
+
+    hc_count   = len([s for s in subs if s.get("fit_score", 0) >= 70])
+    top_fit    = subs[0]["fit_score"] if subs else 0
+    top_name   = f'r/{subs[0]["subreddit"]}' if subs else "—"
+    avg_sent   = sum(scores.values()) / len(scores) if scores else 0
+    tone_lbl, tone_col = sentiment_label(avg_sent)
+
+    c1, c2, c3, c4 = st.columns(4, gap="small")
+    with c1:
+        st.markdown(
+            '<div class="cp-db-m1">'
+            + metric_card_html(
+                "HIGH-CONFIDENCE COMMUNITIES",
+                str(hc_count),
+                "fit score ≥ 70",
+                sub_up=True,
+                container_style="border-top:3px solid #3B82F6 !important;",
+            )
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+    with c2:
+        st.markdown(
+            '<div class="cp-db-m2">'
+            + metric_card_html(
+                "TOP FIT SCORE",
+                f"{top_fit}/100",
+                top_name,
+                sub_up=True,
+                container_style="border-top:3px solid #10B981 !important;",
+            )
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+    with c3:
+        st.markdown(
+            '<div class="cp-db-m3">'
+            + metric_card_html(
+                "COMMUNITY TONE",
+                tone_lbl,
+                f"avg {avg_sent:+.2f}",
+                sub_up=avg_sent >= 0,
+                container_style=f"border-top:3px solid {tone_col} !important;",
+            )
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+    with c4:
+        st.markdown(
+            '<div class="cp-db-m4">'
+            + metric_card_html(
+                "COMMUNITIES ANALYZED",
+                str(len(subs)),
+                f"from {meta['retrieval_top_k']} retrieved",
+                sub_up=False,
+                container_style="border-top:3px solid #C7C7CC !important;",
+            )
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    col_left, col_right = st.columns([1, 1], gap="medium")
+    with col_left:
+        render_action_cards(data, dark)
+    with col_right:
+        render_compare(data, dark)
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+        render_sentiment(data["sentiment_scores"])
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+        render_report(str(data["strategy_report"]))
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+        render_first_post_draft(data, dark)
+
+    st.markdown(
+        f'<p style="font-size:11px;color:#A0A0A8;text-align:right;margin-top:4px">'
+        f'Analysis in {meta["latency_ms"] / 1000:.1f}s</p>',
         unsafe_allow_html=True,
     )
 
@@ -2066,11 +2431,7 @@ def main() -> None:
     if error_message:
         st.markdown(f'<div class="cp-db-error">{error_card_html(error_message)}</div>', unsafe_allow_html=True)
 
-    st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
-    render_metrics(data)
-    st.markdown('<div style="height:8px"></div>', unsafe_allow_html=True)
-
-    render_results_grid(data)
+    render_dashboard(data, dark=dark)
 
 
 if __name__ == "__main__":
