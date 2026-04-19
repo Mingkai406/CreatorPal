@@ -68,6 +68,7 @@ class QueryRewriter:
         retriever: object,
         top_k: int = 50,
         rrf_k: int = 60,
+        retrieval_base_query: str | None = None,
     ) -> list[dict]:
         """Run retrieval for all rewritten queries and fuse results with RRF.
 
@@ -75,11 +76,19 @@ class QueryRewriter:
         query rewrites.  RRF only depends on rank position, so raw scores from
         different queries (which are not on a comparable scale) are never mixed.
 
+        *user_query* is shown to the LLM for generating rewrites (may include
+        the creator's goal).  *retrieval_base_query*, if provided, replaces the
+        original query slot in BM25/FAISS retrieval so that meta-keywords like
+        "grow subscribers" do not pollute keyword matching.
+
         *retriever* must expose a ``retrieve(query, top_k)`` method (works
         with :class:`HybridRetriever`, :class:`FaissRetriever`, or
         :class:`BM25Retriever`).
         """
-        queries = self.rewrite(user_query)
+        rewrites = self.rewrite(user_query)
+        # Use content-only query as the retrieval anchor; keep LLM rewrites.
+        base = retrieval_base_query if retrieval_base_query is not None else rewrites[0]
+        queries = [base, *rewrites[1:]]
 
         # key -> best hit dict (metadata carrier)
         best_hit: dict[str, dict] = {}

@@ -12,6 +12,51 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Subreddit quality filters
+# ---------------------------------------------------------------------------
+
+# Exact lowercase subreddit names to exclude unconditionally.
+_BLOCKED_NAMES: frozenset[str] = frozenset({
+    # Self-promotion / sub-for-sub
+    "sub4sub", "subforsub", "subforsubreddit",
+    "subscribetome", "subscribetomeyoutube",
+    "promote", "promote_your_channel", "promoteyourchannel",
+    "youtubelimited", "cookiecollector",
+    "ytpromotion", "youtubegrowth",
+    # Known NSFW
+    "gfur", "yiff", "rule34", "hentai",
+})
+
+# If any of these fragments appear in the lowercase subreddit name, exclude it.
+_BLOCKED_NAME_FRAGMENTS: tuple[str, ...] = (
+    "sub4sub", "subforsub", "subscribetome",
+    "promote_your", "promotechannel", "youtubelimited",
+    "nsfw", "porn", "xxx",
+)
+
+# Phrases that indicate subscription-farming content.
+_SPAM_PHRASES: tuple[str, ...] = (
+    "sub 4 sub", "sub4sub", "sub for sub", "subforsub",
+    "i will sub back", "sub back", "subscribe back",
+    "subscribe to my channel", "i sub back",
+)
+
+# If a profile contains more than this many spam-phrase hits, drop it.
+_SPAM_PHRASE_THRESHOLD = 5
+
+
+def _is_blocked(subreddit: str, profile_text: str) -> bool:
+    """Return True if this subreddit should be excluded from the corpus."""
+    lower_name = subreddit.lower()
+    if lower_name in _BLOCKED_NAMES:
+        return True
+    if any(frag in lower_name for frag in _BLOCKED_NAME_FRAGMENTS):
+        return True
+    lower_text = profile_text.lower()
+    hits = sum(lower_text.count(phrase) for phrase in _SPAM_PHRASES)
+    return hits > _SPAM_PHRASE_THRESHOLD
+
 
 def _iter_ndjson(path: Path):
     """Yield JSON objects line-by-line from an NDJSON file."""
@@ -79,16 +124,23 @@ def build_subreddit_profiles(
     logger.info("Scanned %d posts across %d subreddits", scanned, len(heaps))
 
     profiles: list[dict[str, Any]] = []
+    blocked_count = 0
     for subreddit, heap in sorted(heaps.items()):
         if len(heap) < min_posts:
             continue
         top = sorted(heap, key=lambda x: x[0], reverse=True)
         profile_text = "\n".join(text for _, text in top)
+        if _is_blocked(subreddit, profile_text):
+            blocked_count += 1
+            logger.info("Filtered out r/%s", subreddit)
+            continue
         profiles.append({
             "subreddit": subreddit,
             "profile_text": profile_text,
             "post_count": len(heap),
         })
+
+    logger.info("Blocked %d subreddits by name/content filter", blocked_count)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as fh:

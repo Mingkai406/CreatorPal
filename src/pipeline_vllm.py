@@ -101,31 +101,40 @@ class CreatorPalPipeline:
         self,
         user_query: str | None,
         channel_context: dict[str, Any],
-    ) -> str:
-        """Build a structured retrieval query from user goal and channel metadata.
+    ) -> tuple[str, str]:
+        """Build retrieval queries from user goal and channel metadata.
 
-        Produces labelled sections so downstream LLMs (Query Rewriter, HyDE)
-        can distinguish the creator's intent from channel content.
+        Returns a tuple of (llm_query, content_query):
+        - llm_query: includes the creator's goal; passed to LLM components
+          (QueryRewriter, HyDE) so they understand the intent.
+        - content_query: channel content only (no goal); used for BM25/FAISS
+          retrieval to prevent meta-keywords like "grow subscribers" from
+          pulling up self-promotion subreddits via keyword matching.
         """
-        sections: list[str] = []
-
-        if user_query:
-            sections.append(f"Goal: {user_query}")
+        content_sections: list[str] = []
 
         title = channel_context.get("title", "")
         if title:
-            sections.append(f"Channel: {title}")
+            content_sections.append(f"Channel: {title}")
 
         description = channel_context.get("description", "")
         if description:
-            sections.append(f"Description: {description[:300]}")
+            content_sections.append(f"Description: {description[:300]}")
 
         videos = channel_context.get("videos", [])
         video_titles = [v["title"] for v in videos[:10] if v.get("title")]
         if video_titles:
-            sections.append(f"Videos: {' | '.join(video_titles)}")
+            content_sections.append(f"Videos: {' | '.join(video_titles)}")
 
-        return "\n".join(sections) if sections else "general content recommendation"
+        content_query = "\n".join(content_sections) if content_sections else "general content recommendation"
+
+        llm_sections = []
+        if user_query:
+            llm_sections.append(f"Goal: {user_query}")
+        llm_sections.extend(content_sections)
+        llm_query = "\n".join(llm_sections) if llm_sections else content_query
+
+        return llm_query, content_query
 
     # ------------------------------------------------------------------
     # End-to-end execution
@@ -171,8 +180,10 @@ class CreatorPalPipeline:
             except Exception as exc:
                 logger.warning("YouTube ingestion failed – skipping: %s", exc)
 
-        # 2. Build retrieval query directly from channel metadata
-        retrieval_query = self.prepare_retrieval_query(
+        # 2. Build retrieval queries from channel metadata
+        # llm_query includes the creator's goal (for QueryRewriter / HyDE prompts)
+        # content_query is channel content only (for BM25/FAISS keyword matching)
+        llm_query, content_query = self.prepare_retrieval_query(
             user_query, channel_context
         )
 
@@ -180,16 +191,17 @@ class CreatorPalPipeline:
         with ThreadPoolExecutor(max_workers=2) as pool:
             rewrite_future: Future[list[dict]] = pool.submit(
                 self.query_rewriter.retrieve_with_rewrites,
-                user_query=retrieval_query,
+                user_query=llm_query,
                 retriever=self.hybrid_retriever,
                 top_k=self.settings.retrieval_top_k,
+                retrieval_base_query=content_query,
             )
 
             hyde_future: Future[list[dict[str, Any]]] | None = None
             if self.hyde is not None:
                 hyde_future = pool.submit(
                     self.hyde.retrieve,
-                    user_query=retrieval_query,
+                    user_query=llm_query,
                     faiss_retriever=self.faiss_retriever,
                     top_k=self.settings.retrieval_top_k,
                 )
@@ -213,12 +225,16 @@ class CreatorPalPipeline:
             except Exception as exc:
                 logger.warning("HyDE retrieval failed – skipping: %s", exc)
 
-        # 4. Cross-encoder reranking
+        # 4. Cross-encoder reranking (use llm_query so the cross-encoder sees
+        #    the creator's goal when judging relevance)
         ranked_raw = self.reranker.rerank(
-            query=retrieval_query,
+            query=llm_query,
             candidates=candidates,
             top_k=self.settings.rerank_top_k,
         )
+        # Drop results with very negative rerank scores (cross-encoder is
+        # confident they are irrelevant; negative logits indicate no match)
+        ranked_raw = [e for e in ranked_raw if e.get("rerank_score", 0.0) > -5.0]
         stages.append("reranking")
 
         # 5. Analytics (direct computation, no LLM)
