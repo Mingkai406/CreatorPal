@@ -80,7 +80,7 @@ def build_subreddit_profiles(
     input_path: Path,
     output_path: Path,
     min_posts: int = 10,
-    top_posts: int = 50,
+    top_posts: int = 15,
 ) -> int:
     """Aggregate Reddit submissions into per-subreddit profile documents.
 
@@ -183,8 +183,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--top-posts",
         type=int,
-        default=50,
-        help="Number of top-scored posts per subreddit to keep (default: 50).",
+        default=15,
+        help="Number of top-scored posts per subreddit to keep (default: 15).",
     )
     return parser.parse_args()
 

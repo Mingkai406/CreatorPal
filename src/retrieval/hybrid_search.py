@@ -12,8 +12,8 @@ from src.retrieval.faiss_search import FaissRetriever
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_ALPHA_KEYWORD = 0.15
-DEFAULT_ALPHA_SEMANTIC = 0.85
+DEFAULT_ALPHA_KEYWORD = 0.05
+DEFAULT_ALPHA_SEMANTIC = 0.95
 
 
 def _min_max_normalize(scores: dict[int, float]) -> dict[int, float]:
