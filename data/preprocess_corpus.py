@@ -90,6 +90,13 @@ def build_subreddit_profiles(
 
     Returns the number of profiles written.
     """
+    if min_posts > top_posts:
+        raise ValueError(
+            f"min_posts ({min_posts}) must be <= top_posts ({top_posts}); "
+            "the heap can hold at most top_posts entries so no subreddit "
+            "would ever satisfy the min_posts threshold."
+        )
+
     # Use a min-heap of size top_posts per subreddit to bound memory.
     # Heap items are (score, post_text) so the lowest score is popped first.
     heaps: dict[str, list[tuple[int, str]]] = defaultdict(list)
