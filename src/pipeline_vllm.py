@@ -38,7 +38,11 @@ class CreatorPalPipeline:
         from src.ingest.youtube import YouTubeIngestor
         self.youtube: YouTubeIngestor | None = _try_init(
             "YouTubeIngestor",
-            lambda: YouTubeIngestor(api_key=settings.youtube_api_key),
+            lambda: YouTubeIngestor(
+                api_key=settings.youtube_api_key,
+                cache_dir=settings.youtube_cache_dir,
+                cache_ttl_seconds=settings.youtube_cache_ttl_seconds,
+            ),
         )
 
         from src.retrieval.hyde import HyDEQueryRewriter
@@ -117,7 +121,7 @@ class CreatorPalPipeline:
             sections.append(f"Description: {description[:300]}")
 
         videos = channel_context.get("videos", [])
-        video_titles = [v["title"] for v in videos[:15] if v.get("title")]
+        video_titles = [v["title"] for v in videos[:10] if v.get("title")]
         if video_titles:
             sections.append(f"Videos: {' | '.join(video_titles)}")
 
@@ -221,42 +225,31 @@ class CreatorPalPipeline:
         pal_results = self._compute_analytics(ranked_raw)
         stages.append("analytics")
 
-        # 6. Sentiment + Report generation in parallel
+        # 6. Sentiment analysis (must finish before report generation)
         sentiment_scores: dict[str, float] = {}
         report = ""
 
-        with ThreadPoolExecutor(max_workers=2) as pool:
-            sentiment_future: Future[dict[str, float]] | None = None
-            if self.sentiment is not None and ranked_raw:
-                sub_comments: dict[str, list[str]] = {}
-                for entry in ranked_raw:
-                    sub = entry.get("subreddit", "unknown")
-                    text = entry.get("chunk_text", "")
-                    sub_comments.setdefault(sub, []).append(text)
-                sentiment_future = pool.submit(
-                    self.sentiment.score_subreddits, sub_comments
-                )
-
-            report_future: Future[str] | None = None
-            if self.generator is not None:
-                report_future = pool.submit(
-                    self.generator.generate_strategy_report,
-                    channel_context=channel_context,
-                    ranked_subreddits=ranked_raw,
-                    pal_results=pal_results,
-                    sentiment_scores={},
-                )
-
-        if sentiment_future is not None:
+        if self.sentiment is not None and ranked_raw:
+            sub_comments: dict[str, list[str]] = {}
+            for entry in ranked_raw:
+                sub = entry.get("subreddit", "unknown")
+                text = entry.get("chunk_text", "")
+                sub_comments.setdefault(sub, []).append(text)
             try:
-                sentiment_scores = sentiment_future.result()
+                sentiment_scores = self.sentiment.score_subreddits(sub_comments)
                 stages.append("sentiment")
             except Exception as exc:
                 logger.warning("Sentiment analysis failed: %s", exc)
 
-        if report_future is not None:
+        # 7. Report generation (with real sentiment scores)
+        if self.generator is not None:
             try:
-                report = report_future.result()
+                report = self.generator.generate_strategy_report(
+                    channel_context=channel_context,
+                    ranked_subreddits=ranked_raw,
+                    pal_results=pal_results,
+                    sentiment_scores=sentiment_scores,
+                )
                 stages.append("generation")
             except Exception as exc:
                 logger.warning("Report generation failed – skipping: %s", exc)

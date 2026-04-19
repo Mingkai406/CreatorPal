@@ -59,7 +59,11 @@ class CreatorPalPipeline:
         from src.ingest.youtube import YouTubeIngestor
         self.youtube: YouTubeIngestor | None = _try_init(
             "YouTubeIngestor",
-            lambda: YouTubeIngestor(api_key=settings.youtube_api_key),
+            lambda: YouTubeIngestor(
+                api_key=settings.youtube_api_key,
+                cache_dir=settings.youtube_cache_dir,
+                cache_ttl_seconds=settings.youtube_cache_ttl_seconds,
+            ),
         )
 
         from src.retrieval.hyde import HyDEQueryRewriter

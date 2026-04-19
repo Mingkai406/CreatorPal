@@ -37,6 +37,8 @@ class Settings:
     hybrid_alpha_semantic: float = 0.85
     max_channel_videos: int = 20
     max_video_comments: int = 100
+    youtube_cache_ttl_seconds: int = 0
+    youtube_cache_dir: Path = Path("data/cache/youtube")
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -66,6 +68,8 @@ class Settings:
             hybrid_alpha_semantic=float(_get("hybrid_alpha_semantic", "0.85")),
             max_channel_videos=int(_get("max_channel_videos", "20")),
             max_video_comments=int(_get("max_video_comments", "100")),
+            youtube_cache_ttl_seconds=int(_get("youtube_cache_ttl_seconds", "0")),
+            youtube_cache_dir=Path(_get("youtube_cache_dir", "data/cache/youtube")),
         )
 
 

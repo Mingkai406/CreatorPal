@@ -67,28 +67,43 @@ class QueryRewriter:
         user_query: str,
         retriever: object,
         top_k: int = 50,
+        rrf_k: int = 60,
     ) -> list[dict]:
-        """Run retrieval for all rewritten queries and deduplicate results.
+        """Run retrieval for all rewritten queries and fuse results with RRF.
+
+        Uses Reciprocal Rank Fusion (RRF) to merge ranked lists from multiple
+        query rewrites.  RRF only depends on rank position, so raw scores from
+        different queries (which are not on a comparable scale) are never mixed.
 
         *retriever* must expose a ``retrieve(query, top_k)`` method (works
         with :class:`HybridRetriever`, :class:`FaissRetriever`, or
         :class:`BM25Retriever`).
         """
         queries = self.rewrite(user_query)
-        seen_keys: set[str] = set()
-        merged: list[dict] = []
+
+        # key -> best hit dict (metadata carrier)
+        best_hit: dict[str, dict] = {}
+        # key -> accumulated RRF score across all query lists
+        rrf_scores: dict[str, float] = {}
 
         for q in queries:
             hits = retriever.retrieve(q, top_k=top_k)  # type: ignore[attr-defined]
-            for hit in hits:
+            for rank, hit in enumerate(hits, start=1):
                 key = f"{hit.get('subreddit', '')}|{hit.get('chunk_text', '')[:80]}"
-                if key not in seen_keys:
-                    seen_keys.add(key)
-                    merged.append(hit)
+                rrf_scores[key] = rrf_scores.get(key, 0.0) + 1.0 / (rrf_k + rank)
+                if key not in best_hit:
+                    best_hit[key] = hit
 
-        score_key = next(
-            (k for k in ("hybrid_score", "score", "rerank_score") if merged and k in merged[0]),
-            "score",
+        ranked_keys = sorted(rrf_scores, key=lambda k: rrf_scores[k], reverse=True)
+        merged: list[dict] = []
+        for key in ranked_keys[:top_k]:
+            entry = dict(best_hit[key])
+            entry["rrf_score"] = rrf_scores[key]
+            merged.append(entry)
+
+        logger.info(
+            "RRF fusion over %d queries produced %d unique candidates",
+            len(queries),
+            len(merged),
         )
-        merged.sort(key=lambda d: d.get(score_key, 0.0), reverse=True)
-        return merged[:top_k]
+        return merged
