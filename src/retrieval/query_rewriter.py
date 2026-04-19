@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
 
 from openai import OpenAI
 
@@ -11,10 +10,10 @@ logger = logging.getLogger(__name__)
 
 REWRITE_SYSTEM_PROMPT = (
     "You are a search-query optimizer for a Reddit community discovery system. "
-    "Given a user's original query and optional channel themes, generate {n} "
-    "diverse reformulations that will improve retrieval coverage. "
-    "Each reformulation should emphasize different aspects: synonyms, related "
-    "topics, or more specific sub-topics. Return one query per line, no numbering."
+    "Given a user's original query, generate {n} diverse reformulations that "
+    "will improve retrieval coverage. Each reformulation should emphasize "
+    "different aspects: synonyms, related topics, or more specific sub-topics. "
+    "Return one query per line, no numbering."
 )
 
 
@@ -32,22 +31,14 @@ class QueryRewriter:
         self.num_rewrites = num_rewrites
         logger.info("QueryRewriter ready – model=%s, num_rewrites=%d", model_name, num_rewrites)
 
-    def rewrite(
-        self,
-        user_query: str,
-        channel_themes: Sequence[str] | None = None,
-    ) -> list[str]:
+    def rewrite(self, user_query: str) -> list[str]:
         """Return a list of rewritten queries including the original.
 
         The original query is always the first element so that callers
         can treat ``rewrites[0]`` as the unchanged baseline.
         """
-        theme_context = ""
-        if channel_themes:
-            theme_context = f"\nChannel themes: {', '.join(channel_themes)}"
-
         user_message = (
-            f"Original query: {user_query}{theme_context}\n\n"
+            f"Original query: {user_query}\n\n"
             f"Generate {self.num_rewrites} diverse search query reformulations."
         )
 
@@ -60,7 +51,7 @@ class QueryRewriter:
                 },
                 {"role": "user", "content": user_message},
             ],
-            temperature=0.7,
+            temperature=0.3,
             max_tokens=256,
         )
 
@@ -75,7 +66,6 @@ class QueryRewriter:
         self,
         user_query: str,
         retriever: object,
-        channel_themes: Sequence[str] | None = None,
         top_k: int = 50,
     ) -> list[dict]:
         """Run retrieval for all rewritten queries and deduplicate results.
@@ -84,7 +74,7 @@ class QueryRewriter:
         with :class:`HybridRetriever`, :class:`FaissRetriever`, or
         :class:`BM25Retriever`).
         """
-        queries = self.rewrite(user_query, channel_themes)
+        queries = self.rewrite(user_query)
         seen_keys: set[str] = set()
         merged: list[dict] = []
 

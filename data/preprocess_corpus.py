@@ -98,31 +98,6 @@ def build_subreddit_profiles(
     return len(profiles)
 
 
-def chunk_profile_text(
-    profile_text: str,
-    window_tokens: int = 64,
-    overlap_tokens: int = 16,
-) -> list[str]:
-    """Chunk profile text into overlapping token windows for dense encoding.
-
-    Uses whitespace tokenization as a lightweight approximation.  The actual
-    FAISS index builder (``build_faiss_index.py``) re-chunks with the real
-    model tokenizer, so this function is a convenience fallback only.
-    """
-    words = profile_text.split()
-    if not words:
-        return []
-    step = max(window_tokens - overlap_tokens, 1)
-    chunks: list[str] = []
-    for start in range(0, len(words), step):
-        chunk = " ".join(words[start : start + window_tokens])
-        if chunk:
-            chunks.append(chunk)
-        if start + window_tokens >= len(words):
-            break
-    return chunks
-
-
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments for corpus preprocessing."""
     parser = argparse.ArgumentParser(
