@@ -69,22 +69,18 @@ def _token_count(text: str, tokenizer: Any) -> int:
     return len(tokenizer.encode(text, add_special_tokens=False))
 
 
-def semantic_chunk_text(
+def sentence_chunk_text(
     text: str,
-    encoder: SentenceTransformer,
     tokenizer: Any,
-    similarity_threshold: float = 0.5,
     max_chunk_tokens: int = 384,
     min_chunk_tokens: int = 20,
 ) -> list[str]:
-    """Split *text* into semantically coherent chunks.
+    """Split *text* into chunks at sentence boundaries with a token limit.
 
-    1. Split into sentences.
-    2. Encode each sentence with the bi-encoder.
-    3. Compute cosine similarity between consecutive sentence embeddings.
-    4. Cut where similarity drops below *similarity_threshold*.
-    5. Merge tiny chunks with their neighbour; split oversized chunks
-       at sentence boundaries.
+    Greedily accumulates sentences until adding the next would exceed
+    *max_chunk_tokens*, then starts a new chunk.  No encoder calls are
+    needed, making this orders of magnitude faster than semantic chunking
+    while preserving sentence integrity.
     """
     if not text or not text.strip():
         return []
@@ -93,53 +89,26 @@ def semantic_chunk_text(
     if not sentences:
         return []
 
-    if len(sentences) == 1:
-        return [" ".join(sentences[0].split())]
+    buf: list[str] = []
+    buf_tokens = 0
+    chunks: list[str] = []
 
-    embeddings = encoder.encode(sentences, convert_to_numpy=True, normalize_embeddings=True)
-    embeddings = np.asarray(embeddings, dtype=np.float32)
-
-    similarities = np.sum(embeddings[:-1] * embeddings[1:], axis=1)
-
-    breakpoints: list[int] = [0]
-    for i in range(len(similarities)):
-        if similarities[i] < similarity_threshold:
-            breakpoints.append(i + 1)
-    breakpoints.append(len(sentences))
-
-    raw_chunks: list[str] = []
-    for start, end in zip(breakpoints[:-1], breakpoints[1:]):
-        chunk = " ".join(sentences[start:end])
-        chunk = " ".join(chunk.split())
-        if chunk:
-            raw_chunks.append(chunk)
-
-    final_chunks: list[str] = []
-    for chunk in raw_chunks:
-        n_tokens = _token_count(chunk, tokenizer)
-        if n_tokens > max_chunk_tokens:
-            sub_sentences = split_sentences(chunk)
-            if len(sub_sentences) <= 1:
-                final_chunks.append(chunk)
-                continue
-            buf: list[str] = []
-            buf_tokens = 0
-            for sent in sub_sentences:
-                sent_tokens = _token_count(sent, tokenizer)
-                if buf and buf_tokens + sent_tokens > max_chunk_tokens:
-                    final_chunks.append(" ".join(buf))
-                    buf = [sent]
-                    buf_tokens = sent_tokens
-                else:
-                    buf.append(sent)
-                    buf_tokens += sent_tokens
-            if buf:
-                final_chunks.append(" ".join(buf))
+    for sent in sentences:
+        sent_tokens = _token_count(sent, tokenizer)
+        if buf and buf_tokens + sent_tokens > max_chunk_tokens:
+            chunks.append(" ".join(buf))
+            buf = [sent]
+            buf_tokens = sent_tokens
         else:
-            final_chunks.append(chunk)
+            buf.append(sent)
+            buf_tokens += sent_tokens
 
+    if buf:
+        chunks.append(" ".join(buf))
+
+    # Merge trailing tiny chunks into their predecessor
     merged: list[str] = []
-    for chunk in final_chunks:
+    for chunk in chunks:
         if merged and _token_count(merged[-1], tokenizer) < min_chunk_tokens:
             merged[-1] = merged[-1] + " " + chunk
         else:
@@ -164,9 +133,7 @@ def infer_text_column(frame: pd.DataFrame) -> str:
 
 def build_chunk_metadata(
     profile_chunks_path: Path,
-    encoder: SentenceTransformer,
     tokenizer: Any,
-    similarity_threshold: float = 0.5,
     max_chunk_tokens: int = 384,
     min_chunk_tokens: int = 20,
 ) -> pd.DataFrame:
@@ -191,11 +158,9 @@ def build_chunk_metadata(
         if text_column == "chunk_text":
             chunks = [raw_text] if raw_text.strip() else []
         else:
-            chunks = semantic_chunk_text(
+            chunks = sentence_chunk_text(
                 raw_text,
-                encoder=encoder,
                 tokenizer=tokenizer,
-                similarity_threshold=similarity_threshold,
                 max_chunk_tokens=max_chunk_tokens,
                 min_chunk_tokens=min_chunk_tokens,
             )
@@ -275,12 +240,6 @@ def parse_args() -> argparse.Namespace:
         help="Embedding batch size (default: 32).",
     )
     parser.add_argument(
-        "--similarity-threshold",
-        type=float,
-        default=0.5,
-        help="Cosine similarity threshold for semantic chunk boundaries (default: 0.5).",
-    )
-    parser.add_argument(
         "--max-chunk-tokens",
         type=int,
         default=384,
@@ -304,16 +263,14 @@ def main() -> None:
     model = SentenceTransformer(args.model_name)
     metadata = build_chunk_metadata(
         profile_chunks_path=args.profiles,
-        encoder=model,
         tokenizer=model.tokenizer,
-        similarity_threshold=args.similarity_threshold,
         max_chunk_tokens=args.max_chunk_tokens,
         min_chunk_tokens=args.min_chunk_tokens,
     )
     if metadata.empty:
         raise ValueError("No profile chunks were produced from the provided input.")
 
-    print(f"Semantic chunking produced {len(metadata)} chunks")
+    print(f"Sentence chunking produced {len(metadata)} chunks")
 
     embeddings = model.encode(
         metadata["chunk_text"].tolist(),
