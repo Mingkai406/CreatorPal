@@ -31,8 +31,14 @@ class MockPipeline:
                     "retrieval_score": 0.91,
                     "rerank_score": 0.94,
                     "reason": "GPU/CPU benchmark overlap, shares YT reviews in weekly threads.",
-                    "evidence": ["Hardware benchmark threads show strong review-link affinity."],
+                    "evidence": [
+                        "Community actively discusses GPU benchmarks in weekly threads",
+                        "High keyword overlap: 'benchmark', 'review', 'comparison'",
+                        "Positive sentiment toward YouTube video citations (+0.72)",
+                    ],
                     "sentiment_score": 0.72,
+                    "risk_level": "Low",
+                    "posting_angle": "Share a benchmark breakdown as a discussion starter, not a promotion.",
                 },
                 {
                     "rank": 2,
@@ -41,18 +47,30 @@ class MockPipeline:
                     "retrieval_score": 0.85,
                     "rerank_score": 0.88,
                     "reason": "Phone comparisons, frequently links reviews in help threads.",
-                    "evidence": ["High overlap with troubleshooting and buyer advice content."],
+                    "evidence": [
+                        "High overlap with troubleshooting and buyer advice content",
+                        "Review links upvoted when they answer specific questions",
+                        "Warm community sentiment supports external resource sharing",
+                    ],
                     "sentiment_score": 0.61,
+                    "risk_level": "Low",
+                    "posting_angle": "Answer a common phone-buying question with your comparison video as the reference.",
                 },
                 {
                     "rank": 3,
                     "subreddit": "buildapc",
-                    "url": "",
+                    "url": "https://www.reddit.com/r/buildapc/",
                     "retrieval_score": 0.79,
                     "rerank_score": 0.81,
                     "reason": "High component discussion, video citations in recommendation posts.",
-                    "evidence": ["Part-comparison posts frequently include review references."],
+                    "evidence": [
+                        "Part-comparison posts frequently include review video references",
+                        "Weekly 'What should I buy?' threads welcome curated video resources",
+                        "Component overlap: CPU/GPU/RAM topics match your content",
+                    ],
                     "sentiment_score": 0.55,
+                    "risk_level": "Medium",
+                    "posting_angle": "Contribute to a build-advice thread by linking your most relevant component review.",
                 },
                 {
                     "rank": 4,
@@ -63,6 +81,8 @@ class MockPipeline:
                     "reason": "Broad tech news, active link sharing for launch coverage.",
                     "evidence": ["Launch and rumor threads reward concise video context."],
                     "sentiment_score": 0.38,
+                    "risk_level": "Medium",
+                    "posting_angle": "Frame a launch-day take as news commentary rather than a channel promo.",
                 },
                 {
                     "rank": 5,
@@ -73,6 +93,8 @@ class MockPipeline:
                     "reason": "iOS/Mac product reviews with strong brand-focused audience fit.",
                     "evidence": ["Strong engagement around ecosystem comparison content."],
                     "sentiment_score": 0.44,
+                    "risk_level": "Medium",
+                    "posting_angle": "Post an ecosystem comparison that invites community opinion.",
                 },
                 {
                     "rank": 6,
@@ -83,6 +105,8 @@ class MockPipeline:
                     "reason": "Troubleshooting audience actively seeks step-by-step video guides.",
                     "evidence": ["Video solution links are frequently upvoted in help threads."],
                     "sentiment_score": 0.52,
+                    "risk_level": "Low",
+                    "posting_angle": "Answer a common support question and offer your tutorial as a reference.",
                 },
                 {
                     "rank": 7,
@@ -93,6 +117,8 @@ class MockPipeline:
                     "reason": "Enthusiast community with high benchmark and build-log engagement.",
                     "evidence": ["Showcase posts reward detailed spec comparisons with video walkthroughs."],
                     "sentiment_score": 0.68,
+                    "risk_level": "Medium",
+                    "posting_angle": "Share a rig showcase or benchmark that fits community build standards.",
                 },
                 {
                     "rank": 8,
@@ -103,6 +129,8 @@ class MockPipeline:
                     "reason": "DIY server and networking audience overlaps with deep-dive tech content.",
                     "evidence": ["Setup showcase threads regularly surface video tutorials."],
                     "sentiment_score": 0.57,
+                    "risk_level": "Low",
+                    "posting_angle": "Share a setup walkthrough as a detailed guide for the community.",
                 },
                 {
                     "rank": 9,
@@ -113,6 +141,8 @@ class MockPipeline:
                     "reason": "Camera and lens review content aligns with gear discussion threads.",
                     "evidence": ["Gear threads frequently link external review videos."],
                     "sentiment_score": 0.41,
+                    "risk_level": "Medium",
+                    "posting_angle": "Join a gear recommendation thread with a focused, comparison-driven take.",
                 },
                 {
                     "rank": 10,
@@ -123,6 +153,8 @@ class MockPipeline:
                     "reason": "Streaming device and antenna setup audience fits consumer electronics content.",
                     "evidence": ["Setup and comparison posts often include video links for clarity."],
                     "sentiment_score": 0.33,
+                    "risk_level": "Medium",
+                    "posting_angle": "Help someone choose a streaming device by referencing your comparison video.",
                 },
             ],
             "strategy_report": (

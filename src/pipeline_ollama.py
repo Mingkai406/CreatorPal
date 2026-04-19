@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 from openai import OpenAI
@@ -10,6 +11,26 @@ from openai import OpenAI
 from src.config import Settings, load_settings
 
 logger = logging.getLogger(__name__)
+
+
+def _apply_runtime_stability_defaults() -> None:
+    """Apply conservative runtime defaults to reduce native crashes on macOS.
+
+    These can still be overridden by explicitly setting environment variables
+    before process start.
+    """
+    defaults = {
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+        "TOKENIZERS_PARALLELISM": "false",
+    }
+    for key, value in defaults.items():
+        os.environ.setdefault(key, value)
+
+
+_apply_runtime_stability_defaults()
 
 
 def _try_init(label: str, factory):
@@ -158,13 +179,21 @@ class CreatorPalPipeline:
         )
 
         # 4. Query rewriting + hybrid retrieval
-        candidates = self.query_rewriter.retrieve_with_rewrites(
-            user_query=retrieval_query,
-            retriever=self.hybrid_retriever,
-            channel_themes=channel_themes or None,
-            top_k=self.settings.retrieval_top_k,
-        )
-        stages.extend(["query_rewriting", "hybrid_retrieval"])
+        try:
+            candidates = self.query_rewriter.retrieve_with_rewrites(
+                user_query=retrieval_query,
+                retriever=self.hybrid_retriever,
+                channel_themes=channel_themes or None,
+                top_k=self.settings.retrieval_top_k,
+            )
+            stages.extend(["query_rewriting", "hybrid_retrieval"])
+        except Exception as exc:
+            logger.warning("Query rewriting failed – fallback to direct hybrid retrieval: %s", exc)
+            candidates = self.hybrid_retriever.retrieve(
+                query=retrieval_query,
+                top_k=self.settings.retrieval_top_k,
+            )
+            stages.append("hybrid_retrieval_fallback")
 
         # 4b. HyDE retrieval – merge FAISS hits from a hypothetical subreddit document
         if self.hyde is not None:
@@ -190,12 +219,27 @@ class CreatorPalPipeline:
                 logger.warning("HyDE retrieval failed – skipping: %s", exc)
 
         # 5. Cross-encoder reranking
-        ranked_raw = self.reranker.rerank(
-            query=retrieval_query,
-            candidates=candidates,
-            top_k=self.settings.rerank_top_k,
-        )
-        stages.append("reranking")
+        try:
+            ranked_raw = self.reranker.rerank(
+                query=retrieval_query,
+                candidates=candidates,
+                top_k=self.settings.rerank_top_k,
+            )
+            stages.append("reranking")
+        except Exception as exc:
+            logger.warning("Reranking failed – fallback to hybrid score ordering: %s", exc)
+            ranked_raw = sorted(
+                candidates,
+                key=lambda item: float(
+                    item.get("hybrid_score", item.get("score", 0.0))
+                ),
+                reverse=True,
+            )[: self.settings.rerank_top_k]
+            for entry in ranked_raw:
+                entry["rerank_score"] = float(
+                    entry.get("hybrid_score", entry.get("score", 0.0))
+                )
+            stages.append("reranking_fallback")
 
         # 6. PAL analytics
         pal_results: dict[str, Any] = {"summary": "", "metrics": {}}
