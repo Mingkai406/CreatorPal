@@ -320,3 +320,6 @@ A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## Report
+[CreatorPal Final Report (PDF)](./CreatorPal_Final_Report.pdf)
