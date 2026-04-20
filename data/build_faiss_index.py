@@ -1,9 +1,16 @@
-"""Encode subreddit profile chunks and build a FAISS Flat index."""
+"""Encode subreddit profile chunks and build a FAISS Flat index.
+
+Uses semantic chunking: splits text into sentences, encodes them,
+and groups consecutive sentences with high cosine similarity into
+coherent chunks.  Chunks that exceed the encoder's max context are
+split at sentence boundaries; tiny chunks are merged with neighbours.
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -48,36 +55,69 @@ def load_json_records(path: Path) -> list[dict[str, Any]]:
     return records
 
 
-def chunk_text_with_tokenizer(
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+
+
+def split_sentences(text: str) -> list[str]:
+    """Split text into sentences using punctuation boundaries."""
+    raw_parts = _SENTENCE_SPLIT_RE.split(text.strip())
+    return [s.strip() for s in raw_parts if s.strip()]
+
+
+def _token_count(text: str, tokenizer: Any) -> int:
+    """Return the number of tokens for *text* according to *tokenizer*."""
+    return len(tokenizer.encode(text, add_special_tokens=False))
+
+
+def sentence_chunk_text(
     text: str,
     tokenizer: Any,
-    window_tokens: int,
-    overlap_tokens: int,
+    max_chunk_tokens: int = 384,
+    min_chunk_tokens: int = 20,
 ) -> list[str]:
-    """Chunk text according to model token ids."""
+    """Split *text* into chunks at sentence boundaries with a token limit.
+
+    Greedily accumulates sentences until adding the next would exceed
+    *max_chunk_tokens*, then starts a new chunk.  No encoder calls are
+    needed, making this orders of magnitude faster than semantic chunking
+    while preserving sentence integrity.
+    """
     if not text or not text.strip():
         return []
-    if window_tokens <= 0:
-        raise ValueError("window_tokens must be > 0")
-    if overlap_tokens < 0 or overlap_tokens >= window_tokens:
-        raise ValueError("overlap_tokens must be >= 0 and < window_tokens")
 
-    token_ids = tokenizer.encode(text, add_special_tokens=False)
-    if not token_ids:
+    sentences = split_sentences(text)
+    if not sentences:
         return []
 
-    step = window_tokens - overlap_tokens
+    buf: list[str] = []
+    buf_tokens = 0
     chunks: list[str] = []
-    for start in range(0, len(token_ids), step):
-        chunk_ids = token_ids[start : start + window_tokens]
-        if not chunk_ids:
-            continue
-        chunk_text = tokenizer.decode(chunk_ids, skip_special_tokens=True).strip()
-        if chunk_text:
-            chunks.append(" ".join(chunk_text.split()))
-        if start + window_tokens >= len(token_ids):
-            break
-    return chunks
+
+    for sent in sentences:
+        sent_tokens = _token_count(sent, tokenizer)
+        if buf and buf_tokens + sent_tokens > max_chunk_tokens:
+            chunks.append(" ".join(buf))
+            buf = [sent]
+            buf_tokens = sent_tokens
+        else:
+            buf.append(sent)
+            buf_tokens += sent_tokens
+
+    if buf:
+        chunks.append(" ".join(buf))
+
+    # Merge trailing tiny chunks into their predecessor
+    merged: list[str] = []
+    for chunk in chunks:
+        if merged and _token_count(merged[-1], tokenizer) < min_chunk_tokens:
+            merged[-1] = merged[-1] + " " + chunk
+        else:
+            merged.append(chunk)
+    if len(merged) > 1 and _token_count(merged[-1], tokenizer) < min_chunk_tokens:
+        merged[-2] = merged[-2] + " " + merged[-1]
+        merged.pop()
+
+    return merged
 
 
 def infer_text_column(frame: pd.DataFrame) -> str:
@@ -94,8 +134,8 @@ def infer_text_column(frame: pd.DataFrame) -> str:
 def build_chunk_metadata(
     profile_chunks_path: Path,
     tokenizer: Any,
-    window_tokens: int,
-    overlap_tokens: int,
+    max_chunk_tokens: int = 384,
+    min_chunk_tokens: int = 20,
 ) -> pd.DataFrame:
     """Build per-chunk metadata rows from subreddit profile records."""
     records = load_json_records(profile_chunks_path)
@@ -115,11 +155,15 @@ def build_chunk_metadata(
         if not subreddit:
             continue
         raw_text = str(record.get(text_column, "") or "")
-        chunks = (
-            [raw_text]
-            if text_column == "chunk_text"
-            else chunk_text_with_tokenizer(raw_text, tokenizer, window_tokens, overlap_tokens)
-        )
+        if text_column == "chunk_text":
+            chunks = [raw_text] if raw_text.strip() else []
+        else:
+            chunks = sentence_chunk_text(
+                raw_text,
+                tokenizer=tokenizer,
+                max_chunk_tokens=max_chunk_tokens,
+                min_chunk_tokens=min_chunk_tokens,
+            )
         for chunk_id, chunk_text in enumerate(chunks):
             rows.append(
                 {
@@ -132,34 +176,6 @@ def build_chunk_metadata(
             vector_id += 1
 
     return pd.DataFrame(rows)
-
-
-def encode_profiles(
-    profile_chunks_path: Path,
-    model_name: str = "sentence-transformers/all-mpnet-base-v2",
-    batch_size: int = 32,
-    window_tokens: int = 64,
-    overlap_tokens: int = 16,
-) -> np.ndarray:
-    """Encode profile chunks with a bi-encoder model."""
-    model = SentenceTransformer(model_name)
-    metadata = build_chunk_metadata(
-        profile_chunks_path=profile_chunks_path,
-        tokenizer=model.tokenizer,
-        window_tokens=window_tokens,
-        overlap_tokens=overlap_tokens,
-    )
-    if metadata.empty:
-        return np.empty((0, model.get_sentence_embedding_dimension()), dtype=np.float32)
-
-    embeddings = model.encode(
-        metadata["chunk_text"].tolist(),
-        batch_size=batch_size,
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-        show_progress_bar=True,
-    )
-    return np.asarray(embeddings, dtype=np.float32)
 
 
 def build_faiss_flat_index(embeddings: np.ndarray) -> faiss.IndexFlatIP:
@@ -190,7 +206,9 @@ def save_metadata(metadata: pd.DataFrame, output_path: Path) -> None:
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments for index building."""
-    parser = argparse.ArgumentParser(description="Build a FAISS Flat index over subreddit profile chunks.")
+    parser = argparse.ArgumentParser(
+        description="Build a FAISS Flat index over semantically chunked subreddit profiles."
+    )
     parser.add_argument(
         "--profiles",
         type=Path,
@@ -215,18 +233,23 @@ def parse_args() -> argparse.Namespace:
         default="sentence-transformers/all-mpnet-base-v2",
         help="SentenceTransformer model name (default: sentence-transformers/all-mpnet-base-v2).",
     )
-    parser.add_argument("--batch-size", type=int, default=32, help="Embedding batch size (default: 32).")
     parser.add_argument(
-        "--window-tokens",
+        "--batch-size",
         type=int,
-        default=64,
-        help="Sliding window size in model tokens (default: 64).",
+        default=32,
+        help="Embedding batch size (default: 32).",
     )
     parser.add_argument(
-        "--overlap-tokens",
+        "--max-chunk-tokens",
         type=int,
-        default=16,
-        help="Sliding window overlap in model tokens (default: 16).",
+        default=384,
+        help="Maximum tokens per chunk (default: 384).",
+    )
+    parser.add_argument(
+        "--min-chunk-tokens",
+        type=int,
+        default=20,
+        help="Minimum tokens per chunk; smaller chunks are merged (default: 20).",
     )
     return parser.parse_args()
 
@@ -241,11 +264,13 @@ def main() -> None:
     metadata = build_chunk_metadata(
         profile_chunks_path=args.profiles,
         tokenizer=model.tokenizer,
-        window_tokens=args.window_tokens,
-        overlap_tokens=args.overlap_tokens,
+        max_chunk_tokens=args.max_chunk_tokens,
+        min_chunk_tokens=args.min_chunk_tokens,
     )
     if metadata.empty:
         raise ValueError("No profile chunks were produced from the provided input.")
+
+    print(f"Sentence chunking produced {len(metadata)} chunks")
 
     embeddings = model.encode(
         metadata["chunk_text"].tolist(),

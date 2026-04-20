@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from openai import OpenAI
 
 from src.config import Settings
@@ -13,14 +11,12 @@ from src.retrieval.hybrid_search import HybridRetriever
 from src.retrieval.hyde import HyDEQueryRewriter
 from src.retrieval.query_rewriter import QueryRewriter
 from src.retrieval.reranker import CrossEncoderReranker
-from src.retrieval.theme_extractor import ThemeExtractor
 
 
 def build_retrieval_stack(
     settings: Settings,
     llm_client: OpenAI,
 ) -> tuple[
-    ThemeExtractor,
     HyDEQueryRewriter,
     FaissRetriever,
     BM25Retriever,
@@ -30,13 +26,12 @@ def build_retrieval_stack(
 ]:
     """Construct retrieval components in their pipeline execution order.
 
-    The retrieval pipeline now uses:
+    The retrieval pipeline uses:
 
     1. **QueryRewriter** – LLM-based multi-query expansion.
     2. **HybridRetriever** – fused BM25 (15%) + FAISS dense (85%) scoring.
     3. **CrossEncoderReranker** – precision reranking on the fused candidate set.
     """
-    theme_extractor = ThemeExtractor(llm_client, settings.vllm_model)
     hyde_rewriter = HyDEQueryRewriter(llm_client, settings.vllm_model)
 
     faiss_retriever = FaissRetriever(
@@ -61,7 +56,6 @@ def build_retrieval_stack(
     reranker = CrossEncoderReranker(model_name=settings.reranker_model)
 
     return (
-        theme_extractor,
         hyde_rewriter,
         faiss_retriever,
         bm25_retriever,

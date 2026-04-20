@@ -82,7 +82,7 @@ class AugmentedGenerator:
                 {"role": "system", "content": _SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.5,
+            temperature=0.1,
             max_tokens=512,
         )
 

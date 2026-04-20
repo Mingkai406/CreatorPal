@@ -1,8 +1,9 @@
-"""End-to-end CreatorPal pipeline orchestration across ingest, retrieval, PAL, sentiment, and generation."""
+"""End-to-end CreatorPal pipeline orchestration across ingest, retrieval, sentiment, and generation."""
 
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, Future
 from typing import Any
 
 from openai import OpenAI
@@ -37,13 +38,11 @@ class CreatorPalPipeline:
         from src.ingest.youtube import YouTubeIngestor
         self.youtube: YouTubeIngestor | None = _try_init(
             "YouTubeIngestor",
-            lambda: YouTubeIngestor(api_key=settings.youtube_api_key),
-        )
-
-        from src.retrieval.theme_extractor import ThemeExtractor
-        self.theme_extractor: ThemeExtractor | None = _try_init(
-            "ThemeExtractor",
-            lambda: ThemeExtractor(client=self._llm, model_name=settings.vllm_model),
+            lambda: YouTubeIngestor(
+                api_key=settings.youtube_api_key,
+                cache_dir=settings.youtube_cache_dir,
+                cache_ttl_seconds=settings.youtube_cache_ttl_seconds,
+            ),
         )
 
         from src.retrieval.hyde import HyDEQueryRewriter
@@ -86,9 +85,6 @@ class CreatorPalPipeline:
         from src.retrieval.reranker import CrossEncoderReranker
         self.reranker = CrossEncoderReranker(model_name=settings.reranker_model)
 
-        from src.pal.executor import PALExecutor
-        self.pal = PALExecutor(client=self._llm, model_name=settings.vllm_model)
-
         from src.sentiment.analyzer import SentimentAnalyzer
         self.sentiment: SentimentAnalyzer | None = _try_init(
             "SentimentAnalyzer",
@@ -101,22 +97,63 @@ class CreatorPalPipeline:
     # Query preparation
     # ------------------------------------------------------------------
 
-    def prepare_retrieval_query(self, user_query: str | None, channel_themes: list[str]) -> str:
-        """Create the final retrieval query using user intent and extracted themes.
+    def prepare_retrieval_query(
+        self,
+        user_query: str | None,
+        channel_context: dict[str, Any],
+    ) -> tuple[str, str]:
+        """Build retrieval queries from user goal and channel metadata.
 
-        If *user_query* is provided it is used as the base; channel themes are
-        appended as keyword context to boost retrieval relevance.
+        Returns a tuple of (llm_query, content_query):
+        - llm_query: includes the creator's goal; passed to LLM components
+          (QueryRewriter, HyDE) so they understand the intent.
+        - content_query: channel content only (no goal); used for BM25/FAISS
+          retrieval to prevent meta-keywords like "grow subscribers" from
+          pulling up self-promotion subreddits via keyword matching.
         """
-        parts: list[str] = []
+        content_sections: list[str] = []
+
+        title = channel_context.get("title", "")
+        if title:
+            content_sections.append(f"Channel: {title}")
+
+        description = channel_context.get("description", "")
+        if description:
+            content_sections.append(f"Description: {description[:300]}")
+
+        videos = channel_context.get("videos", [])
+        video_titles = [v["title"] for v in videos[:10] if v.get("title")]
+        if video_titles:
+            content_sections.append(f"Videos: {' | '.join(video_titles)}")
+
+        content_query = "\n".join(content_sections) if content_sections else "general content recommendation"
+
+        llm_sections = []
         if user_query:
-            parts.append(user_query)
-        if channel_themes:
-            parts.append("Topics: " + ", ".join(channel_themes))
-        return " ".join(parts) if parts else "general content recommendation"
+            llm_sections.append(f"Goal: {user_query}")
+        llm_sections.extend(content_sections)
+        llm_query = "\n".join(llm_sections) if llm_sections else content_query
+
+        return llm_query, content_query
 
     # ------------------------------------------------------------------
     # End-to-end execution
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _compute_analytics(ranked_raw: list[dict[str, Any]]) -> dict[str, Any]:
+        """Compute simple analytics over ranked results (replaces PAL)."""
+        if not ranked_raw:
+            return {"summary": "", "metrics": {}}
+        scores = [e.get("rerank_score", 0.0) for e in ranked_raw]
+        subs = {e.get("subreddit", "") for e in ranked_raw}
+        best = max(ranked_raw, key=lambda e: e.get("rerank_score", 0.0))
+        result = {
+            "avg_rerank_score": round(sum(scores) / len(scores), 2),
+            "top_subreddit": best.get("subreddit", ""),
+            "unique_subreddits": len(subs),
+        }
+        return {"summary": str(result), "metrics": {"result": result}}
 
     def run(self, channel_or_query: str, user_query: str | None = None) -> dict[str, Any]:
         """Execute the full CreatorPal pipeline.
@@ -143,38 +180,38 @@ class CreatorPalPipeline:
             except Exception as exc:
                 logger.warning("YouTube ingestion failed – skipping: %s", exc)
 
-        # 2. Theme extraction
-        channel_themes: list[str] = []
-        if self.theme_extractor is not None and channel_context:
-            try:
-                channel_themes = self.theme_extractor.extract_themes(channel_context)
-                stages.append("theme_extraction")
-            except Exception as exc:
-                logger.warning("Theme extraction failed – skipping: %s", exc)
-
-        # 3. Build retrieval query
-        retrieval_query = self.prepare_retrieval_query(
-            user_query or channel_or_query, channel_themes
+        # 2. Build retrieval queries from channel metadata
+        # llm_query includes the creator's goal (for QueryRewriter / HyDE prompts)
+        # content_query is channel content only (for BM25/FAISS keyword matching)
+        llm_query, content_query = self.prepare_retrieval_query(
+            user_query, channel_context
         )
 
-        # 4. Query rewriting + hybrid retrieval
-        candidates = self.query_rewriter.retrieve_with_rewrites(
-            user_query=retrieval_query,
-            retriever=self.hybrid_retriever,
-            channel_themes=channel_themes or None,
-            top_k=self.settings.retrieval_top_k,
-        )
-        stages.extend(["query_rewriting", "hybrid_retrieval"])
+        # 3. Query Rewriter + HyDE in parallel
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            rewrite_future: Future[list[dict]] = pool.submit(
+                self.query_rewriter.retrieve_with_rewrites,
+                user_query=llm_query,
+                retriever=self.hybrid_retriever,
+                top_k=self.settings.retrieval_top_k,
+                retrieval_base_query=content_query,
+            )
 
-        # 4b. HyDE retrieval – merge FAISS hits from a hypothetical subreddit document
-        if self.hyde is not None:
-            try:
-                hyde_hits = self.hyde.retrieve(
-                    user_query=retrieval_query,
-                    channel_themes=channel_themes,
+            hyde_future: Future[list[dict[str, Any]]] | None = None
+            if self.hyde is not None:
+                hyde_future = pool.submit(
+                    self.hyde.retrieve,
+                    user_query=llm_query,
                     faiss_retriever=self.faiss_retriever,
                     top_k=self.settings.retrieval_top_k,
                 )
+
+        candidates = rewrite_future.result()
+        stages.extend(["query_rewriting", "hybrid_retrieval"])
+
+        if hyde_future is not None:
+            try:
+                hyde_hits = hyde_future.result()
                 seen_keys: set[str] = {
                     f"{c.get('subreddit', '')}|{c.get('chunk_text', '')[:80]}"
                     for c in candidates
@@ -185,60 +222,42 @@ class CreatorPalPipeline:
                         seen_keys.add(key)
                         candidates.append(hit)
                 stages.append("hyde_retrieval")
-                logger.info("HyDE added %d new candidates", len(hyde_hits))
             except Exception as exc:
                 logger.warning("HyDE retrieval failed – skipping: %s", exc)
 
-        # 5. Cross-encoder reranking
+        # 4. Cross-encoder reranking (use llm_query so the cross-encoder sees
+        #    the creator's goal when judging relevance)
         ranked_raw = self.reranker.rerank(
-            query=retrieval_query,
+            query=llm_query,
             candidates=candidates,
             top_k=self.settings.rerank_top_k,
         )
+        # Drop results with very negative rerank scores (cross-encoder is
+        # confident they are irrelevant; negative logits indicate no match)
+        ranked_raw = [e for e in ranked_raw if e.get("rerank_score", 0.0) > -5.0]
         stages.append("reranking")
 
-        # 6. PAL analytics
-        pal_results: dict[str, Any] = {"summary": "", "metrics": {}}
-        if ranked_raw:
-            try:
-                task = (
-                    "Analyze the subreddit candidates and compute: "
-                    "(a) average rerank_score, (b) subreddit with max score, "
-                    "(c) number of unique subreddits."
-                )
-                import pandas as pd
-                pal_df = pd.DataFrame(ranked_raw)
-                code = self.pal.generate_program(task, {"columns": list(pal_df.columns)})
-                exec_result = self.pal.execute_program(code, dataframe=pal_df)
-                pal_results = {
-                    "summary": str(exec_result.get("result", "")),
-                    "metrics": exec_result if isinstance(exec_result, dict) else {},
-                }
-                stages.append("pal_analytics")
-            except Exception as exc:
-                logger.warning("PAL analytics failed: %s", exc)
-                pal_results = {"summary": f"PAL error: {exc}", "metrics": {}}
+        # 5. Analytics (direct computation, no LLM)
+        pal_results = self._compute_analytics(ranked_raw)
+        stages.append("analytics")
 
-        # 7. Sentiment analysis
-        # NOTE: sentiment is scored over the Reddit post chunks (chunk_text)
-        # that were retrieved and reranked — not over YouTube video comments.
-        # YouTube comments fetched during ingest are used for theme/context
-        # only; community tone is inferred from the subreddit's own posts.
+        # 6. Sentiment analysis (must finish before report generation)
         sentiment_scores: dict[str, float] = {}
+        report = ""
+
         if self.sentiment is not None and ranked_raw:
+            sub_comments: dict[str, list[str]] = {}
+            for entry in ranked_raw:
+                sub = entry.get("subreddit", "unknown")
+                text = entry.get("chunk_text", "")
+                sub_comments.setdefault(sub, []).append(text)
             try:
-                sub_comments: dict[str, list[str]] = {}
-                for entry in ranked_raw:
-                    sub = entry.get("subreddit", "unknown")
-                    text = entry.get("chunk_text", "")
-                    sub_comments.setdefault(sub, []).append(text)
                 sentiment_scores = self.sentiment.score_subreddits(sub_comments)
                 stages.append("sentiment")
             except Exception as exc:
                 logger.warning("Sentiment analysis failed: %s", exc)
 
-        # 8. Report generation
-        report = ""
+        # 7. Report generation (with real sentiment scores)
         if self.generator is not None:
             try:
                 report = self.generator.generate_strategy_report(

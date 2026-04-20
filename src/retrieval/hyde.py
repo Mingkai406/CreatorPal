@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
 from typing import Any
 
 from openai import OpenAI
@@ -12,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 _SYSTEM_PROMPT = (
     "You are an expert on Reddit communities and content strategy. "
-    "Given a YouTube creator's goal and channel themes, write a hypothetical subreddit profile "
+    "Given a YouTube creator's goal, write a hypothetical subreddit profile "
     "description that would be a PERFECT match for this creator's target audience. "
     "Write it as if it were an actual subreddit's self-description: describe the community's "
     "focus, typical content topics, audience interests, and engagement style. "
@@ -34,25 +33,17 @@ class HyDEQueryRewriter:
         self.model = model_name
         logger.info("HyDEQueryRewriter initialised – model=%s", model_name)
 
-    def build_prompt(self, user_query: str, channel_themes: Sequence[str]) -> str:
+    def build_prompt(self, user_query: str) -> str:
         """Build the HyDE instruction prompt sent to the LLM."""
-        themes_block = ""
-        if channel_themes:
-            themes_block = f"\nChannel themes: {', '.join(channel_themes)}"
         return (
-            f"Creator's goal: {user_query}"
-            f"{themes_block}\n\n"
+            f"Creator's goal: {user_query}\n\n"
             "Write a hypothetical subreddit profile description that would be "
             "the ideal community for this creator's audience."
         )
 
-    def generate_hypothetical_subreddit_description(
-        self,
-        user_query: str,
-        channel_themes: Sequence[str],
-    ) -> str:
+    def generate_hypothetical_subreddit_description(self, user_query: str) -> str:
         """Rewrite user/channel intent into a retrieval-optimized pseudo-document."""
-        prompt = self.build_prompt(user_query, channel_themes)
+        prompt = self.build_prompt(user_query)
 
         response = self.client.chat.completions.create(
             model=self.model,
@@ -60,7 +51,7 @@ class HyDEQueryRewriter:
                 {"role": "system", "content": _SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.7,
+            temperature=0.2,
             max_tokens=200,
         )
 
@@ -75,7 +66,6 @@ class HyDEQueryRewriter:
     def retrieve(
         self,
         user_query: str,
-        channel_themes: Sequence[str],
         faiss_retriever: Any,
         top_k: int = 50,
     ) -> list[dict[str, Any]]:
@@ -85,9 +75,7 @@ class HyDEQueryRewriter:
         matching the :class:`FaissRetriever` interface.  Results are tagged with
         ``hyde_score`` (same value as ``score``) so callers can distinguish them.
         """
-        hypo_doc = self.generate_hypothetical_subreddit_description(
-            user_query, channel_themes
-        )
+        hypo_doc = self.generate_hypothetical_subreddit_description(user_query)
         hits = faiss_retriever.retrieve(hypo_doc, top_k=top_k)
         for hit in hits:
             hit["hyde_score"] = hit.get("score", 0.0)

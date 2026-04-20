@@ -33,10 +33,12 @@ class Settings:
     faiss_metadata_path: Path
     retrieval_top_k: int = 50
     rerank_top_k: int = 10
-    hybrid_alpha_keyword: float = 0.15
-    hybrid_alpha_semantic: float = 0.85
+    hybrid_alpha_keyword: float = 0.05
+    hybrid_alpha_semantic: float = 0.95
     max_channel_videos: int = 20
     max_video_comments: int = 100
+    youtube_cache_ttl_seconds: int = 0
+    youtube_cache_dir: Path = Path("data/cache/youtube")
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -62,10 +64,12 @@ class Settings:
             faiss_metadata_path=Path(_get("faiss_metadata_path", _DEFAULTS["faiss_metadata_path"])),
             retrieval_top_k=int(_get("retrieval_top_k", "50")),
             rerank_top_k=int(_get("rerank_top_k", "10")),
-            hybrid_alpha_keyword=float(_get("hybrid_alpha_keyword", "0.15")),
-            hybrid_alpha_semantic=float(_get("hybrid_alpha_semantic", "0.85")),
+            hybrid_alpha_keyword=float(_get("hybrid_alpha_keyword", "0.05")),
+            hybrid_alpha_semantic=float(_get("hybrid_alpha_semantic", "0.95")),
             max_channel_videos=int(_get("max_channel_videos", "20")),
             max_video_comments=int(_get("max_video_comments", "100")),
+            youtube_cache_ttl_seconds=int(_get("youtube_cache_ttl_seconds", "0")),
+            youtube_cache_dir=Path(_get("youtube_cache_dir", "data/cache/youtube")),
         )
 
 

@@ -12,6 +12,51 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Subreddit quality filters
+# ---------------------------------------------------------------------------
+
+# Exact lowercase subreddit names to exclude unconditionally.
+_BLOCKED_NAMES: frozenset[str] = frozenset({
+    # Self-promotion / sub-for-sub
+    "sub4sub", "subforsub", "subforsubreddit",
+    "subscribetome", "subscribetomeyoutube",
+    "promote", "promote_your_channel", "promoteyourchannel",
+    "youtubelimited", "cookiecollector",
+    "ytpromotion", "youtubegrowth",
+    # Known NSFW
+    "gfur", "yiff", "rule34", "hentai",
+})
+
+# If any of these fragments appear in the lowercase subreddit name, exclude it.
+_BLOCKED_NAME_FRAGMENTS: tuple[str, ...] = (
+    "sub4sub", "subforsub", "subscribetome",
+    "promote_your", "promotechannel", "youtubelimited",
+    "nsfw", "porn", "xxx",
+)
+
+# Phrases that indicate subscription-farming content.
+_SPAM_PHRASES: tuple[str, ...] = (
+    "sub 4 sub", "sub4sub", "sub for sub", "subforsub",
+    "i will sub back", "sub back", "subscribe back",
+    "subscribe to my channel", "i sub back",
+)
+
+# If a profile contains more than this many spam-phrase hits, drop it.
+_SPAM_PHRASE_THRESHOLD = 5
+
+
+def _is_blocked(subreddit: str, profile_text: str) -> bool:
+    """Return True if this subreddit should be excluded from the corpus."""
+    lower_name = subreddit.lower()
+    if lower_name in _BLOCKED_NAMES:
+        return True
+    if any(frag in lower_name for frag in _BLOCKED_NAME_FRAGMENTS):
+        return True
+    lower_text = profile_text.lower()
+    hits = sum(lower_text.count(phrase) for phrase in _SPAM_PHRASES)
+    return hits > _SPAM_PHRASE_THRESHOLD
+
 
 def _iter_ndjson(path: Path):
     """Yield JSON objects line-by-line from an NDJSON file."""
@@ -35,7 +80,7 @@ def build_subreddit_profiles(
     input_path: Path,
     output_path: Path,
     min_posts: int = 10,
-    top_posts: int = 50,
+    top_posts: int = 15,
 ) -> int:
     """Aggregate Reddit submissions into per-subreddit profile documents.
 
@@ -45,6 +90,13 @@ def build_subreddit_profiles(
 
     Returns the number of profiles written.
     """
+    if min_posts > top_posts:
+        raise ValueError(
+            f"min_posts ({min_posts}) must be <= top_posts ({top_posts}); "
+            "the heap can hold at most top_posts entries so no subreddit "
+            "would ever satisfy the min_posts threshold."
+        )
+
     # Use a min-heap of size top_posts per subreddit to bound memory.
     # Heap items are (score, post_text) so the lowest score is popped first.
     heaps: dict[str, list[tuple[int, str]]] = defaultdict(list)
@@ -79,16 +131,23 @@ def build_subreddit_profiles(
     logger.info("Scanned %d posts across %d subreddits", scanned, len(heaps))
 
     profiles: list[dict[str, Any]] = []
+    blocked_count = 0
     for subreddit, heap in sorted(heaps.items()):
         if len(heap) < min_posts:
             continue
         top = sorted(heap, key=lambda x: x[0], reverse=True)
         profile_text = "\n".join(text for _, text in top)
+        if _is_blocked(subreddit, profile_text):
+            blocked_count += 1
+            logger.info("Filtered out r/%s", subreddit)
+            continue
         profiles.append({
             "subreddit": subreddit,
             "profile_text": profile_text,
             "post_count": len(heap),
         })
+
+    logger.info("Blocked %d subreddits by name/content filter", blocked_count)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as fh:
@@ -96,31 +155,6 @@ def build_subreddit_profiles(
 
     logger.info("Wrote %d subreddit profiles to %s", len(profiles), output_path)
     return len(profiles)
-
-
-def chunk_profile_text(
-    profile_text: str,
-    window_tokens: int = 64,
-    overlap_tokens: int = 16,
-) -> list[str]:
-    """Chunk profile text into overlapping token windows for dense encoding.
-
-    Uses whitespace tokenization as a lightweight approximation.  The actual
-    FAISS index builder (``build_faiss_index.py``) re-chunks with the real
-    model tokenizer, so this function is a convenience fallback only.
-    """
-    words = profile_text.split()
-    if not words:
-        return []
-    step = max(window_tokens - overlap_tokens, 1)
-    chunks: list[str] = []
-    for start in range(0, len(words), step):
-        chunk = " ".join(words[start : start + window_tokens])
-        if chunk:
-            chunks.append(chunk)
-        if start + window_tokens >= len(words):
-            break
-    return chunks
 
 
 def parse_args() -> argparse.Namespace:
@@ -149,8 +183,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--top-posts",
         type=int,
-        default=50,
-        help="Number of top-scored posts per subreddit to keep (default: 50).",
+        default=15,
+        help="Number of top-scored posts per subreddit to keep (default: 15).",
     )
     return parser.parse_args()
 

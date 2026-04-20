@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import re
+import time
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
@@ -14,13 +17,84 @@ logger = logging.getLogger(__name__)
 
 
 class YouTubeIngestor:
-    """Fetch channel metadata, video descriptions, and top comments."""
+    """Fetch channel metadata, video descriptions, and top comments.
 
-    def __init__(self, api_key: str) -> None:
+    Optional on-disk cache (TTL) avoids repeated API calls for the same
+    channel when ``cache_ttl_seconds`` > 0.  Cache files are keyed by
+    resolved channel id and ``max_videos`` / ``max_comments_per_video``.
+    """
+
+    def __init__(
+        self,
+        api_key: str,
+        *,
+        cache_dir: Path | None = None,
+        cache_ttl_seconds: int = 0,
+    ) -> None:
         if not api_key:
             raise NotImplementedError("YOUTUBE_API_KEY is not set; skipping YouTubeIngestor.")
         self._client = build("youtube", "v3", developerKey=api_key)
-        logger.info("YouTubeIngestor initialised")
+        self._cache_dir = cache_dir
+        self._cache_ttl = max(0, int(cache_ttl_seconds))
+        if self._cache_ttl > 0 and self._cache_dir is not None:
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(
+                "YouTubeIngestor cache enabled – dir=%s ttl=%ds",
+                self._cache_dir,
+                self._cache_ttl,
+            )
+        else:
+            logger.info("YouTubeIngestor initialised (cache disabled)")
+
+    def _cache_path(
+        self,
+        channel_id: str,
+        max_videos: int,
+        max_comments_per_video: int,
+    ) -> Path:
+        assert self._cache_dir is not None
+        safe = re.sub(r"[^\w.-]", "_", channel_id)
+        name = f"{safe}_v{max_videos}_c{max_comments_per_video}.json"
+        return self._cache_dir / name
+
+    def _try_read_cache(
+        self,
+        channel_id: str,
+        max_videos: int,
+        max_comments_per_video: int,
+    ) -> dict[str, Any] | None:
+        if self._cache_ttl <= 0 or self._cache_dir is None:
+            return None
+        path = self._cache_path(channel_id, max_videos, max_comments_per_video)
+        if not path.is_file():
+            return None
+        age = time.time() - path.stat().st_mtime
+        if age >= self._cache_ttl:
+            return None
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and data.get("channel_id") == channel_id:
+                logger.info("YouTube cache HIT (%s, age %.0fs)", channel_id, age)
+                return data
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.warning("YouTube cache read failed: %s", exc)
+        return None
+
+    def _write_cache(
+        self,
+        channel_id: str,
+        max_videos: int,
+        max_comments_per_video: int,
+        payload: dict[str, Any],
+    ) -> None:
+        if self._cache_ttl <= 0 or self._cache_dir is None:
+            return
+        path = self._cache_path(channel_id, max_videos, max_comments_per_video)
+        try:
+            path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+            logger.info("YouTube cache WRITE %s", path.name)
+        except OSError as exc:
+            logger.warning("YouTube cache write failed: %s", exc)
 
     def _resolve_channel_id(self, channel_url_or_id: str) -> str:
         """Resolve a URL, @handle, or raw channel ID to a YouTube channel ID."""
@@ -58,17 +132,15 @@ class YouTubeIngestor:
             raise ValueError(f"Cannot resolve YouTube handle: @{handle}")
         return items[0]["id"]
 
-    def get_channel_info(self, channel_url_or_id: str, max_videos: int = 20) -> dict[str, Any]:
-        """Fetch channel profile and a bounded list of recent videos."""
-        channel_id = self._resolve_channel_id(channel_url_or_id)
-
+    def _fetch_channel_core(self, channel_id: str, max_videos: int) -> dict[str, Any]:
+        """Fetch channel profile and recent videos (no comment threads)."""
         ch_resp = self._client.channels().list(
             part="snippet,statistics,contentDetails",
             id=channel_id,
         ).execute()
         ch_items = ch_resp.get("items", [])
         if not ch_items:
-            raise ValueError(f"Channel not found: {channel_url_or_id}")
+            raise ValueError(f"Channel not found: {channel_id}")
 
         ch = ch_items[0]
         snippet = ch.get("snippet", {})
@@ -115,6 +187,11 @@ class YouTubeIngestor:
             "videos": videos,
         }
 
+    def get_channel_info(self, channel_url_or_id: str, max_videos: int = 20) -> dict[str, Any]:
+        """Fetch channel profile and a bounded list of recent videos."""
+        channel_id = self._resolve_channel_id(channel_url_or_id)
+        return self._fetch_channel_core(channel_id, max_videos)
+
     def get_video_comments(self, video_id: str, max_comments: int = 100) -> list[dict[str, Any]]:
         """Fetch top comment threads for a single video."""
         comments: list[dict[str, Any]] = []
@@ -152,7 +229,13 @@ class YouTubeIngestor:
     ) -> dict[str, Any]:
         """Collect complete channel context needed by downstream retrieval."""
         logger.info("Ingesting YouTube channel: %s", channel_url_or_id)
-        channel_info = self.get_channel_info(channel_url_or_id, max_videos=max_videos)
+        channel_id = self._resolve_channel_id(channel_url_or_id)
+
+        cached = self._try_read_cache(channel_id, max_videos, max_comments_per_video)
+        if cached is not None:
+            return cached
+
+        channel_info = self._fetch_channel_core(channel_id, max_videos)
 
         for video in channel_info["videos"]:
             video["comments"] = self.get_video_comments(
@@ -170,4 +253,5 @@ class YouTubeIngestor:
             channel_info["title"],
             len(channel_info["videos"]),
         )
+        self._write_cache(channel_id, max_videos, max_comments_per_video, channel_info)
         return channel_info
