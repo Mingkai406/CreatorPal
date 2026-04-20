@@ -85,10 +85,11 @@ class QueryRewriter:
         with :class:`HybridRetriever`, :class:`FaissRetriever`, or
         :class:`BM25Retriever`).
         """
-        rewrites = self.rewrite(user_query)
-        # Use content-only query as the retrieval anchor; keep LLM rewrites.
-        base = retrieval_base_query if retrieval_base_query is not None else rewrites[0]
-        queries = [base, *rewrites[1:]]
+        # When a content-only query is provided, generate rewrites from it so
+        # that meta-keywords like "grow subscribers" never reach BM25/FAISS.
+        rewrite_source = retrieval_base_query if retrieval_base_query is not None else user_query
+        rewrites = self.rewrite(rewrite_source)
+        queries = rewrites  # rewrites[0] == rewrite_source, already the clean base
 
         # key -> best hit dict (metadata carrier)
         best_hit: dict[str, dict] = {}
