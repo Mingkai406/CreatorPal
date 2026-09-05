@@ -1,0 +1,13 @@
+task_id,policy,repeat,factual_support_0_to_2,usefulness_0_to_2,reviewer,notes
+test-plants,eager-fast,0,,,,
+test-plants,progressive-fast,0,,,,
+test-plants,progressive-routed,0,,,,
+test-python,eager-fast,0,,,,
+test-python,progressive-fast,0,,,,
+test-python,progressive-routed,0,,,,
+test-bread,eager-fast,0,,,,
+test-bread,progressive-fast,0,,,,
+test-bread,progressive-routed,0,,,,
+test-camera,eager-fast,0,,,,
+test-camera,progressive-fast,0,,,,
+test-camera,progressive-routed,0,,,,

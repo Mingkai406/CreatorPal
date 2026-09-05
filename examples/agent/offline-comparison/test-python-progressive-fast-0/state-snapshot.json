@@ -1,0 +1,146 @@
+{
+  "contract_version": 1,
+  "task": {
+    "id": "test-python",
+    "query": "Compare communities for my Python data analysis tutorials using their engagement_rate metrics.",
+    "needs_rules": false,
+    "needs_analytics": true,
+    "max_results": 2
+  },
+  "evidence": {
+    "data-profile": {
+      "id": "data-profile",
+      "community": "DemoDataProjects",
+      "kind": "profile",
+      "text": "Python data analysis, visualization, reproducible notebooks, statistics and portfolio project discussions.",
+      "source_url": "https://example.org/communities/data-projects",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {
+        "engagement_rate": 0.09,
+        "weekly_posts": 35.0
+      }
+    },
+    "python-profile": {
+      "id": "python-profile",
+      "community": "DemoPythonLearning",
+      "kind": "profile",
+      "text": "Python programming tutorials, data analysis, beginner coding exercises and practical automation projects.",
+      "source_url": "https://example.org/communities/python-learning",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {
+        "engagement_rate": 0.07,
+        "weekly_posts": 100.0
+      }
+    }
+  },
+  "analyses": {
+    "5bb8b6cbb16d099ac83a963d": {
+      "program": "result = {r['community']: r['engagement_rate'] for r in rows}",
+      "rows": [
+        {
+          "engagement_rate": 0.09,
+          "weekly_posts": 35.0,
+          "community": "DemoDataProjects",
+          "evidence_id": "data-profile"
+        },
+        {
+          "engagement_rate": 0.07,
+          "weekly_posts": 100.0,
+          "community": "DemoPythonLearning",
+          "evidence_id": "python-profile"
+        }
+      ],
+      "result": {
+        "DemoDataProjects": 0.09,
+        "DemoPythonLearning": 0.07
+      },
+      "sandbox": "restricted"
+    }
+  },
+  "reports": [
+    {
+      "task_id": "test-python",
+      "recommendations": [
+        {
+          "community": "DemoPythonLearning",
+          "rationale": "Profile evidence: Python programming tutorials, data analysis, beginner coding exercises and practical automation projects.",
+          "evidence_ids": [
+            "python-profile"
+          ],
+          "caveats": []
+        },
+        {
+          "community": "DemoDataProjects",
+          "rationale": "Profile evidence: Python data analysis, visualization, reproducible notebooks, statistics and portfolio project discussions.",
+          "evidence_ids": [
+            "data-profile"
+          ],
+          "caveats": []
+        }
+      ],
+      "analysis_id": "5bb8b6cbb16d099ac83a963d",
+      "limitations": [
+        "Offline ADK model double; synthetic reference data."
+      ]
+    }
+  ],
+  "events": [
+    {
+      "seq": 1,
+      "kind": "model_selected",
+      "model": null,
+      "reason": "default_fast",
+      "adapter": "offline-adk"
+    },
+    {
+      "seq": 2,
+      "kind": "model_context",
+      "skill_mode": "progressive",
+      "initial_chars": 2702
+    },
+    {
+      "seq": 3,
+      "kind": "skill_loaded",
+      "name": "audience-discovery",
+      "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+      "instruction_chars": 378
+    },
+    {
+      "seq": 4,
+      "kind": "tool_attempt",
+      "tool": "search_communities",
+      "attempt": 1
+    },
+    {
+      "seq": 5,
+      "kind": "skill_loaded",
+      "name": "programmatic-analytics",
+      "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+      "instruction_chars": 691
+    },
+    {
+      "seq": 6,
+      "kind": "tool_attempt",
+      "tool": "run_analysis",
+      "attempt": 1
+    },
+    {
+      "seq": 7,
+      "kind": "skill_loaded",
+      "name": "evidence-report",
+      "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+      "instruction_chars": 543
+    },
+    {
+      "seq": 8,
+      "kind": "tool_attempt",
+      "tool": "publish_report",
+      "attempt": 1
+    },
+    {
+      "seq": 9,
+      "kind": "report_committed",
+      "task_id": "test-python"
+    }
+  ]
+}

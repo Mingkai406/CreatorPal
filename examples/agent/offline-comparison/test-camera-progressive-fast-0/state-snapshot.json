@@ -1,0 +1,119 @@
+{
+  "contract_version": 1,
+  "task": {
+    "id": "test-camera",
+    "query": "I teach beginner photography lighting. Find an audience and summarize its engagement_rate.",
+    "needs_rules": false,
+    "needs_analytics": true,
+    "max_results": 1
+  },
+  "evidence": {
+    "photo-profile": {
+      "id": "photo-profile",
+      "community": "DemoCameraPractice",
+      "kind": "profile",
+      "text": "Photography lighting tutorials, beginner camera settings, lens comparisons and portrait photo critique.",
+      "source_url": "https://example.org/communities/camera-practice",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {
+        "engagement_rate": 0.05,
+        "weekly_posts": 75.0
+      }
+    }
+  },
+  "analyses": {
+    "b96fa4cd7afd150721fcd22a": {
+      "program": "result = {r['community']: r['engagement_rate'] for r in rows}",
+      "rows": [
+        {
+          "engagement_rate": 0.05,
+          "weekly_posts": 75.0,
+          "community": "DemoCameraPractice",
+          "evidence_id": "photo-profile"
+        }
+      ],
+      "result": {
+        "DemoCameraPractice": 0.05
+      },
+      "sandbox": "restricted"
+    }
+  },
+  "reports": [
+    {
+      "task_id": "test-camera",
+      "recommendations": [
+        {
+          "community": "DemoCameraPractice",
+          "rationale": "Profile evidence: Photography lighting tutorials, beginner camera settings, lens comparisons and portrait photo critique.",
+          "evidence_ids": [
+            "photo-profile"
+          ],
+          "caveats": []
+        }
+      ],
+      "analysis_id": "b96fa4cd7afd150721fcd22a",
+      "limitations": [
+        "Offline ADK model double; synthetic reference data."
+      ]
+    }
+  ],
+  "events": [
+    {
+      "seq": 1,
+      "kind": "model_selected",
+      "model": null,
+      "reason": "default_fast",
+      "adapter": "offline-adk"
+    },
+    {
+      "seq": 2,
+      "kind": "model_context",
+      "skill_mode": "progressive",
+      "initial_chars": 2702
+    },
+    {
+      "seq": 3,
+      "kind": "skill_loaded",
+      "name": "audience-discovery",
+      "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+      "instruction_chars": 378
+    },
+    {
+      "seq": 4,
+      "kind": "tool_attempt",
+      "tool": "search_communities",
+      "attempt": 1
+    },
+    {
+      "seq": 5,
+      "kind": "skill_loaded",
+      "name": "programmatic-analytics",
+      "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+      "instruction_chars": 691
+    },
+    {
+      "seq": 6,
+      "kind": "tool_attempt",
+      "tool": "run_analysis",
+      "attempt": 1
+    },
+    {
+      "seq": 7,
+      "kind": "skill_loaded",
+      "name": "evidence-report",
+      "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+      "instruction_chars": 543
+    },
+    {
+      "seq": 8,
+      "kind": "tool_attempt",
+      "tool": "publish_report",
+      "attempt": 1
+    },
+    {
+      "seq": 9,
+      "kind": "report_committed",
+      "task_id": "test-camera"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "dataset_sha256": "c2820283ec023d00316e8a64deeb7f40d68a0005643d9295e5508490d6c69553",
+  "split": "test",
+  "repeats": 1,
+  "policies": [
+    "eager-fast",
+    "progressive-fast",
+    "progressive-routed"
+  ],
+  "label_boundary": "Only task fields enter the runtime; labels stay in the scorer.",
+  "adapter": "offline-adk",
+  "provenance": [
+    "Hand-authored synthetic request, not generated from target profiles; demonstration split, not an unbiased population benchmark."
+  ]
+}

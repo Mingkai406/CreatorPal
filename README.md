@@ -1,6 +1,6 @@
-# CreatorPal: YouTube-to-Reddit Audience Intelligence
+# CreatorPal: Audience Research Agent and Retrieval Pipeline
 
-> A RAG-centric system that matches YouTube creators with high-fit Reddit communities and generates actionable audience strategy reports.
+> Audience research with an ADK tool loop, on-demand Agent Skills, programmatic analytics and verifiable report commits, alongside the original YouTube-to-Reddit retrieval application.
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit)](https://streamlit.io/)
@@ -8,6 +8,14 @@
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
+
+## Agent extension (September 2026)
+
+The new `creatorpal-agent` CLI selects skills and tools, persists evidence, runs restricted Python analytics, and validates report citations before committing a result. It includes three model/skill-loading policies and a reproducible evaluation runner. The original Streamlit application still uses the original pipeline.
+
+**[Agent quickstart, architecture and evaluation boundaries](doc/agent/README.md)** · **[Example task](examples/agent/task.json)** · **[Agent tests](tests_agent/)**
+
+Run the real ADK tool loop without credentials using `uv sync --locked --extra adk --extra dev`, then `uv run creatorpal-agent run --adapter offline-adk --task examples/agent/task.json --output runs`. This uses an explicitly labeled deterministic model double and synthetic data. Real model comparisons await provider configuration; no live accuracy, latency or cost improvement is claimed.
 
 ## Table of Contents
 

@@ -1,0 +1,149 @@
+{
+  "contract_version": 1,
+  "task": {
+    "id": "test-plants",
+    "query": "I make videos about watering plants in an apartment. Where should I participate?",
+    "needs_rules": true,
+    "needs_analytics": false,
+    "max_results": 2
+  },
+  "evidence": {
+    "gardens-profile": {
+      "id": "gardens-profile",
+      "community": "DemoUrbanGardens",
+      "kind": "profile",
+      "text": "Apartment gardening community: balcony vegetables, container plants, watering tutorials and small-space growing.",
+      "source_url": "https://example.org/communities/urban-gardens",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {
+        "engagement_rate": 0.12,
+        "weekly_posts": 42.0
+      }
+    },
+    "gardens-rules": {
+      "id": "gardens-rules",
+      "community": "DemoUrbanGardens",
+      "kind": "rules",
+      "text": "Synthetic rules: original instructional videos are welcome with a written summary; no repeated promotional links.",
+      "source_url": "https://example.org/communities/urban-gardens/rules",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {}
+    },
+    "plants-profile": {
+      "id": "plants-profile",
+      "community": "DemoPlantCare",
+      "kind": "profile",
+      "text": "Houseplant care, balcony plants and beginner watering advice. Members compare indoor gardening experiments.",
+      "source_url": "https://example.org/communities/plant-care",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {
+        "engagement_rate": 0.08,
+        "weekly_posts": 80.0
+      }
+    },
+    "plants-rules": {
+      "id": "plants-rules",
+      "community": "DemoPlantCare",
+      "kind": "rules",
+      "text": "Synthetic rules: answer questions directly; post video links only in the weekly resource thread.",
+      "source_url": "https://example.org/communities/plant-care/rules",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {}
+    }
+  },
+  "analyses": {},
+  "reports": [
+    {
+      "task_id": "test-plants",
+      "recommendations": [
+        {
+          "community": "DemoUrbanGardens",
+          "rationale": "Profile evidence: Apartment gardening community: balcony vegetables, container plants, watering tutorials and small-space growing.",
+          "evidence_ids": [
+            "gardens-profile",
+            "gardens-rules"
+          ],
+          "caveats": []
+        },
+        {
+          "community": "DemoPlantCare",
+          "rationale": "Profile evidence: Houseplant care, balcony plants and beginner watering advice. Members compare indoor gardening experiments.",
+          "evidence_ids": [
+            "plants-profile",
+            "plants-rules"
+          ],
+          "caveats": []
+        }
+      ],
+      "analysis_id": null,
+      "limitations": [
+        "Offline ADK model double; synthetic reference data."
+      ]
+    }
+  ],
+  "events": [
+    {
+      "seq": 1,
+      "kind": "model_selected",
+      "model": null,
+      "reason": "default_fast",
+      "adapter": "offline-adk"
+    },
+    {
+      "seq": 2,
+      "kind": "model_context",
+      "skill_mode": "progressive",
+      "initial_chars": 2702
+    },
+    {
+      "seq": 3,
+      "kind": "skill_loaded",
+      "name": "audience-discovery",
+      "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+      "instruction_chars": 378
+    },
+    {
+      "seq": 4,
+      "kind": "tool_attempt",
+      "tool": "search_communities",
+      "attempt": 1
+    },
+    {
+      "seq": 5,
+      "kind": "skill_loaded",
+      "name": "community-rules",
+      "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+      "instruction_chars": 373
+    },
+    {
+      "seq": 6,
+      "kind": "tool_attempt",
+      "tool": "read_community_rules",
+      "attempt": 1
+    },
+    {
+      "seq": 7,
+      "kind": "tool_attempt",
+      "tool": "read_community_rules",
+      "attempt": 1
+    },
+    {
+      "seq": 8,
+      "kind": "skill_loaded",
+      "name": "evidence-report",
+      "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+      "instruction_chars": 543
+    },
+    {
+      "seq": 9,
+      "kind": "tool_attempt",
+      "tool": "publish_report",
+      "attempt": 1
+    },
+    {
+      "seq": 10,
+      "kind": "report_committed",
+      "task_id": "test-plants"
+    }
+  ]
+}

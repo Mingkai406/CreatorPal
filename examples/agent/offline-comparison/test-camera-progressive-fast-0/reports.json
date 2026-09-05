@@ -1,0 +1,19 @@
+[
+  {
+    "task_id": "test-camera",
+    "recommendations": [
+      {
+        "community": "DemoCameraPractice",
+        "rationale": "Profile evidence: Photography lighting tutorials, beginner camera settings, lens comparisons and portrait photo critique.",
+        "evidence_ids": [
+          "photo-profile"
+        ],
+        "caveats": []
+      }
+    ],
+    "analysis_id": "b96fa4cd7afd150721fcd22a",
+    "limitations": [
+      "Offline ADK model double; synthetic reference data."
+    ]
+  }
+]

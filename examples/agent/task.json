@@ -1,0 +1,7 @@
+{
+  "id": "audience-demo",
+  "query": "Compare Python data analysis tutorials using engagement_rate and community rules.",
+  "needs_rules": true,
+  "needs_analytics": true,
+  "max_results": 2
+}
