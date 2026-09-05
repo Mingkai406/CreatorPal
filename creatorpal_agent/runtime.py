@@ -219,10 +219,7 @@ class ResearchRuntime:
             parsed = ResearchReport.model_validate(report)
             if not self.validate_report(parsed):
                 raise ValueError("Report references or required analysis are invalid")
-            actual, created = self.state.commit_report(self.task.id, parsed.model_dump())
-            self.state.event(
-                "report_committed" if created else "report_reused", task_id=self.task.id
-            )
+            actual, _ = self.state.commit_report(self.task.id, parsed.model_dump())
             return {"status": "complete", "task_id": self.task.id, "report_sha256": digest(actual)}
 
         return self._invoke(

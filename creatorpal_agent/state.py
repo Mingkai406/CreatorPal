@@ -89,8 +89,16 @@ class ResearchState:
             if prior:
                 if digest(json.loads(prior[0])) != digest(report):
                     raise ValueError("Task report already committed with another payload")
+                db.execute(
+                    "INSERT INTO events(kind,data) VALUES('report_reused',?)",
+                    (json.dumps({"task_id": task_id}),),
+                )
                 return json.loads(prior[0]), False
             db.execute("INSERT INTO reports VALUES(?,?)", (task_id, json.dumps(report)))
+            db.execute(
+                "INSERT INTO events(kind,data) VALUES('report_committed',?)",
+                (json.dumps({"task_id": task_id}),),
+            )
             return report, True
 
     def reports(self):

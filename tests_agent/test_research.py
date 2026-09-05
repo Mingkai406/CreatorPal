@@ -125,6 +125,7 @@ def test_atomic_report_commit_is_idempotent_under_contention(tmp_path):
     with ThreadPoolExecutor(max_workers=8) as pool:
         outcomes = list(pool.map(lambda _: state.commit_report("same", report), range(32)))
     assert sum(created for _, created in outcomes) == 1
+    assert sum(e["kind"] == "report_committed" for e in state.events()) == 1
     assert state.reports() == [report]
     with pytest.raises(ValueError, match="another payload"):
         state.commit_report("same", {"value": 43})
@@ -136,16 +137,18 @@ import os, sys
 from pathlib import Path
 from creatorpal_agent.backends import CorpusBackend
 from creatorpal_agent.contracts import ResearchTask
-from creatorpal_agent.runtime import ResearchRuntime, ToolHook, run_scripted
+from creatorpal_agent.runtime import ResearchRuntime, run_scripted
 from creatorpal_agent.state import ResearchState
-class Crash(ToolHook):
-    def after(self, name, arguments, result, state):
-        if name == 'publish_report' and state.once('crash'):
-            os._exit(75)
-        return result
 state = ResearchState(Path(sys.argv[1]))
+original_commit = state.commit_report
+def crash_after_transaction(task_id, report):
+    result = original_commit(task_id, report)
+    if state.once('crash'):
+        os._exit(75)
+    return result
+state.commit_report = crash_after_transaction
 agent = ResearchRuntime(ResearchTask(id='restart', query='sourdough bread baking', max_results=1),
-                        CorpusBackend(), state, hook=Crash())
+                        CorpusBackend(), state)
 assert run_scripted(agent)['status'] == 'complete'
 assert len(state.reports()) == 1
 assert sum(e['kind'] == 'report_committed' for e in state.events()) == 1
