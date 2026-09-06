@@ -226,3 +226,9 @@ INTERVIEW_PROMPT_TEMPLATE.md
 INTERVIEW_GUIDE.md
 *.zst
 incomplete_label_problem.txt
+
+# Agent execution artifacts
+runs/
+*.sqlite*
+.env.*
+!.env.example

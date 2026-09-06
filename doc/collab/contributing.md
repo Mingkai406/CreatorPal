@@ -2,6 +2,8 @@
 
 ## Development Setup
 
+For the new agent package, run `uv sync --locked --extra adk --extra dev`. See the [agent testing guide](../agent/testing.md). The setup below is for the original application.
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -48,6 +50,7 @@ All branches integrate into `main` via pull request.
 |---|---|
 | Data & Configuration | `data/`, `src/config.py`, `src/pipeline.py` |
 | Retrieval | `src/ingest/`, `src/retrieval/` |
+| Agent Runtime & Evaluation | `creatorpal_agent/`, `tests_agent/`, `doc/agent/` |
 | Analytics & Evaluation | `src/pal/`, `src/sentiment/`, `eval/` |
 | Frontend & Deployment | `app/`, `Dockerfile`, `docker-compose.yml`, `docker-startup` |
 
@@ -55,16 +58,14 @@ All branches integrate into `main` via pull request.
 
 ## Testing
 
-Run the test suite before opening a PR:
+For agent changes:
 
-```bash
-python tests/test_retrieval_smoke.py   # BM25 + FAISS + hybrid fusion
-python tests/test_pal.py               # PAL code generation + sandbox
-python tests/test_sentiment.py         # RoBERTa sentiment scoring
-python tests/test_eval.py              # retrieval evaluation metrics
+```sh
+uv run pytest -q tests_agent
+uv run creatorpal-agent compare --adapter offline-adk --output runs
 ```
 
-Tests run as standalone scripts and require no test runner. Tests that depend on a live FAISS index or vLLM endpoint are skipped automatically when those services are unavailable.
+For original pipeline changes, install the legacy dependencies and run `python -m pytest -q tests/` with the required data/model fixtures. Do not execute pytest test files as plain scripts. The [testing guide](../agent/testing.md) explains optional Docker checks, live models and dataset requirements.
 
 ---
 

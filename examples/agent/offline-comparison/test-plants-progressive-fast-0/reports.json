@@ -1,0 +1,29 @@
+[
+  {
+    "task_id": "test-plants",
+    "recommendations": [
+      {
+        "community": "DemoUrbanGardens",
+        "rationale": "Profile evidence: Apartment gardening community: balcony vegetables, container plants, watering tutorials and small-space growing.",
+        "evidence_ids": [
+          "gardens-profile",
+          "gardens-rules"
+        ],
+        "caveats": []
+      },
+      {
+        "community": "DemoPlantCare",
+        "rationale": "Profile evidence: Houseplant care, balcony plants and beginner watering advice. Members compare indoor gardening experiments.",
+        "evidence_ids": [
+          "plants-profile",
+          "plants-rules"
+        ],
+        "caveats": []
+      }
+    ],
+    "analysis_id": null,
+    "limitations": [
+      "Offline ADK model double; synthetic reference data."
+    ]
+  }
+]

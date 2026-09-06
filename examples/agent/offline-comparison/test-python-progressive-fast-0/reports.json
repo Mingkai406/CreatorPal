@@ -1,0 +1,27 @@
+[
+  {
+    "task_id": "test-python",
+    "recommendations": [
+      {
+        "community": "DemoPythonLearning",
+        "rationale": "Profile evidence: Python programming tutorials, data analysis, beginner coding exercises and practical automation projects.",
+        "evidence_ids": [
+          "python-profile"
+        ],
+        "caveats": []
+      },
+      {
+        "community": "DemoDataProjects",
+        "rationale": "Profile evidence: Python data analysis, visualization, reproducible notebooks, statistics and portfolio project discussions.",
+        "evidence_ids": [
+          "data-profile"
+        ],
+        "caveats": []
+      }
+    ],
+    "analysis_id": "5bb8b6cbb16d099ac83a963d",
+    "limitations": [
+      "Offline ADK model double; synthetic reference data."
+    ]
+  }
+]

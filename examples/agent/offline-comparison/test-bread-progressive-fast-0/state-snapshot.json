@@ -1,0 +1,113 @@
+{
+  "contract_version": 1,
+  "task": {
+    "id": "test-bread",
+    "query": "Find a community for home sourdough bread baking experiments and explain posting rules.",
+    "needs_rules": true,
+    "needs_analytics": false,
+    "max_results": 1
+  },
+  "evidence": {
+    "bread-profile": {
+      "id": "bread-profile",
+      "community": "DemoBreadBaking",
+      "kind": "profile",
+      "text": "Home bread baking, sourdough starter experiments, recipe tutorials, flour and fermentation comparisons.",
+      "source_url": "https://example.org/communities/bread-baking",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {
+        "engagement_rate": 0.15,
+        "weekly_posts": 60.0
+      }
+    },
+    "bread-rules": {
+      "id": "bread-rules",
+      "community": "DemoBreadBaking",
+      "kind": "rules",
+      "text": "Synthetic rules: provide ingredient weights and timings with every tutorial; commercial posts are excluded.",
+      "source_url": "https://example.org/communities/bread-baking/rules",
+      "collected_at": "2026-09-05; synthetic",
+      "metrics": {}
+    }
+  },
+  "analyses": {},
+  "reports": [
+    {
+      "task_id": "test-bread",
+      "recommendations": [
+        {
+          "community": "DemoBreadBaking",
+          "rationale": "Profile evidence: Home bread baking, sourdough starter experiments, recipe tutorials, flour and fermentation comparisons.",
+          "evidence_ids": [
+            "bread-profile",
+            "bread-rules"
+          ],
+          "caveats": []
+        }
+      ],
+      "analysis_id": null,
+      "limitations": [
+        "Offline ADK model double; synthetic reference data."
+      ]
+    }
+  ],
+  "events": [
+    {
+      "seq": 1,
+      "kind": "model_selected",
+      "model": null,
+      "reason": "default_fast",
+      "adapter": "offline-adk"
+    },
+    {
+      "seq": 2,
+      "kind": "model_context",
+      "skill_mode": "progressive",
+      "initial_chars": 2702
+    },
+    {
+      "seq": 3,
+      "kind": "skill_loaded",
+      "name": "audience-discovery",
+      "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+      "instruction_chars": 378
+    },
+    {
+      "seq": 4,
+      "kind": "tool_attempt",
+      "tool": "search_communities",
+      "attempt": 1
+    },
+    {
+      "seq": 5,
+      "kind": "skill_loaded",
+      "name": "community-rules",
+      "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+      "instruction_chars": 373
+    },
+    {
+      "seq": 6,
+      "kind": "tool_attempt",
+      "tool": "read_community_rules",
+      "attempt": 1
+    },
+    {
+      "seq": 7,
+      "kind": "skill_loaded",
+      "name": "evidence-report",
+      "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+      "instruction_chars": 543
+    },
+    {
+      "seq": 8,
+      "kind": "tool_attempt",
+      "tool": "publish_report",
+      "attempt": 1
+    },
+    {
+      "seq": 9,
+      "kind": "report_committed",
+      "task_id": "test-bread"
+    }
+  ]
+}

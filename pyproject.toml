@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "creatorpal-agent"
+version = "0.2.0"
+description = "Skill-driven audience research with verifiable tools and reproducible evaluations"
+requires-python = ">=3.11"
+dependencies = ["pydantic>=2.11,<3", "PyYAML>=6,<7", "opentelemetry-sdk>=1.36,<2"]
+
+[project.optional-dependencies]
+adk = ["google-adk>=2.8,<3"]
+retrieval = ["faiss-cpu>=1.7", "rank-bm25>=0.2", "sentence-transformers>=3", "python-dotenv>=1", "openai>=1"]
+dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "ruff>=0.12,<1", "build>=1,<2"]
+
+[project.scripts]
+creatorpal-agent = "creatorpal_agent.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["creatorpal_agent", "src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests_agent"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+include = ["creatorpal_agent/**/*.py", "tests_agent/**/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

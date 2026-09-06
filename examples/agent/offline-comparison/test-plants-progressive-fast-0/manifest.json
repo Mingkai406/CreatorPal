@@ -1,0 +1,26 @@
+{
+  "task": {
+    "id": "test-plants",
+    "query": "I make videos about watering plants in an apartment. Where should I participate?",
+    "needs_rules": true,
+    "needs_analytics": false,
+    "max_results": 2
+  },
+  "corpus_sha256": "b5982bd5cdbbec232ec904b1cf4c556e5eae3c272e86c74a5657d80721167999",
+  "skill_sha256": "4512911fb46f7c3760498fea368345e3cc4597a2c5bc92e1bfd8037dee5f7c05",
+  "policy": "progressive-fast",
+  "adapter": "offline-adk",
+  "fast_model": null,
+  "strong_model": null,
+  "sandbox": "restricted",
+  "limits": {
+    "llm_calls_per_invocation": 16,
+    "invocations": 2,
+    "tool_attempts": 30
+  },
+  "package_version": "0.2.0",
+  "adk_version": "2.8.0",
+  "pricing": null,
+  "measurement": "Offline control; not measured LLM capability",
+  "configuration_sha256": "60366440a6b3210fa9878d98d31362183c7e93e9fb873c6feaf07af1d70037d0"
+}

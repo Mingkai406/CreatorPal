@@ -1,0 +1,1134 @@
+[
+  {
+    "task_id": "test-plants",
+    "policy": "eager-fast",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-plants",
+      "report_sha256": "53f2703ce888b4924471eb5929a2250a3abe07f1a78e582cd37c740551d7617b"
+    },
+    "duration_ms": 507.89,
+    "usage": null,
+    "missing_usage_events": 8,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1985,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 2,
+        "kind": "skill_loaded",
+        "name": "community-rules",
+        "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+        "instruction_chars": 373
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 4,
+        "kind": "skill_loaded",
+        "name": "programmatic-analytics",
+        "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+        "instruction_chars": 691
+      },
+      {
+        "seq": 5,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 6,
+        "kind": "model_context",
+        "skill_mode": "eager",
+        "initial_chars": 5650
+      },
+      {
+        "seq": 7,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 10,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 11,
+        "kind": "report_committed",
+        "task_id": "test-plants"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-plants",
+    "policy": "progressive-fast",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-plants",
+      "report_sha256": "53f2703ce888b4924471eb5929a2250a3abe07f1a78e582cd37c740551d7617b"
+    },
+    "duration_ms": 19.51,
+    "usage": null,
+    "missing_usage_events": 8,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1294,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 2,
+        "kind": "model_context",
+        "skill_mode": "progressive",
+        "initial_chars": 2702
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 4,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 5,
+        "kind": "skill_loaded",
+        "name": "community-rules",
+        "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+        "instruction_chars": 373
+      },
+      {
+        "seq": 6,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 7,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 8,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 9,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 10,
+        "kind": "report_committed",
+        "task_id": "test-plants"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-plants",
+    "policy": "progressive-routed",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-plants",
+      "report_sha256": "53f2703ce888b4924471eb5929a2250a3abe07f1a78e582cd37c740551d7617b"
+    },
+    "duration_ms": 21.3,
+    "usage": null,
+    "missing_usage_events": 8,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1294,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 2,
+        "kind": "model_context",
+        "skill_mode": "progressive",
+        "initial_chars": 2702
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 4,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 5,
+        "kind": "skill_loaded",
+        "name": "community-rules",
+        "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+        "instruction_chars": 373
+      },
+      {
+        "seq": 6,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 7,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 8,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 9,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 10,
+        "kind": "report_committed",
+        "task_id": "test-plants"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-python",
+    "policy": "eager-fast",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "analysis_correct": true,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-python",
+      "report_sha256": "db4e8c413f13d8a594aa8edc12da7d3be6a26d94a89f9449b407d8d3d37a8f70"
+    },
+    "duration_ms": 41.58,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1985,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 2,
+        "kind": "skill_loaded",
+        "name": "community-rules",
+        "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+        "instruction_chars": 373
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 4,
+        "kind": "skill_loaded",
+        "name": "programmatic-analytics",
+        "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+        "instruction_chars": 691
+      },
+      {
+        "seq": 5,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 6,
+        "kind": "model_context",
+        "skill_mode": "eager",
+        "initial_chars": 5650
+      },
+      {
+        "seq": 7,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "run_analysis",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 10,
+        "kind": "report_committed",
+        "task_id": "test-python"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-python",
+    "policy": "progressive-fast",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "analysis_correct": true,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-python",
+      "report_sha256": "db4e8c413f13d8a594aa8edc12da7d3be6a26d94a89f9449b407d8d3d37a8f70"
+    },
+    "duration_ms": 41.53,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1612,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 2,
+        "kind": "model_context",
+        "skill_mode": "progressive",
+        "initial_chars": 2702
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 4,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 5,
+        "kind": "skill_loaded",
+        "name": "programmatic-analytics",
+        "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+        "instruction_chars": 691
+      },
+      {
+        "seq": 6,
+        "kind": "tool_attempt",
+        "tool": "run_analysis",
+        "attempt": 1
+      },
+      {
+        "seq": 7,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "report_committed",
+        "task_id": "test-python"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-python",
+    "policy": "progressive-routed",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "analysis_correct": true,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-python",
+      "report_sha256": "db4e8c413f13d8a594aa8edc12da7d3be6a26d94a89f9449b407d8d3d37a8f70"
+    },
+    "duration_ms": 41.67,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1612,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "explicit_numeric_analysis",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 2,
+        "kind": "model_context",
+        "skill_mode": "progressive",
+        "initial_chars": 2702
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 4,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 5,
+        "kind": "skill_loaded",
+        "name": "programmatic-analytics",
+        "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+        "instruction_chars": 691
+      },
+      {
+        "seq": 6,
+        "kind": "tool_attempt",
+        "tool": "run_analysis",
+        "attempt": 1
+      },
+      {
+        "seq": 7,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "report_committed",
+        "task_id": "test-python"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-bread",
+    "policy": "eager-fast",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-bread",
+      "report_sha256": "a55e0d58df2a9e9bfd7ca32917d75c73901a673fbc5979f5a571ed8497f842ef"
+    },
+    "duration_ms": 15.52,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1985,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 2,
+        "kind": "skill_loaded",
+        "name": "community-rules",
+        "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+        "instruction_chars": 373
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 4,
+        "kind": "skill_loaded",
+        "name": "programmatic-analytics",
+        "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+        "instruction_chars": 691
+      },
+      {
+        "seq": 5,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 6,
+        "kind": "model_context",
+        "skill_mode": "eager",
+        "initial_chars": 5650
+      },
+      {
+        "seq": 7,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 10,
+        "kind": "report_committed",
+        "task_id": "test-bread"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-bread",
+    "policy": "progressive-fast",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-bread",
+      "report_sha256": "a55e0d58df2a9e9bfd7ca32917d75c73901a673fbc5979f5a571ed8497f842ef"
+    },
+    "duration_ms": 17.15,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1294,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 2,
+        "kind": "model_context",
+        "skill_mode": "progressive",
+        "initial_chars": 2702
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 4,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 5,
+        "kind": "skill_loaded",
+        "name": "community-rules",
+        "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+        "instruction_chars": 373
+      },
+      {
+        "seq": 6,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 7,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "report_committed",
+        "task_id": "test-bread"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-bread",
+    "policy": "progressive-routed",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-bread",
+      "report_sha256": "a55e0d58df2a9e9bfd7ca32917d75c73901a673fbc5979f5a571ed8497f842ef"
+    },
+    "duration_ms": 16.25,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1294,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 2,
+        "kind": "model_context",
+        "skill_mode": "progressive",
+        "initial_chars": 2702
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 4,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 5,
+        "kind": "skill_loaded",
+        "name": "community-rules",
+        "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+        "instruction_chars": 373
+      },
+      {
+        "seq": 6,
+        "kind": "tool_attempt",
+        "tool": "read_community_rules",
+        "attempt": 1
+      },
+      {
+        "seq": 7,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "report_committed",
+        "task_id": "test-bread"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-camera",
+    "policy": "eager-fast",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "analysis_correct": true,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-camera",
+      "report_sha256": "8dfe6e82a62701ce0b167e3ead6d8921d1edea8624f5324a3e22b1a74807c506"
+    },
+    "duration_ms": 40.81,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1985,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 2,
+        "kind": "skill_loaded",
+        "name": "community-rules",
+        "sha256": "e36cf79a83b91526096a0952d538e4622ed90e4e5d3f8ddb0ddde7e0524e3ab8",
+        "instruction_chars": 373
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 4,
+        "kind": "skill_loaded",
+        "name": "programmatic-analytics",
+        "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+        "instruction_chars": 691
+      },
+      {
+        "seq": 5,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 6,
+        "kind": "model_context",
+        "skill_mode": "eager",
+        "initial_chars": 5650
+      },
+      {
+        "seq": 7,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "run_analysis",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 10,
+        "kind": "report_committed",
+        "task_id": "test-camera"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-camera",
+    "policy": "progressive-fast",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "analysis_correct": true,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-camera",
+      "report_sha256": "8dfe6e82a62701ce0b167e3ead6d8921d1edea8624f5324a3e22b1a74807c506"
+    },
+    "duration_ms": 40.85,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1612,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "default_fast",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 2,
+        "kind": "model_context",
+        "skill_mode": "progressive",
+        "initial_chars": 2702
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 4,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 5,
+        "kind": "skill_loaded",
+        "name": "programmatic-analytics",
+        "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+        "instruction_chars": 691
+      },
+      {
+        "seq": 6,
+        "kind": "tool_attempt",
+        "tool": "run_analysis",
+        "attempt": 1
+      },
+      {
+        "seq": 7,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "report_committed",
+        "task_id": "test-camera"
+      }
+    ],
+    "repeat": 0
+  },
+  {
+    "task_id": "test-camera",
+    "policy": "progressive-routed",
+    "adapter": "offline-adk",
+    "backend": "reference-lexical",
+    "selected_model": null,
+    "attempted_models": [
+      "offline-research-double"
+    ],
+    "completed": true,
+    "report_count": 1,
+    "citation_integrity": true,
+    "semantic_grounding": null,
+    "human_review_required": true,
+    "recall_at_k": 1.0,
+    "reciprocal_rank": 1.0,
+    "ndcg_at_k": 1.0,
+    "analysis_correct": true,
+    "receipt": {
+      "status": "complete",
+      "task_id": "test-camera",
+      "report_sha256": "8dfe6e82a62701ce0b167e3ead6d8921d1edea8624f5324a3e22b1a74807c506"
+    },
+    "duration_ms": 41.8,
+    "usage": null,
+    "missing_usage_events": 7,
+    "usage_complete": null,
+    "estimated_cost_usd": null,
+    "cost_method": null,
+    "skill_instruction_chars_loaded": 1612,
+    "events": [
+      {
+        "seq": 1,
+        "kind": "model_selected",
+        "model": null,
+        "reason": "explicit_numeric_analysis",
+        "adapter": "offline-adk"
+      },
+      {
+        "seq": 2,
+        "kind": "model_context",
+        "skill_mode": "progressive",
+        "initial_chars": 2702
+      },
+      {
+        "seq": 3,
+        "kind": "skill_loaded",
+        "name": "audience-discovery",
+        "sha256": "c66f144ace85419b29fa3a390a9dee8c8d8167019db519a1630fcd02ba395361",
+        "instruction_chars": 378
+      },
+      {
+        "seq": 4,
+        "kind": "tool_attempt",
+        "tool": "search_communities",
+        "attempt": 1
+      },
+      {
+        "seq": 5,
+        "kind": "skill_loaded",
+        "name": "programmatic-analytics",
+        "sha256": "a9ea55f8a11a3dab53c144b6a3cfd739d78ec86a63ea033dace96f5bd5242935",
+        "instruction_chars": 691
+      },
+      {
+        "seq": 6,
+        "kind": "tool_attempt",
+        "tool": "run_analysis",
+        "attempt": 1
+      },
+      {
+        "seq": 7,
+        "kind": "skill_loaded",
+        "name": "evidence-report",
+        "sha256": "a345b0f5331f7a174a824d0bfbbad724d47d9e207f717beb5007ebfc5dcddc3a",
+        "instruction_chars": 543
+      },
+      {
+        "seq": 8,
+        "kind": "tool_attempt",
+        "tool": "publish_report",
+        "attempt": 1
+      },
+      {
+        "seq": 9,
+        "kind": "report_committed",
+        "task_id": "test-camera"
+      }
+    ],
+    "repeat": 0
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "task_id": "test-bread",
+    "recommendations": [
+      {
+        "community": "DemoBreadBaking",
+        "rationale": "Profile evidence: Home bread baking, sourdough starter experiments, recipe tutorials, flour and fermentation comparisons.",
+        "evidence_ids": [
+          "bread-profile",
+          "bread-rules"
+        ],
+        "caveats": []
+      }
+    ],
+    "analysis_id": null,
+    "limitations": [
+      "Offline ADK model double; synthetic reference data."
+    ]
+  }
+]
