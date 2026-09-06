@@ -1,6 +1,6 @@
-# CreatorPal: Audience Research Agent and Retrieval Pipeline
+# CreatorPal: Audience Research Agent
 
-> Audience research with an ADK tool loop, on-demand Agent Skills, programmatic analytics and verifiable report commits, alongside the original YouTube-to-Reddit retrieval application.
+> Audience research with Google ADK, on-demand Agent Skills, community retrieval, programmatic analytics and evidence-linked reports.
 
 [![Agent CI](https://github.com/Mingkai406/CreatorPal/actions/workflows/agent-ci.yml/badge.svg?branch=main)](https://github.com/Mingkai406/CreatorPal/actions/workflows/agent-ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://www.python.org/)
@@ -10,18 +10,18 @@
 
 ---
 
-## Agent extension (September 2026)
+## Research workflow
 
-The new `creatorpal-agent` CLI selects skills and tools, persists evidence, runs restricted Python analytics, and validates report citations before committing a result. It includes three model/skill-loading policies and a reproducible evaluation runner. The original Streamlit application still uses the original pipeline.
+CreatorPal selects relevant skills and tools, retrieves community evidence, runs restricted Python analytics, and validates report citations before committing a result. The `creatorpal-agent` CLI provides three model and skill-loading policies, persistent task state, and a reproducible evaluation runner.
 
 **[Agent quickstart, architecture and evaluation boundaries](doc/agent/README.md)** · **[Testing guide: offline, live models and acceptance criteria](doc/agent/testing.md)** · **[Example task](examples/agent/task.json)** · **[Agent tests](tests_agent/)**
 
-Run the real ADK tool loop without credentials using `uv sync --locked --extra adk --extra dev`, then `uv run creatorpal-agent run --adapter offline-adk --task examples/agent/task.json --output runs`. This uses an explicitly labeled deterministic model double and synthetic data. Real model comparisons await provider configuration; no live accuracy, latency or cost improvement is claimed.
+Run an offline demo using `uv sync --locked --extra adk --extra dev`, then `uv run creatorpal-agent run --adapter offline-adk --task examples/agent/task.json --output runs`. The demo uses a deterministic model double and synthetic data. Configure a supported model and evidence corpus to run live research tasks; see the testing guide for model setup and evaluation criteria.
 
 ## Table of Contents
 
+- [Research workflow](#research-workflow)
 - [Overview](#overview)
-- [Team & Collaboration](#team--collaboration)
 - [Architecture](#architecture)
 - [Repository Structure](#repository-structure)
 - [Getting Started](#getting-started)
@@ -37,9 +37,9 @@ Run the real ADK tool loop without credentials using `uv sync --locked --extra a
 
 ## Overview
 
-CreatorPal helps creators investigate relevant Reddit communities using retrieved profiles, analytics and source-linked recommendations. The original application starts from a YouTube channel and generates a strategy report. The new agent CLI accepts a research task, chooses tools and Skills, and persists a validated report. Latency and recommendation quality depend on the configured models and corpus; see the [testing guide](doc/agent/testing.md) for how to measure them. For the original product narrative, read the [Product Overview](doc/product/overview.md).
+CreatorPal helps creators investigate relevant Reddit communities using retrieved profiles, analytics and source-linked recommendations. The agent CLI accepts a research task, chooses tools and Skills, and persists a validated report. The Streamlit interface provides a YouTube-to-Reddit strategy workflow. Latency and recommendation quality depend on the configured models and corpus; see the [testing guide](doc/agent/testing.md) for how to measure them and the [Product Overview](doc/product/overview.md) for the user workflow.
 
-Original pipeline workflow (the Streamlit entry point uses `src/pipeline_vllm.py`):
+The YouTube-to-Reddit workflow uses `src/pipeline_vllm.py`:
 
 1. YouTube channel ingest (metadata, videos, comments)
 2. LLM theme extraction
@@ -47,45 +47,28 @@ Original pipeline workflow (the Streamlit entry point uses `src/pipeline_vllm.py
 4. **[Hybrid retrieval](doc/algorithm/retrieval.md)** (top-50) – [Okapi BM25](doc/algorithm/retrieval.md) keyword search (5% default) + [FAISS dense similarity](doc/algorithm/retrieval.md) (95% default)
 5. **[HyDE](doc/algorithm/query-expansion.md)** – supplementary retrieval from a hypothetical subreddit document; merged into candidates
 6. [Cross-encoder reranking](doc/algorithm/analytics.md) (top-10)
-7. Pipeline analytics + [subreddit sentiment scoring](doc/algorithm/analytics.md); the new agent exposes generated Python analysis as a separate tool
+7. Pipeline analytics + [subreddit sentiment scoring](doc/algorithm/analytics.md); the agent exposes generated Python analysis as a separate tool
 8. Strategy report generation and [Streamlit rendering](doc/frontend/structure.md)
-
----
-
-## Team & Collaboration
-
-CreatorPal was built by four people, each owning a distinct vertical of the system end-to-end:
-
-| Member | Role |
-|---|---|
-| Runxin Shao | Retrieval pipeline + backend integration (`src/retrieval/`, `src/pipeline.py`) |
-| Ziqi Yang | Frontend + deployment + project documentation (`app/`, `doc/`, `Dockerfile`) |
-| Gaoyuan Shi | Data pipeline (`data/build_*.py`, `data/preprocess_corpus.py`) |
-| Mingkai Gao | Analytics + evaluation + project initialization (`src/pal/`, `src/sentiment/`, `eval/`) |
-
-Each member owned their modules from design through tests, with shared ownership at integration boundaries (payload contract, config schema, pipeline orchestration). Development followed a feature-branch workflow — five topic branches integrating into `main` via pull request, with cross-area review required for any change touching the frontend–backend payload contract.
-
-For a detailed breakdown of module ownership, files committed, and key technical decisions per member, see [Team Contributions](doc/collab/team.md). For branch naming conventions, PR guidelines, and quality gates, see [Contributing](doc/collab/contributing.md).
 
 ---
 
 ## Architecture
 
-For the new task/Skills/tool/state architecture, see the [agent design](doc/agent/README.md#architecture-and-ownership). The diagram below describes the original retrieval application.
+The agent coordinates research through explicit tools and persistent task state. See the [agent design](doc/agent/README.md#architecture) for tool contracts, model policies and execution boundaries.
 
+```text
+Research task
+  → Task-based model policy
+  → ADK tool loop + on-demand Agent Skills
+       → Community search and rules lookup
+       → Restricted Python analytics
+       → Evidence and analysis state
+  → Citation validation
+  → Atomic report and receipt commit
+  → Evaluation results + OpenTelemetry traces
 ```
-Input (YouTube URL or topic query)
-  → YouTube Ingest
-  → Theme Extractor
-  → Query Rewriter (multi-query expansion)
-  → Hybrid Retriever (BM25 α=0.15 + FAISS α=0.85, top-50)
-       ↳ HyDE Retriever (supplementary; merges FAISS hits from a
-         hypothetical subreddit document, deduplicates into candidates)
-  → CrossEncoder Reranker (top-10)
-  → PAL Analytics + Sentiment Analyzer
-  → Augmented Generator (strategy report)
-  → Streamlit UI (ranked subreddit links + strategy report)
-```
+
+The Streamlit interface uses the YouTube retrieval workflow described above.
 
 See the [pipeline orchestration reference](doc/backend/pipeline.md) for component initialization order, graceful-skip behavior, and the full return payload schema.
 
@@ -121,8 +104,7 @@ creatorpal/
 │   ├── product/
 │   │   └── overview.md             # product narrative, user journey, and vision
 │   ├── collab/
-│   │   ├── contributing.md         # development workflow, branch strategy, PR process
-│   │   └── team.md                 # member contributions and module ownership
+│   │   └── contributing.md         # development workflow and PR process
 │   ├── backend/
 │   │   ├── pipeline.md             # runtime inference pipeline reference
 │   │   ├── retrieval.md            # retrieval stack deep dive
@@ -263,7 +245,7 @@ uv run creatorpal-agent compare --adapter offline-adk --output runs/offline
 
 Expected offline control: 39 tests pass, with the Docker test run separately in CI, and 12/12 task-policy runs complete. These are implementation checks with deterministic model doubles. Follow the **[testing guide](doc/agent/testing.md)** for Docker checks, one-task model setup, frozen-data comparisons, human review and acceptance criteria.
 
-For the original application, install its `requirements.txt` and use `python -m pytest -q tests/`. Dataset/model-dependent tests need their fixtures; the lightweight agent environment does not supply the original corpus or all legacy libraries. To run just the original PAL/sentiment regression checks, use `python -m pytest -q tests/test_pal.py tests/test_sentiment.py` in that environment.
+For the Streamlit pipeline, install its `requirements.txt` and use `python -m pytest -q tests/`. Dataset/model-dependent tests need their fixtures; the lightweight agent environment does not supply the original corpus or all pipeline dependencies. To run just the PAL/sentiment regression checks, use `python -m pytest -q tests/test_pal.py tests/test_sentiment.py` in that environment.
 
 ---
 
@@ -305,7 +287,6 @@ A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is
 | [`doc/frontend/frontend-design.md`](doc/frontend/frontend-design.md) | Implementation constraints and regression checklist |
 | [`doc/frontend/frontend-backend-interaction-guide.md`](doc/frontend/frontend-backend-interaction-guide.md) | Payload contract, adapter rules, error handling |
 | [`doc/collab/contributing.md`](doc/collab/contributing.md) | Development workflow, branch strategy, PR process |
-| [`doc/collab/team.md`](doc/collab/team.md) | Member contributions and module ownership |
 | [`doc/algorithm/retrieval.md`](doc/algorithm/retrieval.md) | BM25 scoring, bi-encoder FAISS retrieval, sliding-window chunking, hybrid fusion |
 | [`doc/algorithm/query-expansion.md`](doc/algorithm/query-expansion.md) | Multi-query LLM expansion and HyDE hypothetical document retrieval |
 | [`doc/algorithm/analytics.md`](doc/algorithm/analytics.md) | Cross-encoder reranking, RoBERTa sentiment scoring, legacy PAL execution |
@@ -319,7 +300,7 @@ A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is
 | `creatorpal_agent/` | Implemented | ADK loop, four Skills, validated tools, atomic state and evaluation |
 | `tests_agent/` + Agent CI | Passing offline | Includes crash recovery, model doubles, wheel and Docker execution |
 | Live model comparison | Pending configuration | No measured model quality, latency or cost improvement claimed |
-| Agent integration in original Streamlit UI | Not implemented | Use the new CLI for agent tasks |
+| Agent integration in Streamlit UI | Not implemented | Use the CLI for agent tasks |
 | `data/build_reddit_slim.py` | Done | Stream `.zst` → slim NDJSON |
 | `data/preprocess_corpus.py` | Done | Aggregate top-50 posts per subreddit, filter `min_posts=10` |
 | `data/build_faiss_index.py` | Done | 64-token chunking + `all-mpnet-base-v2` encoding |

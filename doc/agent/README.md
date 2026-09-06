@@ -1,6 +1,6 @@
 # Audience Research Agent
 
-The agent extension adds an ADK decision loop over CreatorPal tools. It selects the next tool and loads relevant skill instructions, persists retrieved evidence, runs a small analytics program, and commits a report only when its references and required artifacts validate. The original YouTube-to-Reddit pipelines and Streamlit application remain available. This extension currently has a CLI entry point; the original UI does not automatically switch to it.
+CreatorPal uses an ADK decision loop to select tools and load relevant skill instructions, persist retrieved evidence, run analytics programs, and commit reports whose references and required artifacts validate. Research tasks run through the `creatorpal-agent` CLI. The Streamlit interface uses the YouTube-to-Reddit pipeline.
 
 For exact commands, expected results and the live-model study protocol, see the [testing guide](testing.md).
 
@@ -18,7 +18,7 @@ uv run pytest -q tests_agent
 
 `scripted` calls real tools with a fixed control program. `offline-adk` uses the actual Google ADK Runner and function-call execution, with a deterministic `BaseLlm` double. Neither measures LLM capability. Both use fictional community data by default. Runs contain the report, receipt, SQLite state, versioned state snapshot, local OpenTelemetry spans and a configuration manifest.
 
-## Architecture and ownership
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -39,7 +39,7 @@ flowchart LR
   Snapshot --> Grader[Independent Harness checks]
 ```
 
-Mingkai Gao's agent extension is in `creatorpal_agent/` and `tests_agent/`. It builds on his original PAL/evaluation work and adapts the team's retrieval interfaces. The four-person project's original ownership remains documented in the main README; this extension does not reattribute the retrieval, data or frontend work.
+The runtime is implemented in `creatorpal_agent/`, with validation in `tests_agent/`. Retrieval adapters connect the research tools to the BM25, FAISS and cross-encoder interfaces.
 
 - **Skills:** four standard `SKILL.md` packages for audience discovery, rules lookup, programmatic analytics and evidence-based report submission. Only names/descriptions/hashes enter the initial progressive context; `load_skill` supplies the selected body. CI validates their format with ADK's skill loader. The runtime uses explicit ADK function tools and its own registry, not ADK's experimental `SkillToolset` script executor. This application feature does not install personal Codex skills.
 - **Tool use:** the model decides tool order and arguments. The host enforces loaded-skill requirements, retrieved-community scope, input limits, two attempts for transient tool failures and a persisted 30-attempt tool budget. ADK is limited to 16 model calls per invocation and at most two invocations. Unknown skills do not grant capabilities.
@@ -77,13 +77,13 @@ uv run creatorpal-agent compare --adapter adk \
 
 Authentication options follow [ADK model documentation](https://google.github.io/adk-docs/agents/models/). Do not put API keys in task JSON, commands committed to Git, or reports. The CLI also accepts `--pricing` with caller-supplied `{ "model-id": { "input_per_million": 0.0, "output_per_million": 0.0 } }` rates. Estimated cost is reported only when usage metadata is complete; rates are not fetched or claimed current. This estimate uses flat input/output rates, includes reported thinking tokens, and does not apply cache discounts.
 
-`run --state /path/to/existing.sqlite` explicitly resumes a task. Task, corpus, skill and sandbox fingerprints must match. Use new output directories for comparisons; reusing a completed state would invalidate a fresh-model comparison. No live model results are included in this change.
+`run --state /path/to/existing.sqlite` explicitly resumes a task. Task, corpus, skill and sandbox fingerprints must match. Use new output directories for comparisons; reusing a completed state would invalidate a fresh-model comparison. Published examples use offline controls.
 
 ## Evaluation boundaries
 
 The checked-in development set has two tasks; the demonstration test set has four independently written task prompts and explicit relevance labels, plus exact numeric targets where requested. The data is synthetic and was visible during implementation. This is a regression fixture, **not** a statistically valid unseen test set or evidence of generalization. Labels enter the scorer, not the agent task/context.
 
-Policy comparisons hold tasks and backend constant and report task completion, Recall@K, reciprocal rank, NDCG@K, numeric answer correctness, loaded instruction characters, elapsed time and available provider usage. These policies all use the new agent runtime; the results do **not** demonstrate an improvement over the original fixed RAG pipeline. Characters loaded are not tokens saved. Offline elapsed times are not model latency measurements.
+Policy comparisons hold tasks and backend constant and report task completion, Recall@K, reciprocal rank, NDCG@K, numeric answer correctness, loaded instruction characters, elapsed time and available provider usage. These policies all use the agent runtime; the results do **not** demonstrate an improvement over the original fixed RAG pipeline. Characters loaded are not tokens saved. Offline elapsed times are not model latency measurements.
 
 Citation integrity verifies source IDs and community relationships. It cannot establish that a source supports every sentence. Semantic grounding is explicitly unscored until a human or separately validated judge reviews it. A review sheet is generated with each comparison; review the report and evidence, mark factual support and usefulness, and document disagreements. For a credible live study, freeze unseen real tasks, record corpus/model/skill versions, predefine quality criteria, and repeat runs. Do not promote the synthetic control numbers to a resume claim about LLM accuracy.
 
@@ -99,7 +99,7 @@ uv run creatorpal-agent run --adapter offline-adk --sandbox docker \
   --task examples/agent/task.json --output runs
 ```
 
-The parent starts a non-root container with no network, read-only root filesystem, no host mounts, dropped capabilities, and CPU/memory/process limits. The same restricted language is enforced inside. The trusted host must have Docker access; that privilege is never exposed as an agent tool. CI builds the image and tests execution. The previous pandas/numpy PAL implementation remains in `src/pal/`; its older in-process executor is not the new runtime's execution boundary.
+The parent starts a non-root container with no network, read-only root filesystem, no host mounts, dropped capabilities, and CPU/memory/process limits. The same restricted language is enforced inside. The trusted host must have Docker access; that privilege is never exposed as an agent tool. CI builds the image and tests execution. The previous pandas/numpy PAL implementation remains in `src/pal/`; its older in-process executor is not the agent runtime's execution boundary.
 
 ## Reliability experiments
 
