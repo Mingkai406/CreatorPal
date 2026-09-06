@@ -2,6 +2,7 @@
 
 > Audience research with an ADK tool loop, on-demand Agent Skills, programmatic analytics and verifiable report commits, alongside the original YouTube-to-Reddit retrieval application.
 
+[![Agent CI](https://github.com/Mingkai406/CreatorPal/actions/workflows/agent-ci.yml/badge.svg?branch=main)](https://github.com/Mingkai406/CreatorPal/actions/workflows/agent-ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit)](https://streamlit.io/)
 [![FAISS](https://img.shields.io/badge/FAISS-Vector%20Search-0467DF)](https://github.com/facebookresearch/faiss)
@@ -13,7 +14,7 @@
 
 The new `creatorpal-agent` CLI selects skills and tools, persists evidence, runs restricted Python analytics, and validates report citations before committing a result. It includes three model/skill-loading policies and a reproducible evaluation runner. The original Streamlit application still uses the original pipeline.
 
-**[Agent quickstart, architecture and evaluation boundaries](doc/agent/README.md)** · **[Example task](examples/agent/task.json)** · **[Agent tests](tests_agent/)**
+**[Agent quickstart, architecture and evaluation boundaries](doc/agent/README.md)** · **[Testing guide: offline, live models and acceptance criteria](doc/agent/testing.md)** · **[Example task](examples/agent/task.json)** · **[Agent tests](tests_agent/)**
 
 Run the real ADK tool loop without credentials using `uv sync --locked --extra adk --extra dev`, then `uv run creatorpal-agent run --adapter offline-adk --task examples/agent/task.json --output runs`. This uses an explicitly labeled deterministic model double and synthetic data. Real model comparisons await provider configuration; no live accuracy, latency or cost improvement is claimed.
 
@@ -36,17 +37,17 @@ Run the real ADK tool loop without credentials using `uv sync --locked --extra a
 
 ## Overview
 
-Reddit has 3.4 million active communities, and most YouTube creators have no systematic way to know which ones are worth their time — which tolerate creator posts, which engage with their specific content type, and which will remove them on sight. CreatorPal solves that matching problem: paste in a YouTube channel URL and in under two minutes it returns the ten subreddits most likely to embrace your content, scored by topical fit and community sentiment, alongside a tailored engagement strategy grounded in real community data. For the full product narrative and user journey, read the [Product Overview](doc/product/overview.md).
+CreatorPal helps creators investigate relevant Reddit communities using retrieved profiles, analytics and source-linked recommendations. The original application starts from a YouTube channel and generates a strategy report. The new agent CLI accepts a research task, chooses tools and Skills, and persists a validated report. Latency and recommendation quality depend on the configured models and corpus; see the [testing guide](doc/agent/testing.md) for how to measure them. For the original product narrative, read the [Product Overview](doc/product/overview.md).
 
-Core workflow:
+Original pipeline workflow (the Streamlit entry point uses `src/pipeline_vllm.py`):
 
 1. YouTube channel ingest (metadata, videos, comments)
 2. LLM theme extraction
 3. **[Query rewriting](doc/algorithm/query-expansion.md)** – LLM generates diverse reformulations for broader recall
-4. **[Hybrid retrieval](doc/algorithm/retrieval.md)** (top-50) – [Okapi BM25](doc/algorithm/retrieval.md) keyword search (15%) + [FAISS dense similarity](doc/algorithm/retrieval.md) (85%)
+4. **[Hybrid retrieval](doc/algorithm/retrieval.md)** (top-50) – [Okapi BM25](doc/algorithm/retrieval.md) keyword search (5% default) + [FAISS dense similarity](doc/algorithm/retrieval.md) (95% default)
 5. **[HyDE](doc/algorithm/query-expansion.md)** – supplementary retrieval from a hypothetical subreddit document; merged into candidates
 6. [Cross-encoder reranking](doc/algorithm/analytics.md) (top-10)
-7. [PAL analytics](doc/algorithm/analytics.md) + [subreddit sentiment scoring](doc/algorithm/analytics.md)
+7. Pipeline analytics + [subreddit sentiment scoring](doc/algorithm/analytics.md); the new agent exposes generated Python analysis as a separate tool
 8. Strategy report generation and [Streamlit rendering](doc/frontend/structure.md)
 
 ---
@@ -70,6 +71,8 @@ For a detailed breakdown of module ownership, files committed, and key technical
 
 ## Architecture
 
+For the new task/Skills/tool/state architecture, see the [agent design](doc/agent/README.md#architecture-and-ownership). The diagram below describes the original retrieval application.
+
 ```
 Input (YouTube URL or topic query)
   → YouTube Ingest
@@ -92,6 +95,12 @@ See the [pipeline orchestration reference](doc/backend/pipeline.md) for componen
 
 ```text
 creatorpal/
+├── creatorpal_agent/               # ADK loop, Skills, tools, state and evaluation
+├── tests_agent/                    # agent and execution-boundary tests
+├── examples/agent/                 # tasks and labeled offline results
+├── pyproject.toml                  # lightweight agent package and optional extras
+├── uv.lock                         # reproducible dependencies
+├── Dockerfile.analytics            # isolated restricted analytics worker
 ├── app/
 │   ├── streamlit_app.py
 │   └── helpers/
@@ -246,14 +255,15 @@ The `app` service reads `.env` and overrides `VLLM_ENDPOINT` to point at the `vl
 
 ## Testing
 
-```bash
-python tests/test_retrieval_smoke.py   # BM25 + FAISS + hybrid fusion
-python tests/test_pal.py               # PAL code generation + sandbox
-python tests/test_sentiment.py         # RoBERTa sentiment scoring
-python tests/test_eval.py              # retrieval evaluation metrics
+```sh
+uv sync --locked --extra adk --extra dev
+uv run pytest -q tests_agent
+uv run creatorpal-agent compare --adapter offline-adk --output runs/offline
 ```
 
-Tests run as standalone scripts. Tests that require a live FAISS index or vLLM endpoint are automatically skipped when those services are unavailable.
+Expected offline control: 39 tests pass, with the Docker test run separately in CI, and 12/12 task-policy runs complete. These are implementation checks with deterministic model doubles. Follow the **[testing guide](doc/agent/testing.md)** for Docker checks, one-task model setup, frozen-data comparisons, human review and acceptance criteria.
+
+For the original application, install its `requirements.txt` and use `python -m pytest -q tests/`. Dataset/model-dependent tests need their fixtures; the lightweight agent environment does not supply the original corpus or all legacy libraries. To run just the original PAL/sentiment regression checks, use `python -m pytest -q tests/test_pal.py tests/test_sentiment.py` in that environment.
 
 ---
 
@@ -265,8 +275,8 @@ The retrieval stage fuses two complementary signals:
 
 | Component | Weight (α) | Description |
 |---|---|---|
-| BM25 (keyword) | 0.15 | Okapi BM25 over tokenized `chunk_text` — captures exact keyword matches |
-| FAISS (semantic) | 0.85 | Cosine similarity via `all-mpnet-base-v2` embeddings — captures meaning |
+| BM25 (keyword) | 0.05 default | Okapi BM25 over tokenized `chunk_text` — captures exact keyword matches |
+| FAISS (semantic) | 0.95 default | Cosine similarity via `all-mpnet-base-v2` embeddings — captures meaning |
 
 Scores from each source are [min-max normalized](doc/algorithm/retrieval.md) before the weighted linear combination. The fused ranking is then passed to the [cross-encoder reranker](doc/algorithm/analytics.md) for precision refinement. For the full scoring formulas, weight selection rationale, and tuning guide, see the [retrieval stack reference](doc/backend/retrieval.md).
 
@@ -284,6 +294,8 @@ A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is
 
 | Document | Description |
 |---|---|
+| [`doc/agent/README.md`](doc/agent/README.md) | Agent architecture, setup, models, state and execution boundaries |
+| [`doc/agent/testing.md`](doc/agent/testing.md) | Offline checks, live-model protocol, metrics and human review |
 | [`doc/product/overview.md`](doc/product/overview.md) | Product narrative: problem, user journey, value proposition, and vision |
 | [`doc/backend/pipeline.md`](doc/backend/pipeline.md) | Backend pipeline: component init, 9-step execution flow, graceful degradation, return payload |
 | [`doc/backend/retrieval.md`](doc/backend/retrieval.md) | Retrieval stack: BM25, FAISS, hybrid fusion, query rewriting, HyDE, reranking, tuning guide |
@@ -296,7 +308,7 @@ A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is
 | [`doc/collab/team.md`](doc/collab/team.md) | Member contributions and module ownership |
 | [`doc/algorithm/retrieval.md`](doc/algorithm/retrieval.md) | BM25 scoring, bi-encoder FAISS retrieval, sliding-window chunking, hybrid fusion |
 | [`doc/algorithm/query-expansion.md`](doc/algorithm/query-expansion.md) | Multi-query LLM expansion and HyDE hypothetical document retrieval |
-| [`doc/algorithm/analytics.md`](doc/algorithm/analytics.md) | Cross-encoder reranking, RoBERTa sentiment scoring, PAL sandboxed execution |
+| [`doc/algorithm/analytics.md`](doc/algorithm/analytics.md) | Cross-encoder reranking, RoBERTa sentiment scoring, legacy PAL execution |
 
 ---
 
@@ -304,6 +316,10 @@ A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is
 
 | Module | Status | Notes |
 |---|---|---|
+| `creatorpal_agent/` | Implemented | ADK loop, four Skills, validated tools, atomic state and evaluation |
+| `tests_agent/` + Agent CI | Passing offline | Includes crash recovery, model doubles, wheel and Docker execution |
+| Live model comparison | Pending configuration | No measured model quality, latency or cost improvement claimed |
+| Agent integration in original Streamlit UI | Not implemented | Use the new CLI for agent tasks |
 | `data/build_reddit_slim.py` | Done | Stream `.zst` → slim NDJSON |
 | `data/preprocess_corpus.py` | Done | Aggregate top-50 posts per subreddit, filter `min_posts=10` |
 | `data/build_faiss_index.py` | Done | 64-token chunking + `all-mpnet-base-v2` encoding |
@@ -318,7 +334,7 @@ A [hypothetical subreddit profile document](doc/algorithm/query-expansion.md) is
 | `src/retrieval/reranker.py` | Done | Cross-encoder reranking |
 | `src/retrieval/hyde.py` | Done | Supplementary HyDE retrieval |
 | `src/retrieval/theme_extractor.py` | Done | LLM-based channel theme extraction |
-| `src/pal/executor.py` | Done | RestrictedPython PAL sandbox |
+| `src/pal/executor.py` | Done | Legacy in-process RestrictedPython executor |
 | `src/sentiment/analyzer.py` | Done | RoBERTa sentiment scoring |
 | `src/ingest/youtube.py` | Done | YouTube Data API v3 ingestion (requires `YOUTUBE_API_KEY`) |
 | `src/generator/augmented_gen.py` | Done | LLM strategy report generation |

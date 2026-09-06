@@ -2,6 +2,8 @@
 
 The agent extension adds an ADK decision loop over CreatorPal tools. It selects the next tool and loads relevant skill instructions, persists retrieved evidence, runs a small analytics program, and commits a report only when its references and required artifacts validate. The original YouTube-to-Reddit pipelines and Streamlit application remain available. This extension currently has a CLI entry point; the original UI does not automatically switch to it.
 
+For exact commands, expected results and the live-model study protocol, see the [testing guide](testing.md).
+
 ## Run without credentials
 
 Python 3.11+; development and CI use 3.12. From the repository root:
@@ -51,8 +53,7 @@ Mingkai Gao's agent extension is in `creatorpal_agent/` and `tests_agent/`. It b
 ```sh
 uv sync --locked --extra adk --extra dev --extra retrieval
 uv run creatorpal-agent run --adapter adk --backend legacy \
-  --task examples/agent/task.json --fast-model "$FAST_MODEL" \
-  --rules-corpus /path/to/rules-snapshot.json --output runs
+  --task examples/agent/legacy-task.json --fast-model "$FAST_MODEL" --output runs
 ```
 
 Configure the original `src.config` index/metadata paths and install/build the original corpus first. `LegacyHybridBackend` calls the existing BM25/FAISS hybrid retriever and cross-encoder reranker. It does not silently replace these with the demo lexical search. The default reference backend is deliberately tiny and lexical so CI needs no model downloads.

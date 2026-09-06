@@ -1,0 +1,7 @@
+{
+  "id": "legacy-audience-demo",
+  "query": "Find communities for Python tutorials and summarize the retrieved rerank_score for each community.",
+  "needs_rules": false,
+  "needs_analytics": true,
+  "max_results": 2
+}
