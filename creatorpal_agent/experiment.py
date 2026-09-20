@@ -8,7 +8,7 @@ import uuid
 from pathlib import Path
 
 from .backends import CorpusBackend
-from .contracts import EvaluationCase
+from .contracts import EvaluationCase, ResearchReport
 from .runtime import InterruptedTask, ResearchRuntime, run_scripted
 from .sandbox import AnalyticsSandbox
 from .state import ResearchState, digest
@@ -34,6 +34,11 @@ def score(runtime, receipt, relevant=None, expected_analysis=None):
         "citation_integrity": runtime.completed(),
         "semantic_grounding": None,
         "human_review_required": True,
+        "numeric_consistency": (
+            runtime.validate_numbers(ResearchReport.model_validate(reports[0]))
+            if reports
+            else False
+        ),
     }
     if relevant is not None:
         truth = set(relevant)

@@ -25,6 +25,8 @@ jobs:
           cd /tmp
           /tmp/creatorpal-wheel/bin/creatorpal-agent compare --output /tmp/wheel-report
       - run: uv run --frozen creatorpal-agent compare --adapter offline-adk --output runs
+      - name: Reproduce 180 deterministic ADK trials
+        run: uv run --frozen python -m creatorpal_agent.benchmark --output runs/benchmark-180
       - run: docker build -f Dockerfile.analytics -t creatorpal-analytics .
       - name: Check restricted container execution
         run: CREATORPAL_DOCKER_TEST=1 uv run --frozen pytest -q tests_agent/test_research.py -k docker

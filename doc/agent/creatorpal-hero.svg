@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+<title id="title">CreatorPal: research with a verifiable finish line</title>
+<desc id="desc">Retrieve evidence, execute analytics, validate numerical claims and commit. 180 deterministic integration trials.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#10132a"/><stop offset="1" stop-color="#25214e"/></linearGradient></defs>
+<rect width="1200" height="420" rx="22" fill="url(#bg)"/>
+<circle cx="1090" cy="52" r="190" fill="#a78bfa" opacity=".045"/>
+<g font-family="Arial, Helvetica, sans-serif">
+<text x="52" y="56" fill="#c4b5fd" font-size="14" letter-spacing="3">CREATORPAL / EVIDENCE-DRIVEN RESEARCH</text>
+<text x="52" y="118" fill="#fafafa" font-size="43" font-weight="700">Research with a verifiable finish line.</text>
+<text x="52" y="157" fill="#b8b5d0" font-size="19">Google ADK tools turn retrieved evidence into checked, durable reports.</text>
+<g fill="#252341" stroke="#51466e"><rect x="52" y="198" width="251" height="99" rx="12"/><rect x="332" y="198" width="251" height="99" rx="12"/><rect x="612" y="198" width="251" height="99" rx="12"/><rect x="892" y="198" width="256" height="99" rx="12"/></g>
+<g fill="#c4b5fd" font-size="12" letter-spacing="2"><text x="72" y="228">RETRIEVE</text><text x="352" y="228">COMPUTE</text><text x="632" y="228">VALIDATE</text><text x="912" y="228">COMMIT</text></g>
+<g fill="#fafafa" font-size="21" font-weight="700"><text x="72" y="262">Source evidence</text><text x="352" y="262">Python analytics</text><text x="632" y="262">Numeric claims</text><text x="912" y="262">Report + receipt</text></g>
+<g fill="#b8b5d0" font-size="12"><text x="72" y="283">Profiles and participation rules</text><text x="352" y="283">Restricted execution over metrics</text><text x="632" y="283">Reference, value and display scale</text><text x="912" y="283">Atomic SQLite persistence</text></g>
+<g fill="#a78bfa" font-size="22"><text x="310" y="255">›</text><text x="590" y="255">›</text><text x="870" y="255">›</text></g>
+<path d="M52 328H1148" stroke="#45405b"/>
+<text x="52" y="375" fill="#fafafa" font-size="30" font-weight="700">180</text><text x="122" y="375" fill="#b8b5d0" font-size="15">offline ADK trials</text>
+<text x="405" y="375" fill="#fafafa" font-size="30" font-weight="700">108</text><text x="475" y="375" fill="#b8b5d0" font-size="15">numeric workflows</text>
+<text x="778" y="375" fill="#fafafa" font-size="30" font-weight="700">60</text><text x="830" y="375" fill="#b8b5d0" font-size="15">deterministic repeat groups</text>
+</g></svg>

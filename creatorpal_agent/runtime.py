@@ -1,5 +1,6 @@
 """The tool contract is shared by ADK, deterministic controls, and external fault injectors."""
 
+import math
 import time
 
 from opentelemetry import trace
@@ -218,7 +219,9 @@ class ResearchRuntime:
             self._require("evidence-report")
             parsed = ResearchReport.model_validate(report)
             if not self.validate_report(parsed):
-                raise ValueError("Report references or required analysis are invalid")
+                raise ValueError(
+                    "Report references, required analysis or numeric claims are invalid"
+                )
             actual, _ = self.state.commit_report(self.task.id, parsed.model_dump())
             return {"status": "complete", "task_id": self.task.id, "report_sha256": digest(actual)}
 
@@ -253,6 +256,38 @@ class ResearchRuntime:
             return False
         if report.analysis_id and self.state.get("analysis", report.analysis_id) is None:
             return False
+        if not self.validate_numbers(report):
+            return False
+        return True
+
+    def validate_numbers(self, report):
+        """Check structured claims before commit; tolerance is owned by the host."""
+        if self.task.needs_analytics and not report.numeric_claims:
+            return False
+        seen = set()
+        for claim in report.numeric_claims:
+            if claim.analysis_id != report.analysis_id or claim.result_key in seen:
+                return False
+            seen.add(claim.result_key)
+            analysis = self.state.get("analysis", claim.analysis_id)
+            if not analysis or not isinstance(analysis.get("result"), dict):
+                return False
+            actual = analysis["result"].get(claim.result_key)
+            if type(actual) not in {int, float} or not math.isfinite(actual):
+                return False
+            expected = actual * (100 if claim.scale == "percent" else 1)
+            if not math.isfinite(expected) or not math.isclose(
+                claim.value, expected, rel_tol=1e-7, abs_tol=1e-9
+            ):
+                return False
+        if self.task.needs_analytics:
+            analysis = self.state.get("analysis", report.analysis_id)
+            # All numeric result fields must be accounted for; a correct subset is insufficient.
+            if not analysis or not isinstance(analysis.get("result"), dict):
+                return False
+            numeric_keys = {k for k, v in analysis["result"].items() if type(v) in {int, float}}
+            if not numeric_keys or seen != numeric_keys:
+                return False
         return True
 
     def completed(self, receipt=None):
@@ -314,6 +349,11 @@ def run_scripted(runtime):
         {
             "task_id": runtime.task.id,
             "analysis_id": analysis_id,
+            "numeric_claims": [
+                {"analysis_id": analysis_id, "result_key": k, "value": float(v)}
+                for k, v in (result["result"].items() if analysis_id else [])
+                if type(v) in {int, float}
+            ],
             "recommendations": [
                 {
                     "community": d["community"],

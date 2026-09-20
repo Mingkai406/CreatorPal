@@ -90,6 +90,11 @@ class OfflineResearchModel(BaseLlm):
                         for d in profiles
                     ],
                     "analysis_id": analysis["analysis_id"] if analysis else None,
+                    "numeric_claims": [
+                        {"analysis_id": analysis["analysis_id"], "result_key": k, "value": float(v)}
+                        for k, v in (analysis["result"].items() if analysis else [])
+                        if type(v) in {int, float}
+                    ],
                     "limitations": ["Offline ADK model double; synthetic reference data."],
                 }
                 call = need("evidence-report", "publish_report", {"report": report})

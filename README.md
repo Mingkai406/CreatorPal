@@ -7,6 +7,17 @@
 [![Google ADK](https://img.shields.io/badge/Google-ADK-4285F4)](creatorpal_agent/adk_runner.py)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
+![CreatorPal evidence-to-report architecture and deterministic test coverage](doc/agent/creatorpal-hero.svg)
+
+| Reproducible workflows | Numerical correctness | Stable repeat groups |
+|:---:|:---:|:---:|
+| **180 / 180 completed** | **108 / 108 analytics checks** | **60 / 60 matching report hashes** |
+
+Recorded with a **deterministic model double driving the real ADK Runner**, real tools and
+SQLite commits. [Explore the benchmark](examples/agent/benchmark-180/report.md) ·
+[Inspect the numerical gate](doc/agent/numerical-gate.md) ·
+[Reproduce all 180 trials](#evaluation)
+
 [Quickstart](#quickstart) · [Architecture](#architecture) · [Engineering](#engineering) · [Evaluation](#evaluation) · [Documentation](#documentation)
 
 CreatorPal helps creators answer three connected questions: **where to participate, what the community rules say, and which metrics support the recommendation.** It uses Google ADK to choose tools, load relevant Agent Skills, retrieve evidence and execute Python analysis. A report is complete when its required artifacts validate and its result is durably committed.
@@ -21,6 +32,10 @@ CreatorPal works through the task using a small set of explicit capabilities:
 2. **Check participation rules** against supplied community-rule snapshots.
 3. **Calculate comparisons** by executing a restricted Python program over retrieved metrics.
 4. **Commit a report** with recommendations, citations, analysis references and stated limitations.
+
+Before publication, a numerical-consistency gate checks every structured numeric claim
+against its stored analysis result, including reference integrity, coverage and raw/percent
+conversion. Incorrect or missing values are rejected before a report can be committed.
 
 Each run saves the report, supporting evidence, analysis program and inputs, a completion receipt, configuration fingerprints and execution traces. This makes the result inspectable and preserves the inputs needed to reproduce a run.
 
@@ -125,6 +140,7 @@ The Streamlit application uses `src/pipeline_vllm.py`; agent tasks run through `
 ```sh
 uv run pytest -q tests_agent
 uv run creatorpal-agent compare --adapter offline-adk --output runs/evaluation
+uv run python -m creatorpal_agent.benchmark --output runs/benchmark-180
 ```
 
 The comparison runner holds tasks and the backend constant across three policies:
@@ -141,12 +157,19 @@ Results include completion, Recall@K, reciprocal rank, NDCG@K, numeric answer co
 
 | Check | Published result |
 |---|---|
-| Agent regression suite | 39 tests pass; one Docker-specific test runs separately in CI |
-| Policy control | Four synthetic tasks × three policies: 12/12 runs complete |
+| Agent regression suite | 51 tests pass; one Docker-specific test runs separately in CI |
+| Deterministic integration matrix | 20 task configurations × three policies × three repeats: 180/180 complete |
+| Numeric analysis and publication | 108/108 analytics answers correct; structured claims checked before commit |
+| Repeatability | 60/60 task-policy groups produce identical report hashes across three repeats |
 | Independent reliability suite | Eight fault scenarios meet their expected outcomes: six completed tasks and two correctly rejected failures |
 | Packaging and container checks | Wheel installed and executed outside the checkout; restricted analytics container exercised in CI |
 
 See the [recorded policy control](examples/agent/offline-comparison/report.md), [Agent CI](https://github.com/Mingkai406/CreatorPal/actions/workflows/agent-ci.yml) and [Agent Reliability Harness](https://github.com/Mingkai406/agent-reliability-harness/blob/main/docs/creatorpal.md).
+
+The new [180-trial evidence bundle](examples/agent/benchmark-180/report.md) includes the task
+matrix, per-trial scores, report receipts, state snapshots and artifact hashes. Its 20
+configurations cover four topics with five tool-requirement variants; repeats establish
+deterministic execution. All three policies use the same offline model double.
 
 These results verify engineering behavior using synthetic data and deterministic model doubles. Live-model quality, latency and cost comparisons remain to be measured. Character counts are not token savings, and valid citation IDs do not establish that every sentence is supported. The [evaluation protocol](doc/agent/testing.md) describes frozen test data, repeated trials, human review and acceptance criteria.
 

@@ -1,0 +1,22 @@
+{
+  "adapter": "offline-adk",
+  "model": "deterministic model double",
+  "tasks": 20,
+  "policies": 3,
+  "repeats": 3,
+  "trials": 180,
+  "completed": 180,
+  "numeric_trials": 108,
+  "analysis_correct": 108,
+  "numeric_consistency_passed": 180,
+  "repeat_groups_identical": 60,
+  "token_savings": null,
+  "model_quality": null,
+  "python": "3.12.13",
+  "artifacts_sha256": {
+    "cases.jsonl": "72afdb7a094492661dbf7b17e7cc1f249916279fda84b2371893599a0303414a",
+    "evidence.jsonl": "3461c6e368ddd86fc06f6bb1c97b00cbc2a85e0db119b37f9e93d08504885889",
+    "results.json": "fc097067e5f21a21ffb4a81480c8f68775c2c594b725f8236051a06ae5367609"
+  },
+  "scope": "Real ADK Runner and tools; synthetic corpus; no live model inference."
+}

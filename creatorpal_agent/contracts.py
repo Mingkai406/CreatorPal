@@ -32,10 +32,20 @@ class Recommendation(Contract):
     caveats: list[str] = Field(default_factory=list, max_length=10)
 
 
+class NumericClaim(Contract):
+    """A value in the analysis result, with a fixed, host-validated display scale."""
+
+    analysis_id: str
+    result_key: str = Field(min_length=1)
+    value: float = Field(strict=True)
+    scale: Literal["raw", "percent"] = "raw"
+
+
 class ResearchReport(Contract):
     task_id: str
     recommendations: list[Recommendation] = Field(min_length=1, max_length=10)
     analysis_id: str | None = None
+    numeric_claims: list[NumericClaim] = Field(default_factory=list, max_length=50)
     limitations: list[str] = Field(default_factory=list, max_length=20)
 
 
