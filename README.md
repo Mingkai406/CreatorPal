@@ -16,7 +16,8 @@
 Recorded with a **deterministic model double driving the real ADK Runner**, real tools and
 SQLite commits. [Explore the benchmark](examples/agent/benchmark-180/report.md) ·
 [Inspect the numerical gate](doc/agent/numerical-gate.md) ·
-[Reproduce all 180 trials](#evaluation)
+[Reproduce all 180 trials](#evaluation) ·
+[Independent semantic review](doc/agent/independent-review.md)
 
 [Quickstart](#quickstart) · [Architecture](#architecture) · [Engineering](#engineering) · [Evaluation](#evaluation) · [Documentation](#documentation)
 

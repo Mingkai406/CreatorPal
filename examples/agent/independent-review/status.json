@@ -1,0 +1,31 @@
+{
+  "adapters": [
+    "offline-adk"
+  ],
+  "measurement": "Human ratings of supplied artifacts; offline runs remain offline controls",
+  "aggregation": "Average repeats within task, then equal-weight tasks; failures retained",
+  "minimum_reviewers": 2,
+  "policies": {
+    "eager-fast": {
+      "completion_rate": 1.0,
+      "factual_support_per_attempt": null,
+      "usefulness_per_attempt": null,
+      "mean_cost_usd": null
+    },
+    "progressive-fast": {
+      "completion_rate": 1.0,
+      "factual_support_per_attempt": null,
+      "usefulness_per_attempt": null,
+      "mean_cost_usd": null
+    },
+    "progressive-routed": {
+      "completion_rate": 1.0,
+      "factual_support_per_attempt": null,
+      "usefulness_per_attempt": null,
+      "mean_cost_usd": null
+    }
+  },
+  "unresolved_items": 12,
+  "review_packet_items": 12,
+  "note": "Untouched blank ratings; no human or live-model quality result."
+}
