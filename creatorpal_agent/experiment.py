@@ -281,6 +281,7 @@ async def compare(
     manifest = {
         "dataset_sha256": digest([case.model_dump() for case in cases]),
         "split": "test",
+        "task_ids": [case.task.id for case in cases],
         "repeats": repeats,
         "policies": list(POLICIES),
         "label_boundary": "Only task fields enter the runtime; labels stay in the scorer.",
