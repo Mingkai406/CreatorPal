@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install uv
-      - run: uv sync --locked --extra adk --extra dev
+      - run: uv sync --locked --extra adk --extra dev --extra mcp
       - run: uv run --frozen ruff check creatorpal_agent tests_agent
       - run: uv run --frozen ruff format --check creatorpal_agent tests_agent
       - run: uv run --frozen pytest -q tests_agent
