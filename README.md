@@ -204,3 +204,34 @@ doc/                  Architecture, setup and testing references
 ## License
 
 [MIT](LICENSE).
+
+
+## MCP integration
+
+CreatorPal exposes its community retrieval and rule lookup through an optional,
+read-only MCP server using the official Python SDK. External MCP clients can
+list and call `search_communities(query, limit)` and
+`read_community_rules(community)`. Responses retain the corpus evidence IDs,
+source URLs and collection metadata.
+
+```bash
+uv sync --extra mcp --extra dev
+uv run creatorpal-mcp
+# Supply your own compatible corpus explicitly:
+uv run creatorpal-mcp --corpus /absolute/path/to/corpus.json
+```
+
+For a stdio MCP host, configure the absolute virtual-environment Python executable
+as `command`, `["-m", "creatorpal_agent.mcp_server"]` as `args`, and this repository
+as `cwd`. The server does not listen on a network port or execute arbitrary code.
+The default corpus is the bundled reference fixture and uses lexical retrieval;
+this endpoint does not claim live Reddit access or FAISS retrieval. The existing
+ADK research runner, analytics validation and report publishing remain separate.
+Retrieved text is untrusted evidence, not instructions to the client model.
+
+Protocol integration test (real subprocess, initialization, tool discovery,
+search/rules calls, invalid input and unknown-community handling):
+
+```bash
+uv run pytest tests_agent/test_mcp.py -q
+```
